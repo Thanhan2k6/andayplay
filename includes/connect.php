@@ -14,11 +14,11 @@ if ($_SERVER['HTTP_HOST'] == 'localhost' || $_SERVER['HTTP_HOST'] == '127.0.0.1'
     
 } else {
     
-    // MÔI TRƯỜNG PROD: Chạy trên Hosting InfinityFree (Bạn hãy thay các thông số bên dưới)
-    $host = "sqlXXX.infinityfree.com";         // Thay bằng MySQL Hostname của bạn
-    $user = "if0_XXXXXXX";                     // Thay bằng MySQL Username của bạn
-    $pass = "MatKhauHostingCuaBan";            // Thay bằng Mật khẩu Hosting của bạn
-    $db   = "if0_XXXXXXX_game_library_db";     // Thay bằng MySQL Database Name của bạn
+    // MÔI TRƯỜNG PROD: Chạy trên Hosting InfinityFree
+    $host = "sql312.infinityfree.com";
+    $user = "if0_42898364";
+    $pass = "Thanhan2k6";
+    $db   = "if0_42898364_gamelib";
     
 }
 
