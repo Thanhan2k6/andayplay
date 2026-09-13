@@ -1,7 +1,55 @@
 <?php
 if (session_status() === PHP_SESSION_NONE) { session_start(); }
 require_once __DIR__ . '/includes/header.php'; 
+?>
 
+<style>
+/* Hiệu ứng mượt mà cho thanh công cụ lọc */
+.form-select {
+    background-color: #1a1c23 !important;
+    border: 1px solid #2d303e !important;
+    transition: all 0.3s ease;
+}
+.form-select:hover, .form-select:focus {
+    border-color: #3b82f6 !important;
+    box-shadow: 0 0 12px rgba(59, 130, 246, 0.4) !important;
+}
+
+/* Hiệu ứng Nổi bật (Hover) cho Thẻ Game chuẩn Gaming */
+.game-card {
+    background: linear-gradient(180deg, #1e202c 0%, #13141c 100%);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    overflow: hidden;
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+.game-card:hover {
+    transform: translateY(-8px); /* Nhảy thẻ lên nhẹ nhàng */
+    border-color: rgba(59, 130, 246, 0.6); /* Viền sáng Neon Xanh */
+    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.6), 0 0 20px rgba(59, 130, 246, 0.3);
+}
+
+/* Hiệu ứng Zoom ảnh bìa bên trong thẻ */
+.cover-wrapper {
+    overflow: hidden; /* Ngăn ảnh tràn ra ngoài góc bo tròn */
+}
+.game-cover {
+    transition: transform 0.5s ease;
+}
+.game-card:hover .game-cover {
+    transform: scale(1.1); /* Phóng to ảnh khi trỏ chuột */
+}
+
+/* Nhãn dán kính mờ (Glassmorphism) */
+.game-badge {
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+}
+</style>
+
+<?php
 // =========================================================================
 // HỆ THỐNG AUTO-DETECT (TỰ ĐỘNG NHẬN DIỆN NỀN TẢNG PC/MOBILE)
 // =========================================================================
@@ -77,7 +125,7 @@ $result = $conn->query($sql);
         <form method="GET" action="index.php" class="d-flex align-items-center gap-2">
             <?php if(isset($_GET['category'])): ?><input type="hidden" name="category" value="<?php echo intval($_GET['category']); ?>"><?php endif; ?>
             <span class="text-secondary small text-nowrap d-none d-sm-inline">Nền tảng:</span>
-            <select name="platform" class="form-select form-select-sm bg-dark text-white border-secondary" onchange="this.form.submit()" style="min-width: 100px;">
+            <select name="platform" class="form-select form-select-sm text-white border-secondary" onchange="this.form.submit()" style="min-width: 100px;">
                 <option value="">Tất cả</option>
                 <option value="PC" <?php echo (isset($_GET['platform']) && $_GET['platform']=='PC')?'selected':''; ?>>PC</option>
                 <option value="Mobile" <?php echo (isset($_GET['platform']) && $_GET['platform']=='Mobile')?'selected':''; ?>>Mobile</option>
@@ -87,7 +135,7 @@ $result = $conn->query($sql);
         <form method="GET" action="index.php" class="d-flex align-items-center gap-2">
             <?php if(isset($_GET['platform'])): ?><input type="hidden" name="platform" value="<?php echo htmlspecialchars($_GET['platform']); ?>"><?php endif; ?>
             <span class="text-secondary small text-nowrap d-none d-sm-inline">Sắp xếp:</span>
-            <select name="sort" class="form-select form-select-sm bg-dark text-white border-secondary" onchange="this.form.submit()" style="min-width: 110px;">
+            <select name="sort" class="form-select form-select-sm text-white border-secondary" onchange="this.form.submit()" style="min-width: 110px;">
                 <option value="newest" <?php echo (isset($_GET['sort']) && $_GET['sort']=='newest')?'selected':''; ?>>Mới nhất</option>
                 <option value="oldest" <?php echo (isset($_GET['sort']) && $_GET['sort']=='oldest')?'selected':''; ?>>Cũ nhất</option>
                 <option value="name_asc" <?php echo (isset($_GET['sort']) && $_GET['sort']=='name_asc')?'selected':''; ?>>A - Z</option>
@@ -119,21 +167,25 @@ $result = $conn->query($sql);
             }
     ?>
         
-        <a href="<?php echo $target_url; ?>" <?php echo $target_attr; ?> class="game-card shadow-sm text-decoration-none">
+        <a href="<?php echo $target_url; ?>" <?php echo $target_attr; ?> class="game-card shadow text-decoration-none d-flex flex-column">
             
             <?php if ($game['price_type'] == 'free'): ?>
-                <span class="game-badge bg-free position-absolute top-0 start-0 m-2 rounded px-2 py-1 small fw-bold text-white" style="z-index:10; background: #3b82f6;">Miễn phí</span>
+                <span class="game-badge position-absolute top-0 start-0 m-2 rounded px-2 py-1 small fw-bold text-white" style="z-index:10; background: rgba(59, 130, 246, 0.85);">Miễn phí</span>
             <?php else: ?>
-                <span class="game-badge bg-paid position-absolute top-0 start-0 m-2 rounded px-2 py-1 small fw-bold text-white" style="z-index:10; background: #ef4444;">Trả phí</span>
+                <span class="game-badge position-absolute top-0 start-0 m-2 rounded px-2 py-1 small fw-bold text-white" style="z-index:10; background: rgba(239, 68, 68, 0.85);">Trả phí</span>
             <?php endif; ?>
 
-            <?php if (!empty($game['image_url']) && file_exists($game['image_url'])): ?>
-                <img src="<?php echo $game['image_url']; ?>" class="game-cover w-100 object-fit-cover" alt="<?php echo htmlspecialchars($game['title']); ?>" style="height: 180px; border-radius: 8px 8px 0 0;">
-            <?php else: ?>
-                <div class="game-cover d-flex align-items-center justify-content-center bg-dark text-muted w-100" style="height: 180px; border-radius: 8px 8px 0 0;">NO COVER</div>
-            <?php endif; ?>
+            <!-- Bọc ảnh vào thẻ cover-wrapper để bo tròn mượt và không bị tràn viền khi zoom -->
+            <div class="cover-wrapper w-100" style="height: 180px;">
+                <?php if (!empty($game['image_url']) && file_exists($game['image_url'])): ?>
+                    <img src="<?php echo $game['image_url']; ?>" class="game-cover w-100 h-100 object-fit-cover" alt="<?php echo htmlspecialchars($game['title']); ?>">
+                <?php else: ?>
+                    <div class="game-cover d-flex align-items-center justify-content-center text-muted w-100 h-100" style="background: #111;">NO COVER</div>
+                <?php endif; ?>
+            </div>
 
-            <div class="p-3 d-flex flex-column bg-dark" style="flex-grow: 1; border-radius: 0 0 8px 8px;">
+            <!-- Khối nội dung bên dưới -->
+            <div class="p-3 d-flex flex-column" style="flex-grow: 1;">
                 <h5 class="fw-bold text-white mb-1 fs-6 text-truncate" title="<?php echo htmlspecialchars($game['title']); ?>">
                     <?php echo htmlspecialchars($game['title']); ?>
                 </h5>
@@ -141,9 +193,9 @@ $result = $conn->query($sql);
                     <i class="bi bi-tag-fill me-1"></i> <?php echo !empty($game['cate_name']) ? $game['cate_name'] : 'Khác'; ?> 
                     
                     <?php if($game['platform'] == 'Mobile'): ?>
-                        <span class="badge bg-success ms-auto rounded-pill"><i class="bi bi-phone"></i> Mobile</span>
+                        <span class="badge ms-auto rounded-pill" style="background: #059669;"><i class="bi bi-phone"></i> Mobile</span>
                     <?php else: ?>
-                        <span class="badge bg-primary ms-auto rounded-pill"><i class="bi bi-pc-display"></i> PC</span>
+                        <span class="badge ms-auto rounded-pill" style="background: #2563eb;"><i class="bi bi-pc-display"></i> PC</span>
                     <?php endif; ?>
                 </small>
                 
@@ -151,15 +203,15 @@ $result = $conn->query($sql);
                     <span class="text-warning small fw-bold">⭐ 4.8</span>
                     
                     <?php if ($game['platform'] == 'Mobile'): ?>
-                         <span class="badge" style="background: rgba(16, 185, 129, 0.2); color: #34d399;"><i class="bi bi-google-play"></i> Tải ngay</span>
+                         <span class="badge" style="background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16,185,129,0.3);"><i class="bi bi-google-play"></i> Tải ngay</span>
                     <?php elseif ($game['price_type'] == 'free'): ?>
-                        <span class="badge" style="background: rgba(59, 130, 246, 0.2); color: #60a5fa;">Sẵn sàng</span>
+                        <span class="badge" style="background: rgba(59, 130, 246, 0.15); color: #60a5fa; border: 1px solid rgba(59,130,246,0.3);">Sẵn sàng</span>
                     <?php else: ?>
                         <?php if (in_array($game['game_id'], $borrowed_games)): ?>
-                            <span class="badge" style="background: rgba(16, 185, 129, 0.2); color: #34d399;">Đã mở khóa <i class="bi bi-check"></i></span>
+                            <span class="badge" style="background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16,185,129,0.3);">Đã mở khóa <i class="bi bi-check"></i></span>
                         <?php else: ?>
                             <?php if ($game['available_quantity'] > 0): ?>
-                                <span class="badge" style="background: rgba(245, 158, 11, 0.2); color: #fbbf24;">Còn <?php echo $game['available_quantity']; ?></span>
+                                <span class="badge" style="background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245,158,11,0.3);">Còn <?php echo $game['available_quantity']; ?></span>
                             <?php else: ?>
                                 <span class="badge bg-danger text-white">Hết hàng</span>
                             <?php endif; ?>
