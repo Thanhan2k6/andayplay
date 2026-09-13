@@ -78,6 +78,33 @@ require_once __DIR__ . '/connect.php';
             }
             .sidebar-overlay.active { display: block; }
         }
+
+        /* =========================================================
+           CSS BỔ SUNG: LÀM SÁNG CHỮ VÀ BẢNG TRÊN NỀN CYBERPUNK
+        ========================================================= */
+        /* Tăng độ sáng cho các chữ màu xám để dễ đọc hơn */
+        .text-secondary, .text-muted {
+            color: rgba(255, 255, 255, 0.75) !important;
+        }
+
+        /* Làm sáng placeholder của thanh tìm kiếm */
+        .search-container input::placeholder {
+            color: rgba(255, 255, 255, 0.6) !important;
+        }
+
+        /* Đổi màu viền và chữ trong các Bảng (Table) của Admin */
+        .table, .table td, .table th {
+            border-color: rgba(0, 243, 255, 0.2) !important;
+            color: #fff !important; 
+        }
+
+        /* Làm sáng chữ liên kết (link) trong bảng */
+        td a {
+            color: #00f3ff !important;
+        }
+        td a:hover {
+            color: #fce205 !important;
+        }
     </style>
 </head>
 <body>
@@ -135,9 +162,9 @@ require_once __DIR__ . '/connect.php';
         <!-- NÚT MỞ MENU TRÊN MOBILE (Thay thế d-none d-lg-flex cũ) -->
         <button class="btn text-white d-lg-none me-3" id="openSidebarBtn"><i class="bi bi-list fs-2"></i></button>
 
-        <!-- Form tìm kiếm ẩn trên mobile -->
-        <form action="index.php" method="GET" class="search-container d-none d-md-flex align-items-center bg-secondary bg-opacity-25 rounded-pill px-3 py-1 me-auto" style="width: 300px;">
-            <i class="bi bi-search text-secondary me-2"></i>
+        <!-- ĐOẠN ĐƯỢC CHỈNH SỬA: Form tìm kiếm sáng và viền màu Cyan -->
+        <form action="index.php" method="GET" class="search-container d-none d-md-flex align-items-center rounded-pill px-3 py-1 me-auto" style="width: 300px; background: rgba(0, 243, 255, 0.1); border: 1px solid #00f3ff;">
+            <i class="bi bi-search me-2" style="color: #00f3ff;"></i>
             <input type="text" name="search" class="form-control bg-transparent border-0 text-white shadow-none" placeholder="Tìm kiếm trò chơi..." value="<?php echo isset($_GET['search']) ? htmlspecialchars($_GET['search']) : ''; ?>">
         </form>
 
