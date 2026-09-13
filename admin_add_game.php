@@ -15,6 +15,9 @@ if(isset($_POST['btn_add'])) {
     $title = $conn->real_escape_string($_POST['title']);
     $category_id = intval($_POST['category_id']);
     
+    // ĐOẠN MỚI: Bắt dữ liệu Nền tảng
+    $platform = $conn->real_escape_string($_POST['platform']);
+    
     // Lưu ý: Đổi tên biến $description cũ thành $short_desc để đỡ nhầm lẫn với bài viết dài
     $short_desc = $conn->real_escape_string($_POST['short_description']); 
     
@@ -27,9 +30,9 @@ if(isset($_POST['btn_add'])) {
     $download_link = ($price_type == 'free') ? $conn->real_escape_string($_POST['download_link']) : '';
     
     // BƯỚC 1: Lưu thông tin vào Database trước với link ảnh rỗng để Database cấp số thứ tự (ID)
-    // Cập nhật SQL: Thêm lưu description (bài viết dài)
-    $sql_insert = "INSERT INTO games (title, category_id, short_description, description, system_req, total_quantity, available_quantity, price_type, download_link, image_url) 
-            VALUES ('$title', $category_id, '$short_desc', '$long_desc', '$system_req', $quantity, $quantity, '$price_type', '$download_link', '')";
+    // Cập nhật SQL: Thêm cột platform
+    $sql_insert = "INSERT INTO games (title, category_id, platform, short_description, description, system_req, total_quantity, available_quantity, price_type, download_link, image_url) 
+            VALUES ('$title', $category_id, '$platform', '$short_desc', '$long_desc', '$system_req', $quantity, $quantity, '$price_type', '$download_link', '')";
             
     if($conn->query($sql_insert) === TRUE) {
         // Lấy số ID vừa được Database tạo ra (Ví dụ: 1, 2, 3...)
@@ -90,6 +93,14 @@ if(isset($_POST['btn_add'])) {
                 </div>
 
                 <div class="row">
+                    <!-- ĐOẠN MỚI: Thêm chọn nền tảng -->
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label text-info fw-bold">Nền tảng (Platform)</label>
+                        <select name="platform" class="form-select bg-dark text-white border-secondary" required>
+                            <option value="PC">🖥️ PC</option>
+                            <option value="Mobile">📱 Mobile</option>
+                        </select>
+                    </div>
                     <div class="col-md-6 mb-3">
                         <label class="form-label text-info fw-bold">Loại Game</label>
                         <select name="price_type" id="priceTypeSelect" class="form-select bg-dark text-white border-secondary" required onchange="toggleDownloadLink()">
@@ -97,7 +108,10 @@ if(isset($_POST['btn_add'])) {
                             <option value="free">Game Miễn phí (Link chính thức)</option>
                         </select>
                     </div>
-                    <div class="col-md-6 mb-3" id="downloadLinkDiv" style="display: none;">
+                </div>
+                
+                <div class="row" id="downloadLinkDiv" style="display: none;">
+                    <div class="col-12 mb-3">
                         <label class="form-label text-info fw-bold">Link tải chính thức</label>
                         <input type="url" name="download_link" class="form-control bg-dark text-white border-secondary" placeholder="https://store.steampowered.com/...">
                     </div>
@@ -113,13 +127,12 @@ if(isset($_POST['btn_add'])) {
                     <textarea name="short_description" class="form-control bg-dark text-white border-secondary" rows="3" required></textarea>
                 </div>
 
-                <!-- ĐOẠN ĐƯỢC THÊM MỚI: NHẬP BÀI GIỚI THIỆU CHI TIẾT -->
+                <!-- NHẬP BÀI GIỚI THIỆU CHI TIẾT -->
                 <div class="mb-4">
                     <label class="form-label text-warning fw-bold">Mô tả chi tiết (Bài giới thiệu Game)</label>
                     <textarea name="long_description" class="form-control bg-dark text-white border-secondary" rows="10" placeholder="Viết bài giới thiệu chi tiết về cốt truyện, tính năng nổi bật... Hỗ trợ xuống dòng bằng phím Enter."></textarea>
                     <div class="form-text text-secondary">Nội dung này sẽ hiển thị toàn bộ trên trang Chi tiết Game.</div>
                 </div>
-                <!-- KẾT THÚC ĐOẠN THÊM MỚI -->
                 
                 <div class="row">
                     <div class="col-md-6 mb-4">

@@ -31,8 +31,12 @@ if(isset($_POST['btn_update'])) {
     // Ép kiểu chuỗi để tránh lỗi khi gõ dấu nháy đơn (') trong bài viết
     $title = $conn->real_escape_string($_POST['title']);
     $category_id = intval($_POST['category_id']);
+    
+    // ĐOẠN MỚI: Bắt dữ liệu Nền tảng
+    $platform = isset($_POST['platform']) ? $conn->real_escape_string($_POST['platform']) : 'PC';
+    
     $description = $conn->real_escape_string($_POST['description']); // Mô tả tóm tắt
-    $long_description = $conn->real_escape_string($_POST['long_description']); // ĐOẠN MỚI: Mô tả chi tiết
+    $long_description = $conn->real_escape_string($_POST['long_description']); // Mô tả chi tiết
     $system_req = $conn->real_escape_string($_POST['system_req']);
     $total_quantity = intval($_POST['total_quantity']);
     
@@ -63,10 +67,11 @@ if(isset($_POST['btn_update'])) {
     $new_available = $game['available_quantity'] + $diff;
     if($new_available < 0) $new_available = 0;
 
-    // CẬP NHẬT SQL: Thêm cột long_description vào lệnh UPDATE
+    // CẬP NHẬT SQL: Thêm cột platform vào lệnh UPDATE
     $sql = "UPDATE games SET 
             title='$title', 
             category_id=$category_id, 
+            platform='$platform',
             description='$description', 
             long_description='$long_description', 
             system_req='$system_req', 
@@ -112,6 +117,14 @@ if(isset($_POST['btn_update'])) {
                 </div>
 
                 <div class="row">
+                    <!-- ĐOẠN MỚI: Thêm chọn nền tảng -->
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label text-info">Nền tảng (Platform)</label>
+                        <select name="platform" class="form-select bg-dark text-white border-secondary" required>
+                            <option value="PC" <?php echo (isset($game['platform']) && $game['platform'] == 'PC') ? 'selected' : ''; ?>>🖥️ PC</option>
+                            <option value="Mobile" <?php echo (isset($game['platform']) && $game['platform'] == 'Mobile') ? 'selected' : ''; ?>>📱 Mobile</option>
+                        </select>
+                    </div>
                     <div class="col-md-6 mb-3">
                         <label class="form-label text-info">Hình Thức Tính Phí</label>
                         <select name="price_type" id="priceTypeSelect" class="form-select bg-dark text-white border-secondary" required onchange="toggleDownloadLink()">
@@ -119,7 +132,10 @@ if(isset($_POST['btn_update'])) {
                             <option value="free" <?php if($current_price_type == 'free') echo 'selected'; ?>>Game Miễn phí (Link chính thức)</option>
                         </select>
                     </div>
-                    <div class="col-md-6 mb-3" id="downloadLinkDiv" style="<?php echo ($current_price_type == 'free') ? 'display: block;' : 'display: none;'; ?>">
+                </div>
+                
+                <div class="row" id="downloadLinkDiv" style="<?php echo ($current_price_type == 'free') ? 'display: block;' : 'display: none;'; ?>">
+                    <div class="col-12 mb-3">
                         <label class="form-label text-info">Link tải chính thức (Dành cho Miễn phí)</label>
                         <input type="url" name="download_link" class="form-control bg-dark text-white border-secondary" value="<?php echo htmlspecialchars($current_download_link); ?>" placeholder="https://store.steampowered.com/...">
                     </div>
@@ -143,12 +159,10 @@ if(isset($_POST['btn_update'])) {
                     <textarea name="description" class="form-control bg-dark text-white border-secondary" rows="3" required><?php echo htmlspecialchars($game['description']); ?></textarea>
                 </div>
 
-                <!-- ĐOẠN ĐƯỢC THÊM MỚI: NHẬP BÀI GIỚI THIỆU CHI TIẾT -->
                 <div class="mb-4">
                     <label class="form-label text-warning fw-bold">Mô tả chi tiết (Bài giới thiệu Game)</label>
                     <textarea name="long_description" class="form-control bg-dark text-white border-secondary" rows="12" placeholder="Viết bài giới thiệu chi tiết về cốt truyện, tính năng nổi bật... Hỗ trợ xuống dòng bằng phím Enter."><?php echo htmlspecialchars($game['long_description'] ?? ''); ?></textarea>
                 </div>
-                <!-- KẾT THÚC ĐOẠN THÊM MỚI -->
                 
                 <div class="row">
                     <div class="col-md-6 mb-4">
