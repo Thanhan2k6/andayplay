@@ -47,10 +47,17 @@ if (empty($config['gemini_api_key']) || $config['gemini_api_key'] === 'YOUR_GEMI
     exit;
 }
 
-// Nạp kết nối CSDL (dự án dùng includes/connect.php → biến $conn: mysqli)
+// Nạp kết nối CSDL an toàn (nếu DB lỗi thì chatbot vẫn trả lời bình thường, không làm chết endpoint)
 $connectPath = __DIR__ . '/../includes/connect.php';
 if (file_exists($connectPath)) {
-    require_once $connectPath;
+    try {
+        // Chỉ nạp nếu có biến HOST hoặc server web đang chạy
+        if (isset($_SERVER['HTTP_HOST']) || php_sapi_name() !== 'cli') {
+            @require_once $connectPath;
+        }
+    } catch (Throwable $e) {
+        // Bỏ qua lỗi kết nối DB, tiếp tục chạy AI
+    }
 }
 
 // ─── 2. KIỂM TRA CSRF TOKEN ──────────────────────────────

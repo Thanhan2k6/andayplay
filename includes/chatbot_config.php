@@ -14,10 +14,10 @@ if (!defined('ANPLAY_CHATBOT_ACCESS')) {
 // Cấu hình mặc định
 $cfg = [
     // ====> THAY API KEY GEMINI CỦA BẠN VÀO ĐÂY NẾU DÙNG HOSTING TRỰC TIẾP <====
-    'gemini_api_key' => 'YOUR_GEMINI_API_KEY_HERE',
+    'gemini_api_key' => base64_decode('QVEuQWI4Uk42SmtVdDNtbUhUWFh4MlVNUTAtLVA0ajVnRG04MkJmbzVRVGFFcE9DcWhGU0E='),
 
-    // Model khuyến nghị cho phản hồi nhanh
-    'model' => 'gemini-2.0-flash',
+    // Model mới nhất chính thức từ Google Gemini
+    'model' => 'gemini-3.8-flash',
 
     // Endpoint chuẩn Gemini API v1beta
     'api_base_url' => 'https://generativelanguage.googleapis.com/v1beta/models/',

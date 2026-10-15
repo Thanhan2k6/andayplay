@@ -77,42 +77,102 @@ if (empty($_SESSION['chat_csrf_token'])) {
 }
 ?>
 <meta name="chat-csrf" content="<?php echo $_SESSION['chat_csrf_token']; ?>">
-<link rel="stylesheet" href="css/chatbot.css">
 
-<!-- Nút mở Chatbot và Khung Chat -->
-<div class="anplay-chatbot-wrapper">
-    <div class="anplay-chat-toggle" id="anplay-chat-toggle" title="Chat với AI">
-        💬
-    </div>
+<!-- =========================================================
+     ANPLAY ASSISTANT — GAMING AI CHATBOT WIDGET
+     ========================================================= -->
+<div class="anplay-chatbot-wrapper" id="anplayChatbotWrapper">
+    <!-- Nút mở Chatbot nổi góc dưới phải -->
+    <button class="anplay-chat-toggle" id="anplay-chat-toggle" type="button" aria-label="Mở trợ lý AI ANPLAY">
+        <span class="anplay-chat-toggle-icon">
+            <i class="bi bi-robot"></i>
+        </span>
+        <span class="anplay-chat-ping"></span>
+        <span class="anplay-chat-tooltip">ANPLAY ASSISTANT • Hỏi đáp AI</span>
+    </button>
 
-    <div class="anplay-chat-box" id="anplay-chat-box">
+    <!-- Hộp thoại Chatbox -->
+    <div class="anplay-chat-box" id="anplay-chat-box" role="dialog" aria-label="Khung chat trợ lý AI">
+        <!-- Header -->
         <div class="anplay-chat-header">
-            <div class="anplay-chat-title">
-                <span class="anplay-status-dot"></span>
-                <span>ANPLAY ASSISTANT</span>
+            <div class="anplay-chat-title-group">
+                <div class="anplay-chat-avatar">
+                    <i class="bi bi-robot"></i>
+                    <span class="anplay-chat-avatar-status" title="AI sẵn sàng 24/7"></span>
+                </div>
+                <div class="anplay-chat-title-text">
+                    <h4>
+                        ANPLAY ASSISTANT 
+                        <span class="anplay-chat-badge">AI 3.8</span>
+                    </h4>
+                    <p class="anplay-chat-subtitle">
+                        <span class="anplay-status-pill"></span> Trợ lý tư vấn game bản quyền
+                    </p>
+                </div>
             </div>
             <div class="anplay-chat-actions">
-                <button id="anplay-chat-clear" title="Làm mới">🔄</button>
-                <button id="anplay-chat-close" title="Đóng">✕</button>
+                <button class="anplay-header-btn" id="anplay-chat-clear" type="button" title="Làm mới đoạn hội thoại">
+                    <i class="bi bi-arrow-counterclockwise"></i>
+                </button>
+                <button class="anplay-header-btn close-btn" id="anplay-chat-close" type="button" title="Đóng cửa sổ chat">
+                    <i class="bi bi-x-lg"></i>
+                </button>
             </div>
         </div>
 
+        <!-- Gợi ý câu hỏi nhanh (Quick Suggestion Chips) -->
+        <div class="anplay-chat-suggestions" id="anplay-chat-suggestions">
+            <button class="anplay-suggestion-chip" type="button" data-question="Shop có những game gì đang cho thuê?">
+                <i class="bi bi-joystick text-primary"></i> Game cho thuê?
+            </button>
+            <button class="anplay-suggestion-chip" type="button" data-question="Hướng dẫn quy trình thuê tài khoản game">
+                <i class="bi bi-question-circle text-info"></i> Cách thuê game?
+            </button>
+            <button class="anplay-suggestion-chip" type="button" data-question="Thuê game tại ANPLAY STORE có uy tín không?">
+                <i class="bi bi-shield-check text-success"></i> Có uy tín không?
+            </button>
+            <button class="anplay-suggestion-chip" type="button" data-question="Sau khi thuê thì kiểm tra tài khoản ở đâu?">
+                <i class="bi bi-collection-play text-warning"></i> Xem tài khoản đã thuê?
+            </button>
+        </div>
+
+        <!-- Vùng hiển thị tin nhắn -->
         <div class="anplay-chat-messages" id="anplay-chat-messages">
-            <div class="anplay-msg bot">
-                Xin chào! Tôi là trợ lý AI của ANPLAY STORE. Bạn cần tìm game gì hay hỗ trợ thuê tài khoản nào không?
+            <!-- Tin nhắn chào mở đầu -->
+            <div class="anplay-msg-row bot">
+                <div class="anplay-msg-avatar"><i class="bi bi-robot"></i></div>
+                <div class="anplay-msg-content">
+                    <div class="anplay-msg bot">
+                        Xin chào game thủ! 👋 Tôi là <strong>ANPLAY ASSISTANT</strong>. 
+                        Tôi có thể giúp bạn tìm kiếm game bản quyền, báo giá thuê và hướng dẫn trải nghiệm kho game AAA của shop!
+                    </div>
+                    <span class="anplay-msg-time"><?php echo date('H:i'); ?></span>
+                </div>
             </div>
+
+            <!-- Typing indicator -->
             <div class="anplay-typing-indicator" id="anplay-typing" style="display:none;">
                 <span></span><span></span><span></span>
             </div>
         </div>
 
-        <div class="anplay-chat-input-area">
-            <input type="text" id="anplay-chat-input" placeholder="Hỏi gì đó..." autocomplete="off" maxlength="600">
-            <button id="anplay-chat-send">Gửi</button>
+        <!-- Khung nhập liệu & Nút gửi -->
+        <form class="anplay-chat-input-area" id="anplay-chat-form" onsubmit="return false;">
+            <div class="anplay-input-wrapper">
+                <input type="text" id="anplay-chat-input" class="anplay-chat-input" placeholder="Nhập câu hỏi của bạn (Enter để gửi)..." autocomplete="off" maxlength="600" required>
+            </div>
+            <button type="submit" id="anplay-chat-send" class="anplay-chat-send-btn" title="Gửi tin nhắn">
+                <i class="bi bi-send-fill"></i>
+            </button>
+        </form>
+
+        <!-- Footer lưu ý -->
+        <div class="anplay-chat-footer-note">
+            <span>Powered by Google Gemini AI • Câu trả lời mang tính chất tham khảo</span>
         </div>
     </div>
 </div>
 
-<script src="assets/js/chatbot.js"></script>
+<script src="assets/js/chatbot.js?v=<?php echo time(); ?>"></script>
 </body>
 </html>

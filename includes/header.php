@@ -23,8 +23,9 @@ $current_page = basename($_SERVER['PHP_SELF']);
     <!-- SweetAlert2 -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-    <!-- Main Stylesheet -->
+    <!-- Main Stylesheet & Chatbot Stylesheet -->
     <link rel="stylesheet" href="css/style.css?v=<?php echo time(); ?>">
+    <link rel="stylesheet" href="css/chatbot.css?v=<?php echo time(); ?>">
 </head>
 <body>
 
