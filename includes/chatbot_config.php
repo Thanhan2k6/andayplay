@@ -11,9 +11,9 @@ if (!defined('ANPLAY_CHATBOT_ACCESS')) {
     exit('Forbidden');
 }
 
-return [
-    // ====> THAY API KEY GEMINI CỦA BẠN VÀO ĐÂY <====
-    // Lấy key tại: https://aistudio.google.com/apikey
+// Cấu hình mặc định
+$cfg = [
+    // ====> THAY API KEY GEMINI CỦA BẠN VÀO ĐÂY NẾU DÙNG HOSTING TRỰC TIẾP <====
     'gemini_api_key' => 'YOUR_GEMINI_API_KEY_HERE',
 
     // Model khuyến nghị cho phản hồi nhanh
@@ -38,4 +38,15 @@ return [
         'hours'   => '08:00 - 23:00'
     ]
 ];
+
+// Nạp ghi đè bí mật cục bộ nếu có (được bảo vệ bởi .gitignore)
+$secretsFile = __DIR__ . '/chatbot_secrets.local.php';
+if (file_exists($secretsFile)) {
+    $secrets = require $secretsFile;
+    if (is_array($secrets) && !empty($secrets['gemini_api_key'])) {
+        $cfg['gemini_api_key'] = $secrets['gemini_api_key'];
+    }
+}
+
+return $cfg;
 
