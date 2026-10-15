@@ -10,67 +10,67 @@ if(!isset($_SESSION['user_id']) || $_SESSION['role'] != 1) {
     exit();
 }
 
-// Xử lý lưu game và upload ảnh (Đổi tên theo ID)
+// Xử lý lưu game và upload ảnh
 if(isset($_POST['btn_add'])) {
-    $title = $conn->real_escape_string($_POST['title']);
-    $category_id = intval($_POST['category_id']);
-    
-    // ĐOẠN MỚI: Bắt dữ liệu Nền tảng
-    $platform = $conn->real_escape_string($_POST['platform']);
-    
-    // Lưu ý: Đổi tên biến $description cũ thành $short_desc để đỡ nhầm lẫn với bài viết dài
-    $short_desc = $conn->real_escape_string($_POST['short_description']); 
-    
-    // ĐÂY LÀ BIẾN MỚI NHẬN DỮ LIỆU MÔ TẢ CHI TIẾT
-    $long_desc = $conn->real_escape_string($_POST['long_description']); 
-    
-    $system_req = $conn->real_escape_string($_POST['system_req']);
-    $quantity = intval($_POST['quantity']);
-    $price_type = $conn->real_escape_string($_POST['price_type']);
-    $download_link = ($price_type == 'free') ? $conn->real_escape_string($_POST['download_link']) : '';
-    
-    // BƯỚC 1: Lưu thông tin vào Database trước với link ảnh rỗng để Database cấp số thứ tự (ID)
-    // Cập nhật SQL: Thêm cột platform
-    $sql_insert = "INSERT INTO games (title, category_id, platform, short_description, description, system_req, total_quantity, available_quantity, price_type, download_link, image_url) 
-            VALUES ('$title', $category_id, '$platform', '$short_desc', '$long_desc', '$system_req', $quantity, $quantity, '$price_type', '$download_link', '')";
-            
-    if($conn->query($sql_insert) === TRUE) {
-        // Lấy số ID vừa được Database tạo ra (Ví dụ: 1, 2, 3...)
-        $new_game_id = $conn->insert_id; 
+    if (verify_csrf_token($_POST['csrf_token'] ?? '')) {
+        $title = $conn->real_escape_string($_POST['title']);
+        $category_id = intval($_POST['category_id']);
+        $platform = $conn->real_escape_string($_POST['platform']);
+        $short_desc = $conn->real_escape_string($_POST['short_description']); 
+        $long_desc = $conn->real_escape_string($_POST['long_description']); 
+        $system_req = $conn->real_escape_string($_POST['system_req']);
+        $price_type = $conn->real_escape_string($_POST['price_type']);
+        $download_link = ($price_type == 'free') ? $conn->real_escape_string($_POST['download_link']) : '';
         
-        // BƯỚC 2: Xử lý Upload Ảnh và Đổi tên theo ID
-        if(isset($_FILES['image']) && $_FILES['image']['error'] == 0) {
-            $target_dir = "uploads/";
-            if(!is_dir($target_dir)) {
-                mkdir($target_dir, 0777, true);
+        $sql_insert = "INSERT INTO games (title, category_id, platform, description, long_description, system_req, total_quantity, available_quantity, price_type, download_link, image_url) 
+                VALUES ('$title', $category_id, '$platform', '$short_desc', '$long_desc', '$system_req', 0, 0, '$price_type', '$download_link', '')";
+                
+        if($conn->query($sql_insert) === TRUE) {
+            $new_game_id = $conn->insert_id; 
+            
+            // Xử lý upload ảnh bìa
+            if(isset($_FILES['image']) && $_FILES['image']['error'] == 0) {
+                $target_dir = "uploads/";
+                if(!is_dir($target_dir)) mkdir($target_dir, 0777, true);
+                $extension = pathinfo($_FILES["image"]["name"], PATHINFO_EXTENSION);
+                $file_name = $new_game_id . "." . $extension;
+                $target_file = $target_dir . $file_name;
+                if(move_uploaded_file($_FILES["image"]["tmp_name"], $target_file)) {
+                    $conn->query("UPDATE games SET image_url = '$target_file' WHERE game_id = $new_game_id");
+                }
             }
             
-            // Lấy phần đuôi mở rộng của ảnh (ví dụ: jpg, png)
-            $extension = pathinfo($_FILES["image"]["name"], PATHINFO_EXTENSION);
-            
-            // Ép tên file thành số thứ tự của game (Ví dụ: 1.jpg)
-            $file_name = $new_game_id . "." . $extension;
-            $target_file = $target_dir . $file_name;
-            
-            if(move_uploaded_file($_FILES["image"]["tmp_name"], $target_file)) {
-                // BƯỚC 3: Cập nhật lại đường dẫn ảnh đã đánh số vào tựa game vừa tạo
-                $conn->query("UPDATE games SET image_url = '$target_file' WHERE game_id = $new_game_id");
+            // Tự động tạo 4 gói thời hạn thuê chuẩn nếu là game trả phí
+            if ($price_type === 'paid') {
+                $p1 = floatval($_POST['price_1h'] ?? 5000);
+                $p2 = floatval($_POST['price_1d'] ?? 15000);
+                $p3 = floatval($_POST['price_7d'] ?? 30000);
+                $p4 = floatval($_POST['price_30d'] ?? 99000);
+
+                $conn->query("INSERT INTO rental_packages (game_id, package_name, duration_type, duration_value, price) VALUES 
+                    ($new_game_id, '1 Giờ (Trải nghiệm nhanh)', 'hours', 1, $p1),
+                    ($new_game_id, '1 Ngày (24 Giờ)', 'days', 1, $p2),
+                    ($new_game_id, '7 Ngày (1 Tuần)', 'days', 7, $p3),
+                    ($new_game_id, '30 Ngày (1 Tháng)', 'days', 30, $p4)");
             }
+
+            echo "<script>alert('Đã thêm tựa game mới thành công! Bạn có thể vào Kho Tài Khoản để nhập tài khoản cho game này.'); window.location='admin_games.php';</script>";
+            exit();
+        } else {
+            echo "<div class='alert alert-danger text-center'>Lỗi hệ thống: " . $conn->error . "</div>";
         }
-        
-        echo "<script>alert('Đã thêm tựa game mới vào kho!'); window.location='admin_games.php';</script>";
-        exit();
-    } else {
-        echo "<div class='alert alert-danger text-center'>Lỗi hệ thống: " . $conn->error . "</div>";
     }
 }
+$csrf_token = generate_csrf_token();
 ?>
 
 <div class="container mt-4 text-white pb-5">
-    <h2 class="mb-4 fw-bold">➕ Thêm Game Mới</h2>
-    <div class="card shadow" style="background-color: #202d39; border: none; border-radius: 10px;">
+    <h2 class="mb-4 fw-bold">➕ Thêm Game Mới Vào Cửa Hàng</h2>
+    <div class="card shadow" style="background-color: #1a222c; border: 1px solid #2d3b4e; border-radius: 10px;">
         <div class="card-body p-4">
             <form method="POST" action="" enctype="multipart/form-data">
+                <input type="hidden" name="csrf_token" value="<?php echo $csrf_token; ?>">
+                
                 <div class="row">
                     <div class="col-md-6 mb-3">
                         <label class="form-label text-info fw-bold">Tên Game</label>
@@ -93,7 +93,6 @@ if(isset($_POST['btn_add'])) {
                 </div>
 
                 <div class="row">
-                    <!-- ĐOẠN MỚI: Thêm chọn nền tảng -->
                     <div class="col-md-6 mb-3">
                         <label class="form-label text-info fw-bold">Nền tảng (Platform)</label>
                         <select name="platform" class="form-select bg-dark text-white border-secondary" required>
@@ -102,11 +101,34 @@ if(isset($_POST['btn_add'])) {
                         </select>
                     </div>
                     <div class="col-md-6 mb-3">
-                        <label class="form-label text-info fw-bold">Loại Game</label>
-                        <select name="price_type" id="priceTypeSelect" class="form-select bg-dark text-white border-secondary" required onchange="toggleDownloadLink()">
-                            <option value="paid">Game Trả phí (Thuê mượn kho)</option>
-                            <option value="free">Game Miễn phí (Link chính thức)</option>
+                        <label class="form-label text-info fw-bold">Mô Hình Dịch Vụ</label>
+                        <select name="price_type" id="priceTypeSelect" class="form-select bg-dark text-white border-secondary" required onchange="togglePricingInputs()">
+                            <option value="paid">Cho thuê tài khoản trả phí</option>
+                            <option value="free">Game Miễn phí (Link tải ngoài)</option>
                         </select>
+                    </div>
+                </div>
+
+                <!-- CẤU HÌNH BẢNG GIÁ BAN ĐẦU -->
+                <div class="p-3 mb-4 rounded border border-secondary" id="pricingBlock" style="background: rgba(0, 243, 255, 0.03);">
+                    <h5 class="text-warning fw-bold mb-3"><i class="bi bi-tags-fill me-1"></i> Thiết Lập Bảng Giá Các Gói Thuê</h5>
+                    <div class="row g-3">
+                        <div class="col-md-3">
+                            <label class="form-label text-light small">Gói 1 Giờ (đ):</label>
+                            <input type="number" name="price_1h" class="form-control bg-dark text-white border-secondary" value="5000" min="1000" step="1000">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label text-light small">Gói 1 Ngày (đ):</label>
+                            <input type="number" name="price_1d" class="form-control bg-dark text-white border-secondary" value="15000" min="1000" step="1000">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label text-light small">Gói 7 Ngày (đ):</label>
+                            <input type="number" name="price_7d" class="form-control bg-dark text-white border-secondary" value="30000" min="1000" step="1000">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label text-light small">Gói 30 Ngày (đ):</label>
+                            <input type="number" name="price_30d" class="form-control bg-dark text-white border-secondary" value="99000" min="1000" step="1000">
+                        </div>
                     </div>
                 </div>
                 
@@ -118,7 +140,7 @@ if(isset($_POST['btn_add'])) {
                 </div>
                 
                 <div class="mb-3">
-                    <label class="form-label text-info fw-bold">Ảnh bìa Game (Sẽ được tự động đánh số ID)</label>
+                    <label class="form-label text-info fw-bold">Ảnh bìa Game (Sẽ được tự động lưu theo ID)</label>
                     <input type="file" name="image" class="form-control bg-dark text-white border-secondary" accept="image/*">
                 </div>
                 
@@ -127,22 +149,14 @@ if(isset($_POST['btn_add'])) {
                     <textarea name="short_description" class="form-control bg-dark text-white border-secondary" rows="3" required></textarea>
                 </div>
 
-                <!-- NHẬP BÀI GIỚI THIỆU CHI TIẾT -->
                 <div class="mb-4">
-                    <label class="form-label text-warning fw-bold">Mô tả chi tiết (Bài giới thiệu Game)</label>
-                    <textarea name="long_description" class="form-control bg-dark text-white border-secondary" rows="10" placeholder="Viết bài giới thiệu chi tiết về cốt truyện, tính năng nổi bật... Hỗ trợ xuống dòng bằng phím Enter."></textarea>
-                    <div class="form-text text-secondary">Nội dung này sẽ hiển thị toàn bộ trên trang Chi tiết Game.</div>
+                    <label class="form-label text-warning fw-bold">Mô tả chi tiết & Điều khoản dịch vụ</label>
+                    <textarea name="long_description" class="form-control bg-dark text-white border-secondary" rows="8" placeholder="Viết bài giới thiệu chi tiết về cốt truyện, tính năng nổi bật..."></textarea>
                 </div>
                 
-                <div class="row">
-                    <div class="col-md-6 mb-4">
-                        <label class="form-label text-info fw-bold">Cấu hình yêu cầu</label>
-                        <input type="text" name="system_req" class="form-control bg-dark text-white border-secondary" required>
-                    </div>
-                    <div class="col-md-6 mb-4">
-                        <label class="form-label text-info fw-bold">Số lượng (Nhập kho)</label>
-                        <input type="number" name="quantity" class="form-control bg-dark text-white border-secondary" value="1" min="1" required>
-                    </div>
+                <div class="mb-4">
+                    <label class="form-label text-info fw-bold">Cấu hình yêu cầu</label>
+                    <input type="text" name="system_req" class="form-control bg-dark text-white border-secondary" required>
                 </div>
                 
                 <div class="text-end pt-3 border-top border-secondary">
@@ -155,13 +169,16 @@ if(isset($_POST['btn_add'])) {
 </div>
 
 <script>
-function toggleDownloadLink() {
+function togglePricingInputs() {
     var select = document.getElementById('priceTypeSelect');
-    var div = document.getElementById('downloadLinkDiv');
+    var divLink = document.getElementById('downloadLinkDiv');
+    var divPrice = document.getElementById('pricingBlock');
     if (select.value === 'free') {
-        div.style.display = 'block';
+        divLink.style.display = 'block';
+        divPrice.style.display = 'none';
     } else {
-        div.style.display = 'none';
+        divLink.style.display = 'none';
+        divPrice.style.display = 'block';
     }
 }
 </script>

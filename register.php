@@ -20,13 +20,20 @@ if (isset($_POST['btn_register'])) {
         $script_hieu_ung = "Swal.fire({ icon: 'warning', title: 'Oop!', text: 'Mật khẩu nhập lại không khớp.', background: '#1e293b', color: '#fff' });";
     } else {
         // Kiểm tra trùng lặp
-        $check = $conn->query("SELECT * FROM users WHERE username = '$username' OR email = '$email'");
+        $stmt_check = $conn->prepare("SELECT user_id FROM users WHERE username = ? OR email = ?");
+        $stmt_check->bind_param("ss", $username, $email);
+        $stmt_check->execute();
+        $check = $stmt_check->get_result();
+
         if ($check && $check->num_rows > 0) {
             $script_hieu_ung = "Swal.fire({ icon: 'error', title: 'Trùng lặp!', text: 'Tên đăng nhập hoặc Email đã có người sử dụng.', background: '#1e293b', color: '#fff' });";
         } else {
-            // Thêm vào Database
-            $sql_insert = "INSERT INTO users (username, email, password, role) VALUES ('$username', '$email', '$password', 0)";
-            if ($conn->query($sql_insert) === TRUE) {
+            // Thêm vào Database với mật khẩu mã hóa an toàn (Bcrypt)
+            $hashed_password = password_hash($password, PASSWORD_DEFAULT);
+            $stmt_insert = $conn->prepare("INSERT INTO users (username, email, password, role) VALUES (?, ?, ?, 0)");
+            $stmt_insert->bind_param("sss", $username, $email, $hashed_password);
+
+            if ($stmt_insert->execute()) {
                 
                 // HIỆU ỨNG BẮN PHÁO HOA KHI ĐĂNG KÝ THÀNH CÔNG
                 $script_hieu_ung = "

@@ -142,7 +142,7 @@ if (isset($_POST['btn_login'])) {
         <div class="mb-4">
             <div class="d-flex justify-content-between">
                 <label class="form-label text-light fw-bold">Mật khẩu</label>
-                <a href="#" class="text-info text-decoration-none small">Quên mật khẩu?</a>
+                <a href="forgot_password.php" class="text-info text-decoration-none small">Quên mật khẩu?</a>
             </div>
             <input type="password" name="password" class="form-control" placeholder="••••••••" required>
         </div>

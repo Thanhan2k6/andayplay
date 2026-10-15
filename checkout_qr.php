@@ -4,147 +4,207 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 require_once __DIR__ . '/includes/header.php';
 
-// ==========================================
-// 1. XỬ LÝ AUTO-VERIFY SAU 15 GIÂY (CHỐT ĐƠN & CẤP KEY)
-// ==========================================
-if (isset($_POST['auto_verify_payment'])) {
-    $order_data = json_decode(base64_decode(urldecode($_POST['final_order_data'])), true);
-    $d = intval($order_data['days']);
-    $game_id = intval($order_data['game_id']);
+if (!isset($_SESSION['user_id'])) {
+    echo "<script>alert('Vui lòng đăng nhập!'); window.location='login.php';</script>";
+    exit();
+}
+
+$user_id = $_SESSION['user_id'];
+$order_id = isset($_GET['order_id']) ? intval($_GET['order_id']) : 0;
+
+// XỬ LÝ: Khi người dùng bấm gia hạn trực tiếp từ My Library qua POST
+if (isset($_POST['btn_extend_submit'])) {
+    $borrow_id_to_extend = intval($_POST['borrow_id_to_extend']);
+    $extend_pkg_id = intval($_POST['extend_pkg_id']);
     
-    // NẾU LÀ ĐƠN GIA HẠN (Giữ nguyên Key cũ, chỉ tăng ngày)
-    if (isset($order_data['is_extend']) && $order_data['is_extend'] == true) {
-        $b_id = intval($order_data['borrow_id']);
-        
-        $old_date_sql = $conn->query("SELECT due_date FROM borrow_records WHERE borrow_id = $b_id");
-        $old_date_str = $old_date_sql->fetch_assoc()['due_date'];
-        $old_timestamp = strtotime($old_date_str);
-        
-        // Cấu trúc logic cộng dồn: Nếu quá hạn thì tính từ NOW, nếu chưa thì nối tiếp
-        if ($old_timestamp < time()) {
-            $new_due_date = date('Y-m-d H:i:s', strtotime("+$d days"));
-        } else {
-            $new_due_date = date('Y-m-d H:i:s', strtotime("+$d days", $old_timestamp));
-        }
-        
-        $update_sql = "UPDATE borrow_records SET due_date = '$new_due_date', status = 'active' WHERE borrow_id = $b_id";
-        if ($conn->query($update_sql) === TRUE) {
-            // Đổi hướng về trang nhận Key thay vì my_library
-            echo "<script>
-                    alert('🎉 GIA HẠN THÀNH CÔNG! Key của bạn đã được duy trì. Hạn trả mới là: " . date('d/m/Y H:i', strtotime($new_due_date)) . "'); 
-                    window.location='download_game.php?id=$game_id';
-                  </script>";
-            exit();
-        }
-    } 
-    // NẾU LÀ ĐƠN THUÊ MỚI (Cấp Key mới)
-    else {
-        $u_id = intval($order_data['user_id']);
-        $due_date = date('Y-m-d H:i:s', strtotime("+$d days"));
-        
-        // --- TẠO KEY BẢN QUYỀN NGẪU NHIÊN CHUẨN FORM ANPLAY ---
-        $game_key = 'ANPLAY-' . strtoupper(substr(md5(uniqid()), 0, 4)) . '-' . strtoupper(substr(md5(rand()), 0, 4)) . '-' . strtoupper(substr(md5(rand()), 0, 4));
-        
-        // Lưu thông tin kèm Key vào Database (Bổ sung game_key vào câu lệnh INSERT)
-        $sql_borrow = "INSERT INTO borrow_records (user_id, game_id, borrow_date, due_date, status, game_key) 
-                       VALUES ($u_id, $game_id, NOW(), '$due_date', 'active', '$game_key')";
-                       
-        if ($conn->query($sql_borrow) === TRUE) {
-            $conn->query("UPDATE games SET available_quantity = available_quantity - 1 WHERE game_id = $game_id AND available_quantity > 0");
-            
-            // Đổi hướng về trang nhận Key
-            echo "<script>
-                    alert('🎉 THANH TOÁN THÀNH CÔNG! Hệ thống đã cấp License Key bản quyền cho bạn.'); 
-                    window.location='download_game.php?id=$game_id';
-                  </script>";
+    // Kiểm tra đơn cũ thuộc về user
+    $chk_stmt = $conn->prepare("SELECT br.*, g.title FROM borrow_records br JOIN games g ON br.game_id = g.game_id WHERE br.borrow_id = ? AND br.user_id = ?");
+    $chk_stmt->bind_param("ii", $borrow_id_to_extend, $user_id);
+    $chk_stmt->execute();
+    $old_order = $chk_stmt->get_result()->fetch_assoc();
+    $chk_stmt->close();
+
+    if ($old_order) {
+        $game_id = $old_order['game_id'];
+        $pkg_stmt = $conn->prepare("SELECT * FROM rental_packages WHERE package_id = ? AND game_id = ?");
+        $pkg_stmt->bind_param("ii", $extend_pkg_id, $game_id);
+        $pkg_stmt->execute();
+        $pkg = $pkg_stmt->get_result()->fetch_assoc();
+        $pkg_stmt->close();
+
+        if ($pkg) {
+            $duration_hours = ($pkg['duration_type'] == 'hours') ? $pkg['duration_value'] : ($pkg['duration_value'] * 24);
+            $price = $pkg['price'];
+            $order_code = "EXT" . date('YmdHis') . rand(100, 999);
+
+            $ins = $conn->prepare("INSERT INTO borrow_records 
+                (order_code, user_id, game_id, package_id, duration_hours, rental_price, payment_status, payment_method, rent_type, previous_borrow_id, account_id, status) 
+                VALUES (?, ?, ?, ?, ?, ?, 'pending', 'Chuyển khoản VietQR', 'extend', ?, ?, 'pending')");
+            $ins->bind_param("siiiidsii", $order_code, $user_id, $game_id, $pkg['package_id'], $duration_hours, $price, $borrow_id_to_extend, $old_order['account_id']);
+            $ins->execute();
+            $order_id = $conn->insert_id;
+            $ins->close();
+
+            echo "<script>window.location.href = 'checkout_qr.php?order_id=" . $order_id . "';</script>";
             exit();
         }
     }
 }
 
-// ==========================================
-// 2. NHẬN DỮ LIỆU TỪ TRANG THƯ VIỆN HOẶC TRANG ĐẶT HÀNG
-// ==========================================
-$order_data = [];
-$is_extension = false;
+// Lấy thông tin đơn hàng từ DB
+$stmt = $conn->prepare("SELECT br.*, g.title, g.image_url, rp.package_name, ga.account_username 
+                       FROM borrow_records br 
+                       JOIN games g ON br.game_id = g.game_id 
+                       LEFT JOIN rental_packages rp ON br.package_id = rp.package_id 
+                       LEFT JOIN game_accounts ga ON br.account_id = ga.account_id 
+                       WHERE br.borrow_id = ? AND br.user_id = ?");
+$stmt->bind_param("ii", $order_id, $user_id);
+$stmt->execute();
+$order = $stmt->get_result()->fetch_assoc();
+$stmt->close();
 
-// Nếu là Form Gia hạn post lên
-if (isset($_POST['btn_extend_submit'])) {
-    $is_extension = true;
-    $days = intval($_POST['extend_days']);
-    $game_id = intval($_POST['game_id']);
-    $borrow_id = intval($_POST['borrow_id_to_extend']);
-    
-    $price_list = [3 => 15000, 7 => 30000, 14 => 50000, 30 => 99000];
-    $amount = isset($price_list[$days]) ? $price_list[$days] : 30000;
-    
-    $order_data = [
-        'is_extend' => true,
-        'borrow_id' => $borrow_id,
-        'game_id' => $game_id,
-        'days' => $days,
-        'amount' => $amount
-    ];
-} 
-// Nếu là Thuê mới truyền qua URL
-else if (isset($_GET['order'])) {
-    $order_json = base64_decode(urldecode($_GET['order']));
-    $order_data = json_decode($order_json, true);
-} 
-else {
-    echo "<script>window.location='index.php';</script>";
+if (!$order) {
+    echo "<div class='container mt-5 text-center text-white'><div class='alert alert-danger'>Không tìm thấy đơn thuê hợp lệ.</div></div>";
+    include 'includes/footer.php';
     exit();
 }
 
-// Lấy thông tin game để hiển thị
-$game_id = $order_data['game_id'];
-$result = $conn->query("SELECT title FROM games WHERE game_id = $game_id");
-$game_title = ($result && $result->num_rows > 0) ? $result->fetch_assoc()['title'] : "Game";
+$game_id = $order['game_id'];
+$amount = floatval($order['rental_price']);
+$order_code = $order['order_code'] ? $order['order_code'] : ("ORD" . $order['borrow_id']);
+$is_extension = ($order['rent_type'] === 'extend');
 
-// ==========================================
-// CẤU HÌNH TÀI KHOẢN NGÂN HÀNG
-// ==========================================
-$bank_id = "MB"; // Ngân hàng (VD: MB, VCB...)
-$account_no = "123426062006"; // SỐ TÀI KHOẢN 
-$account_name = "NGUYEN TRAN THANH AN"; // TÊN CHỦ TÀI KHOẢN
-// ==========================================
+// =========================================================================
+// XỬ LÝ XÁC NHẬN THANH TOÁN (SIMULATOR / WEBHOOK XÁC THỰC SERVER-SIDE)
+// =========================================================================
+$allocation_error = null;
+if (isset($_POST['confirm_payment_webhook'])) {
+    if (!verify_csrf_token($_POST['csrf_token'] ?? '')) {
+        $allocation_error = "Yêu cầu không hợp lệ hoặc phiên bảo mật hết hạn.";
+    } else {
+        // Kiểm tra xem đơn đã được thanh toán chưa để chống thanh toán lặp
+        if ($order['payment_status'] === 'paid' && $order['status'] === 'active') {
+            echo "<script>alert('Đơn này đã được thanh toán và cấp tài khoản trước đó!'); window.location='my_library.php';</script>";
+            exit();
+        }
 
-$amount = $order_data['amount'];
-$order_code = "ANPLAY" . rand(1000, 9999); 
-$addInfo = ($is_extension ? "Gia han " : "Thue moi ") . $order_code;
+        // NẾU LÀ GIA HẠN ĐƠN HIỆN CÓ:
+        if ($is_extension) {
+            $prev_b_id = intval($order['previous_borrow_id']);
+            $prev_res = $conn->query("SELECT due_date, status, account_id FROM borrow_records WHERE borrow_id = $prev_b_id")->fetch_assoc();
+            
+            $add_hours = intval($order['duration_hours']);
+            $curr_due = strtotime($prev_res['due_date']);
+            if ($curr_due < time()) {
+                $new_due_date = date('Y-m-d H:i:s', strtotime("+$add_hours hours"));
+            } else {
+                $new_due_date = date('Y-m-d H:i:s', strtotime("+$add_hours hours", $curr_due));
+            }
 
-// Gọi API VietQR
+            $conn->begin_transaction();
+            try {
+                // Cập nhật đơn cũ
+                $upd_prev = $conn->prepare("UPDATE borrow_records SET due_date = ?, status = 'active' WHERE borrow_id = ?");
+                $upd_prev->bind_param("si", $new_due_date, $prev_b_id);
+                $upd_prev->execute();
+                $upd_prev->close();
+
+                // Cập nhật tài khoản game
+                $acc_id = intval($prev_res['account_id']);
+                $upd_acc = $conn->prepare("UPDATE game_accounts SET status = 'RENTED', rent_expires_at = ?, updated_at = NOW() WHERE account_id = ?");
+                $upd_acc->bind_param("si", $new_due_date, $acc_id);
+                $upd_acc->execute();
+                $upd_acc->close();
+
+                // Cập nhật đơn gia hạn hiện tại
+                $upd_this = $conn->prepare("UPDATE borrow_records SET payment_status = 'paid', status = 'active', due_date = ? WHERE borrow_id = ?");
+                $upd_this->bind_param("si", $new_due_date, $order_id);
+                $upd_this->execute();
+                $upd_this->close();
+
+                log_account_allocation($conn, $acc_id, $order_id, $user_id, 'EXTENDED', "Gia hạn thêm $add_hours giờ (hạn mới: $new_due_date)", 'SYSTEM');
+
+                $conn->commit();
+                echo "<script>alert('🎉 GIA HẠN THÀNH CÔNG! Thời gian sử dụng tài khoản đã được kéo dài đến: " . date('d/m/Y H:i', strtotime($new_due_date)) . "'); window.location='my_library.php';</script>";
+                exit();
+            } catch (Exception $e) {
+                $conn->rollback();
+                $allocation_error = "Lỗi khi xử lý gia hạn: " . $e->getMessage();
+            }
+        } 
+        // NẾU LÀ THUÊ MỚI HOẶC THUÊ LẠI TÀI KHOẢN CŨ:
+        else {
+            $duration_hours = intval($order['duration_hours']);
+            $pref_acc = !empty($order['account_id']) ? intval($order['account_id']) : null;
+
+            // Thực hiện cấp phát tài khoản an toàn qua Service
+            $alloc_result = allocate_game_account($conn, $game_id, $user_id, $order_id, $duration_hours, $pref_acc);
+
+            if ($alloc_result['success']) {
+                echo "<script>alert('🎉 THANH TOÁN THÀNH CÔNG! Hệ thống đã cấp thông tin tài khoản game cho bạn.'); window.location='my_library.php';</script>";
+                exit();
+            } else {
+                $allocation_error = $alloc_result['error'];
+                // Đánh dấu đơn thất bại để admin hỗ trợ
+                $conn->query("UPDATE borrow_records SET payment_status = 'paid', status = 'pending', error_message = '" . $conn->real_escape_string($allocation_error) . "' WHERE borrow_id = $order_id");
+            }
+        }
+    }
+}
+
+// Cấu hình VietQR
+$bank_id = "MB";
+$account_no = "123426062006";
+$account_name = "NGUYEN TRAN THANH AN";
+$addInfo = "ANPLAY " . $order_code;
 $qr_url = "https://img.vietqr.io/image/{$bank_id}-{$account_no}-compact2.png?amount={$amount}&addInfo=" . urlencode($addInfo) . "&accountName=" . urlencode($account_name);
-
-// Đóng gói Data lần cuối để nhét vào form tự động
-$final_order_data = urlencode(base64_encode(json_encode($order_data)));
+$csrf_token = generate_csrf_token();
 ?>
 
-<div class="container mt-5 mb-5" style="max-width: 550px;">
-    <div class="card shadow p-4 border-0" style="background-color: #202d39; border-radius: 12px;">
-        <h3 class="text-center text-white fw-bold mb-4">Quét Mã Thanh Toán</h3>
+<div class="container mt-5 mb-5" style="max-width: 600px;">
+    <div class="card shadow p-4 border-0" style="background-color: #1a222c; border-radius: 12px; border: 1px solid #2d3b4e;">
+        <h3 class="text-center text-white fw-bold mb-4">Xác Nhận & Quét Mã Thanh Toán</h3>
+
+        <?php if ($allocation_error): ?>
+            <div class="alert alert-danger shadow-sm mb-4">
+                <i class="bi bi-exclamation-triangle-fill me-2"></i><strong>Lỗi cấp phát:</strong> <?php echo htmlspecialchars($allocation_error); ?>
+                <div class="small mt-1 text-light">Đơn hàng của bạn đã được ghi nhận vào hệ thống. Vui lòng liên hệ bộ phận hỗ trợ hoặc thử lại.</div>
+            </div>
+        <?php endif; ?>
         
         <div class="alert alert-info border-info text-center shadow-sm" style="background-color: rgba(71, 191, 255, 0.1);">
-            <p class="mb-1 text-light"><?php echo $is_extension ? "Gia hạn thêm <strong>{$order_data['days']} ngày</strong> cho tựa game:" : "Đơn thuê tựa game:"; ?></p>
-            <h5 class="fw-bold text-info mb-3"><?php echo htmlspecialchars($game_title); ?></h5>
-            <h4 class="fw-bold text-warning mb-0"><?php echo number_format($amount, 0, ',', '.'); ?> VNĐ</h4>
+            <p class="mb-1 text-light">
+                <?php echo $is_extension ? "Gia hạn tài khoản tựa game:" : "Thuê tài khoản tựa game:"; ?>
+            </p>
+            <h4 class="fw-bold text-info mb-2"><?php echo htmlspecialchars($order['title']); ?></h4>
+            <p class="text-secondary small mb-2">
+                Gói: <strong class="text-light"><?php echo htmlspecialchars($order['package_name'] ?? ($order['duration_hours'] . ' Giờ')); ?></strong>
+                | Mã đơn: <strong class="text-warning">#<?php echo htmlspecialchars($order_code); ?></strong>
+            </p>
+            <h3 class="fw-bold text-warning mb-0"><?php echo number_format($amount, 0, ',', '.'); ?> VNĐ</h3>
         </div>
 
-        <div class="text-center bg-white p-3 rounded shadow-sm mb-4 mx-auto" style="width: 300px;">
-            <img src="<?php echo $qr_url; ?>" alt="QR Code Payment" class="img-fluid rounded">
+        <div class="text-center bg-white p-3 rounded shadow-sm mb-4 mx-auto" style="width: 290px;">
+            <img src="<?php echo $qr_url; ?>" alt="VietQR Payment" class="img-fluid rounded">
         </div>
 
         <div class="text-center text-light mb-4">
             <div class="spinner-border text-success spinner-border-sm mb-2" role="status"></div>
-            <h6 class="text-success fw-bold blinking-text">Hệ thống đang tự động chờ nhận tiền...</h6>
-            <p class="small text-muted mb-0">Nội dung CK: <strong class="text-white"><?php echo $addInfo; ?></strong></p>
+            <h6 class="text-success fw-bold blinking-text">Hệ thống đang sẵn sàng ghi nhận thanh toán...</h6>
+            <p class="small text-muted mb-0">Nội dung chuyển khoản: <strong class="text-white user-select-all"><?php echo $addInfo; ?></strong></p>
         </div>
 
-        <!-- FORM ẨN CHỨA DỮ LIỆU ĐỂ JS TỰ SUBMIT -->
-        <form id="autoVerifyForm" method="POST" action="">
-            <input type="hidden" name="auto_verify_payment" value="1">
-            <input type="hidden" name="final_order_data" value="<?php echo $final_order_data; ?>">
-            <a href="game_detail.php?id=<?php echo $game_id; ?>" class="btn btn-outline-secondary w-100 py-2" style="border-radius: 8px;">Hủy giao dịch</a>
+        <!-- FORM XÁC NHẬN THANH TOÁN (HỖ TRỢ WEBHOOK VÀ NÚT XÁC THỰC MÔ PHỎNG) -->
+        <form method="POST" action="">
+            <input type="hidden" name="csrf_token" value="<?php echo $csrf_token; ?>">
+            <input type="hidden" name="confirm_payment_webhook" value="1">
+            
+            <div class="d-grid gap-2">
+                <button type="submit" class="btn btn-success fw-bold py-3 fs-5 shadow" style="border-radius: 8px;">
+                    ✅ TÔI ĐÃ CHUYỂN KHOẢN THÀNH CÔNG
+                </button>
+                <a href="game_detail.php?id=<?php echo $game_id; ?>" class="btn btn-outline-secondary py-2 mt-1" style="border-radius: 8px;">Hủy giao dịch</a>
+            </div>
         </form>
     </div>
 </div>
@@ -153,12 +213,5 @@ $final_order_data = urlencode(base64_encode(json_encode($order_data)));
 @keyframes blink { 50% { opacity: 0.4; } }
 .blinking-text { animation: blink 1.5s linear infinite; }
 </style>
-
-<script>
-// Kịch bản demo: Tự động submit sau 15 giây
-setTimeout(function() {
-    document.getElementById('autoVerifyForm').submit();
-}, 15000); 
-</script>
 
 <?php include 'includes/footer.php'; ?>

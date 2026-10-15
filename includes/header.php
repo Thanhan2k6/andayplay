@@ -131,8 +131,9 @@ require_once __DIR__ . '/connect.php';
         <?php if($_SESSION['role'] == 1): ?>
             <div class="sidebar-title text-danger small fw-bold mt-4 mb-2">Quản Trị Admin</div>
             <a href="admin_dashboard.php" class="sidebar-item d-block text-light py-2 text-decoration-none hover-item"><i class="bi bi-graph-up-arrow text-danger me-2"></i> Thống kê</a>
-            <a href="admin_games.php" class="sidebar-item d-block text-light py-2 text-decoration-none hover-item"><i class="bi bi-box-seam text-danger me-2"></i> Kho Game</a>
-            <a href="admin_borrow.php" class="sidebar-item d-block text-light py-2 text-decoration-none hover-item"><i class="bi bi-card-checklist text-danger me-2"></i> Đơn mượn</a>
+            <a href="admin_games.php" class="sidebar-item d-block text-light py-2 text-decoration-none hover-item"><i class="bi bi-grid-fill text-danger me-2"></i> Cửa Hàng Game</a>
+            <a href="admin_accounts.php" class="sidebar-item d-block text-light py-2 text-decoration-none hover-item"><i class="bi bi-box-seam text-danger me-2"></i> Kho Tài Khoản Game</a>
+            <a href="admin_borrow.php" class="sidebar-item d-block text-light py-2 text-decoration-none hover-item"><i class="bi bi-card-checklist text-danger me-2"></i> Quản Lý Đơn Thuê</a>
             <a href="admin_users.php" class="sidebar-item d-block text-light py-2 text-decoration-none hover-item"><i class="bi bi-people-fill text-danger me-2"></i> Quản lý Thành viên</a>
         <?php endif; ?>
     <?php endif; ?>

@@ -2,70 +2,52 @@
 if (session_status() === PHP_SESSION_NONE) { session_start(); }
 require_once __DIR__ . '/includes/header.php';
 
-// Kiểm tra đăng nhập
+// Kiểm tra quyền
 if (!isset($_SESSION['user_id'])) {
     echo "<script>alert('Vui lòng đăng nhập!'); window.location='login.php';</script>";
     exit();
 }
 
-if (isset($_GET['id'])) {
-    $game_id = intval($_GET['id']);
-    $user_id = $_SESSION['user_id'];
-    
-    // Tự động cộng 1 lượt tải
-    $conn->query("UPDATE games SET download_count = download_count + 1 WHERE game_id = $game_id");
-    
-    // Lấy thông tin game và thông tin đơn thuê kết hợp Key
-    $sql = "SELECT g.title, g.image_url, g.price_type, g.download_link, b.game_key, b.due_date, b.status, b.borrow_id 
-            FROM games g 
-            LEFT JOIN borrow_records b ON g.game_id = b.game_id AND b.user_id = $user_id AND b.status = 'active'
-            WHERE g.game_id = $game_id";
-    $result = $conn->query($sql);
-    
-    if ($result && $result->num_rows > 0) {
-        $game = $result->fetch_assoc();
-        
-        $is_allowed = false;
-        $key_display = "GAME MIỄN PHÍ - KHÔNG CẦN KEY";
-        $expiry_display = "Vĩnh viễn";
-        
-        // KIỂM TRA ĐIỀU KIỆN VÀ CẤP PHÁT KEY BÙ
-        if ($game['price_type'] == 'free') {
-            $is_allowed = true; // Game Free luôn qua cửa
-        } else {
-            // Nếu có đơn active và thời gian hết hạn lớn hơn thời gian hiện tại
-            if (!empty($game['status']) && $game['status'] == 'active' && strtotime($game['due_date']) > time()) {
-                $is_allowed = true;
-                $expiry_display = date('d/m/Y H:i', strtotime($game['due_date']));
-                
-                // TỰ ĐỘNG CẤP BÙ KEY (Nếu đơn hàng bị thiếu Key)
-                if (empty($game['game_key'])) {
-                    // Sinh Key mới
-                    $new_key = 'ANPLAY-' . strtoupper(substr(md5(uniqid()), 0, 4)) . '-' . strtoupper(substr(md5(rand()), 0, 4)) . '-' . strtoupper(substr(md5(rand()), 0, 4));
-                    
-                    // Lưu ngay vào Database để đưa vào Thư viện của khách
-                    $b_id = intval($game['borrow_id']);
-                    $conn->query("UPDATE borrow_records SET game_key = '$new_key' WHERE borrow_id = $b_id");
-                    
-                    $key_display = $new_key; // Hiển thị Key mới sinh
-                } else {
-                    // Nếu đã có sẵn Key thì lôi ra hiển thị
-                    $key_display = $game['game_key'];
-                }
-            }
-        }
-        
-        // Nếu không đủ điều kiện (Chưa mua hoặc đã hết hạn) -> Đá về trang chi tiết
-        if (!$is_allowed) {
-            echo "<script>alert('Truy cập từ chối: Gói thuê đã hết hạn hoặc bạn chưa thanh toán!'); window.location='game_detail.php?id=$game_id';</script>";
-            exit();
-        }
-    } else {
-        echo "<script>window.location='index.php';</script>";
-        exit();
-    }
-} else {
+if (!isset($_GET['id'])) {
     echo "<script>window.location='index.php';</script>";
+    exit();
+}
+
+$game_id = intval($_GET['id']);
+$user_id = $_SESSION['user_id'];
+
+// Lấy thông tin game và kiểm tra đơn thuê
+$sql = "SELECT g.title, g.image_url, g.price_type, g.download_link, 
+               br.borrow_id, br.due_date, br.status, br.account_id,
+               ga.account_username, ga.account_password_encrypted, ga.server_region
+        FROM games g 
+        LEFT JOIN borrow_records br ON g.game_id = br.game_id AND br.user_id = $user_id AND br.status = 'active'
+        LEFT JOIN game_accounts ga ON br.account_id = ga.account_id
+        WHERE g.game_id = $game_id";
+$result = $conn->query($sql);
+
+if (!$result || $result->num_rows == 0) {
+    echo "<script>window.location='index.php';</script>";
+    exit();
+}
+$game = $result->fetch_assoc();
+
+$is_allowed = false;
+$plain_password = "";
+
+if ($game['price_type'] == 'free') {
+    $is_allowed = true;
+} else {
+    if (!empty($game['status']) && $game['status'] == 'active' && strtotime($game['due_date']) > time()) {
+        $is_allowed = true;
+        if (!empty($game['account_password_encrypted'])) {
+            $plain_password = decrypt_game_password($game['account_password_encrypted']);
+        }
+    }
+}
+
+if (!$is_allowed) {
+    echo "<script>alert('Gói thuê tài khoản của bạn đã hết hạn hoặc chưa được kích hoạt!'); window.location='game_detail.php?id=$game_id';</script>";
     exit();
 }
 ?>
@@ -74,64 +56,49 @@ if (isset($_GET['id'])) {
     <div class="card bg-dark text-white border-secondary shadow-lg rounded-4 w-100" style="max-width: 650px;">
         <div class="card-body p-5 text-center">
             
-            <h3 class="fw-bold mb-4 text-info"><i class="bi bi-shield-check"></i> TRUNG TÂM BẢN QUYỀN</h3>
-            
+            <h3 class="fw-bold mb-3 text-info"><i class="bi bi-shield-check"></i> TRUNG TÂM TÀI KHOẢN & BỘ CÀI</h3>
             <h4 class="text-warning fw-bold mb-4 text-uppercase"><?php echo htmlspecialchars($game['title']); ?></h4>
             
-            <!-- KHU VỰC HIỂN THỊ KEY -->
-            <div class="bg-black p-4 rounded-3 border border-secondary mb-4 position-relative shadow-sm">
-                <small class="text-secondary d-block mb-2 fw-bold">LICENSE KEY CỦA BẠN</small>
-                <h2 class="text-success fw-bold m-0 user-select-all" id="gameKey" style="letter-spacing: 2px;">
-                    <?php echo $key_display; ?>
-                </h2>
-                
-                <?php if($game['price_type'] != 'free'): ?>
-                    <button onclick="copyKey()" class="btn btn-outline-light btn-sm mt-3 rounded-pill px-4 shadow">
-                        <i class="bi bi-clipboard"></i> Sao chép Key
-                    </button>
-                <?php endif; ?>
-            </div>
+            <?php if ($game['price_type'] != 'free'): ?>
+                <!-- THÔNG TIN TÀI KHOẢN CHO THUÊ -->
+                <div class="bg-black p-4 rounded-3 border border-secondary mb-4 text-start shadow-sm">
+                    <small class="text-info d-block mb-3 fw-bold"><i class="bi bi-person-fill-lock me-1"></i> THÔNG TIN TÀI KHOẢN GAME ĐÃ CẤP CHO BẠN:</small>
+                    
+                    <div class="mb-3">
+                        <small class="text-secondary">Tên đăng nhập / Email:</small>
+                        <div class="d-flex justify-content-between align-items-center bg-dark p-2 rounded border border-secondary mt-1">
+                            <strong class="text-white user-select-all"><?php echo htmlspecialchars($game['account_username']); ?></strong>
+                            <button class="btn btn-sm btn-outline-info py-0 px-2" onclick="navigator.clipboard.writeText('<?php echo htmlspecialchars($game['account_username']); ?>')">Sao chép</button>
+                        </div>
+                    </div>
 
-            <!-- THỜI GIAN HẾT HẠN -->
-            <div class="mb-5 text-light bg-secondary bg-opacity-25 p-3 rounded-3 border border-secondary border-opacity-50">
-                <p class="mb-1"><i class="bi bi-clock-history text-warning me-1"></i> Thời hạn kích hoạt đến:</p>
-                <h5 class="fw-bold text-danger m-0"><?php echo $expiry_display; ?></h5>
-                <?php if($game['price_type'] != 'free'): ?>
-                    <small class="text-secondary fst-italic d-block mt-2" style="font-size: 0.85rem;">*Hệ thống sẽ tự động thu hồi Key và khóa quyền truy cập sau thời điểm này.</small>
-                <?php endif; ?>
-            </div>
+                    <div class="mb-3">
+                        <small class="text-secondary">Mật khẩu:</small>
+                        <div class="d-flex justify-content-between align-items-center bg-dark p-2 rounded border border-secondary mt-1">
+                            <strong class="text-warning user-select-all"><?php echo htmlspecialchars($plain_password); ?></strong>
+                            <button class="btn btn-sm btn-outline-warning py-0 px-2" onclick="navigator.clipboard.writeText('<?php echo htmlspecialchars($plain_password); ?>')">Sao chép</button>
+                        </div>
+                    </div>
 
-            <!-- NÚT TẢI FILE CHÍNH THỨC -->
-            <?php 
-                $link = !empty($game['download_link']) ? $game['download_link'] : '#'; 
-            ?>
-            <a href="<?php echo $link; ?>" target="_blank" class="btn btn-primary btn-lg rounded-pill px-5 shadow fw-bold w-100 py-3 d-flex align-items-center justify-content-center">
-                <i class="bi bi-cloud-arrow-down-fill me-2 fs-4"></i> TẢI XUỐNG BỘ CÀI ĐẶT
-            </a>
+                    <div class="d-flex justify-content-between align-items-center text-muted small">
+                        <span>Máy chủ: <strong class="text-light"><?php echo htmlspecialchars($game['server_region'] ?? 'Global'); ?></strong></span>
+                        <span>Thời hạn đến: <strong class="text-danger"><?php echo date('d/m/Y H:i', strtotime($game['due_date'])); ?></strong></span>
+                    </div>
+                </div>
+            <?php endif; ?>
+
+            <!-- NÚT TẢI BỘ CÀI (NẾU CÓ PHÂN PHỐI HỢP PHÁP) -->
+            <?php if (!empty($game['download_link'])): ?>
+                <a href="<?php echo htmlspecialchars($game['download_link']); ?>" target="_blank" class="btn btn-primary btn-lg rounded-pill px-5 shadow fw-bold w-100 py-3 mb-3 d-flex align-items-center justify-content-center">
+                    <i class="bi bi-cloud-arrow-down-fill me-2 fs-4"></i> TẢI XUỐNG BỘ CÀI ĐẶT CHÍNH THỨC
+                </a>
+            <?php endif; ?>
             
-            <div class="mt-4">
-                <a href="game_detail.php?id=<?php echo $game_id; ?>" class="text-secondary text-decoration-none hover-text-white transition"><i class="bi bi-arrow-left"></i> Trở lại trang chi tiết</a>
+            <div>
+                <a href="my_library.php" class="btn btn-outline-secondary px-4 py-2"><i class="bi bi-arrow-left"></i> Về Thư Viện Của Tôi</a>
             </div>
         </div>
     </div>
 </div>
-
-<script>
-// Chức năng copy Key bằng Javascript
-function copyKey() {
-    var copyText = document.getElementById("gameKey").innerText;
-    navigator.clipboard.writeText(copyText).then(function() {
-        alert("Thành công! Đã sao chép Key: " + copyText);
-    }, function(err) {
-        console.error('Không thể sao chép', err);
-        alert('Lỗi sao chép, vui lòng bôi đen mã thủ công.');
-    });
-}
-</script>
-
-<style>
-.hover-text-white:hover { color: #fff !important; }
-.transition { transition: all 0.3s ease; }
-</style>
 
 <?php include 'includes/footer.php'; ?>

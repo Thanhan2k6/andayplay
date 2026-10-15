@@ -16,6 +16,7 @@ $user_id = isset($_SESSION['user_id']) ? $_SESSION['user_id'] : null;
 if (isset($_POST['btn_comment'])) {
     if (!$user_id) {
         echo "<script>alert('Vui lòng đăng nhập để bình luận!'); window.location='login.php';</script>";
+        exit();
     } else {
         $content = $conn->real_escape_string($_POST['comment_content']);
         if (!empty($content)) {
@@ -30,26 +31,44 @@ if (isset($_POST['btn_comment'])) {
 $sql_game = "SELECT g.*, c.cate_name FROM games g LEFT JOIN categories c ON g.category_id = c.category_id WHERE g.game_id = $game_id";
 $result_game = $conn->query($sql_game);
 
-if ($result_game->num_rows == 0) {
+if (!$result_game || $result_game->num_rows == 0) {
     echo "<div class='container mt-5 text-center text-white'><h3>Trò chơi không tồn tại.</h3></div>";
     include 'includes/footer.php';
     exit();
 }
 $game = $result_game->fetch_assoc();
 
-// Tăng lượt xem (Views) khi có người click vào xem chi tiết
+// Tăng lượt xem (Views)
 $conn->query("UPDATE games SET views = COALESCE(views, 0) + 1 WHERE game_id = $game_id");
 
-// --- BỘ NÃO KIỂM TRA QUYỀN TRUY CẬP (BẺ GÃY VÒNG LẶP THANH TOÁN) ---
+// Đồng bộ số lượng tài khoản khả dụng thực tế
+sync_game_inventory($conn, $game_id);
+
+$acc_stat = $conn->query("SELECT 
+    COUNT(*) as total_acc,
+    SUM(CASE WHEN status = 'AVAILABLE' THEN 1 ELSE 0 END) as avail_acc 
+    FROM game_accounts WHERE game_id = $game_id")->fetch_assoc();
+$available_accounts = intval($acc_stat['avail_acc'] ?? 0);
+
+// KIỂM TRA ĐƠN THUÊ ĐANG HIỆU LỰC CỦA NGƯỜI DÙNG HIỆN TẠI
 $is_rented = false;
+$active_order = null;
 if ($user_id) {
-    // Kiểm tra xem có đơn thuê nào đang active và chưa hết hạn cho game này không
-    $check_rent = $conn->query("SELECT status FROM borrow_records WHERE user_id = $user_id AND game_id = $game_id AND status = 'active' AND due_date > NOW()");
+    $check_rent = $conn->query("SELECT * FROM borrow_records WHERE user_id = $user_id AND game_id = $game_id AND status = 'active' AND due_date > NOW() LIMIT 1");
     if ($check_rent && $check_rent->num_rows > 0) {
         $is_rented = true;
+        $active_order = $check_rent->fetch_assoc();
     }
 }
-// -------------------------------------------------------------------
+
+// Lấy danh sách gói thuê cấu hình cho game này
+$packages_res = $conn->query("SELECT * FROM rental_packages WHERE game_id = $game_id AND is_active = 1 ORDER BY price ASC");
+$packages = [];
+if ($packages_res && $packages_res->num_rows > 0) {
+    while ($p = $packages_res->fetch_assoc()) {
+        $packages[] = $p;
+    }
+}
 ?>
 
 <div class="container mt-4 mb-5">
@@ -66,7 +85,7 @@ if ($user_id) {
         
         <!-- Thông số & Nút Action -->
         <div class="col-md-8 text-white ps-md-4 d-flex flex-column">
-            <h1 class="fw-bold text-info mb-3" style="font-size: 2.5rem; text-shadow: 1px 1px 2px rgba(0,0,0,0.5);"><?php echo htmlspecialchars($game['title']); ?></h1>
+            <h1 class="fw-bold text-info mb-2" style="font-size: 2.3rem;"><?php echo htmlspecialchars($game['title']); ?></h1>
             <p class="mb-3">
                 <span class="badge bg-secondary px-3 py-2 fs-6"><i class="bi bi-tag-fill"></i> <?php echo !empty($game['cate_name']) ? $game['cate_name'] : 'Khác'; ?></span>
                 <?php if($game['platform'] == 'Mobile'): ?>
@@ -76,69 +95,99 @@ if ($user_id) {
                 <?php endif; ?>
             </p>
             
-            <div class="d-flex flex-wrap text-light mb-4 mt-3 fs-5 fw-bold" style="background-color: #202d39; padding: 15px; border-radius: 8px;">
-                <span class="me-4 mb-2">⭐ Đánh giá: <span class="text-warning">4.8/5</span></span>
-                <span class="me-4 mb-2">⬇️ Lượt tải: <span class="text-white"><?php echo number_format($game['download_count'] ?? 0); ?></span></span>
-                <span class="mb-2">👁️ Lượt xem: <span class="text-white"><?php echo number_format($game['views'] ?? 0); ?></span></span>
+            <div class="d-flex flex-wrap text-light mb-4 mt-2 fs-6 fw-bold" style="background-color: #202d39; padding: 12px; border-radius: 8px;">
+                <span class="me-4 mb-1">⭐ Đánh giá: <span class="text-warning">4.9/5</span></span>
+                <span class="me-4 mb-1">👁️ Lượt xem: <span class="text-white"><?php echo number_format($game['views'] ?? 0); ?></span></span>
+                <span class="mb-1">⚡ Hình thức: <span class="text-info"><?php echo ($game['price_type'] == 'free') ? 'Game Miễn Phí' : 'Cho thuê tài khoản trả phí'; ?></span></span>
             </div>
 
-            <!-- XỬ LÝ NÚT BẤM (ĐÃ ĐƯỢC FIX LỖI VÒNG LẶP) -->
-            <div class="mt-auto pt-3 border-top border-secondary">
-                <?php if ($game['price_type'] == 'free' || $is_rented == true): ?>
-                    
-                    <!-- NẾU MIỄN PHÍ HOẶC ĐÃ THANH TOÁN -> HIỆN NÚT TẢI -->
-                    <?php if ($is_rented): ?>
-                        <h4 class="text-success fw-bold mb-3"><i class="bi bi-check-circle-fill"></i> Trạng thái: Đã Mở Khóa</h4>
-                    <?php else: ?>
-                        <h4 class="text-success fw-bold mb-3"><i class="bi bi-gift-fill"></i> Game Miễn Phí</h4>
-                    <?php endif; ?>
-                    
-                    <a href="download_game.php?id=<?php echo $game_id; ?>" class="btn btn-success btn-lg fw-bold px-5 py-3 shadow w-100 d-flex justify-content-center align-items-center">
-                        <i class="bi bi-cloud-arrow-down-fill me-2 fs-4"></i> TẢI XUỐNG & CHƠI NGAY
-                    </a>
+            <!-- BẢNG BÁO GIÁ CÁC GÓI THUÊ -->
+            <?php if ($game['price_type'] != 'free'): ?>
+                <div class="mb-4">
+                    <h5 class="fw-bold text-warning mb-2"><i class="bi bi-tags-fill me-1"></i> Bảng giá các gói thời hạn thuê:</h5>
+                    <div class="row g-2">
+                        <?php if (count($packages) > 0): ?>
+                            <?php foreach ($packages as $pkg): ?>
+                                <div class="col-6 col-md-3">
+                                    <div class="p-2 rounded text-center border border-secondary" style="background: rgba(255, 255, 255, 0.05);">
+                                        <small class="text-secondary d-block"><?php echo htmlspecialchars($pkg['package_name']); ?></small>
+                                        <strong class="text-info fs-6"><?php echo number_format($pkg['price'], 0, ',', '.'); ?>đ</strong>
+                                    </div>
+                                </div>
+                            <?php endforeach; ?>
+                        <?php else: ?>
+                            <div class="col-12"><small class="text-secondary">Chưa cấu hình gói giá cụ thể, áp dụng mức giá cơ bản từ 5.000đ.</small></div>
+                        <?php endif; ?>
+                    </div>
+                </div>
+            <?php endif; ?>
 
+            <!-- KHU VỰC NÚT THAO TÁC -->
+            <div class="mt-auto pt-3 border-top border-secondary">
+                <?php if ($game['price_type'] == 'free'): ?>
+                    <h4 class="text-success fw-bold mb-3"><i class="bi bi-gift-fill me-1"></i> Trò Chơi Miễn Phí</h4>
+                    <?php $dlink = !empty($game['download_link']) ? $game['download_link'] : '#'; ?>
+                    <a href="<?php echo $dlink; ?>" target="_blank" class="btn btn-success btn-lg fw-bold px-5 py-3 shadow w-100 d-flex justify-content-center align-items-center">
+                        <i class="bi bi-cloud-arrow-down-fill me-2 fs-4"></i> TẢI XUỐNG BỘ CÀI CHÍNH THỨC
+                    </a>
+                <?php elseif ($is_rented): ?>
+                    <div class="alert alert-success d-flex justify-content-between align-items-center mb-3">
+                        <div>
+                            <strong class="fs-6"><i class="bi bi-check-circle-fill me-1"></i> Bạn đang thuê tài khoản game này!</strong>
+                            <div class="small">Hết hạn vào: <?php echo date('d/m/Y H:i', strtotime($active_order['due_date'])); ?></div>
+                        </div>
+                        <a href="my_library.php" class="btn btn-success fw-bold px-3">Xem Tài Khoản Ngay</a>
+                    </div>
                 <?php else: ?>
-                    
-                    <!-- NẾU TRẢ PHÍ VÀ CHƯA THANH TOÁN -> HIỆN NÚT ĐI THUÊ -->
-                    <h4 class="text-warning fw-bold mb-3">Game Trả Phí</h4>
-                    <p class="text-light fs-5 mb-3">Kho còn: <span class="badge <?php echo ($game['available_quantity'] > 0) ? 'bg-success' : 'bg-danger'; ?>"><?php echo $game['available_quantity']; ?> bản</span></p>
-                    
-                    <?php if ($game['available_quantity'] > 0): ?>
-                        <a href="checkout_qr.php?id=<?php echo $game_id; ?>" class="btn btn-warning fw-bold btn-lg px-5 py-3 text-dark shadow w-100 d-flex justify-content-center align-items-center">
-                            <i class="bi bi-cart-check-fill me-2 fs-4"></i> ĐĂNG KÝ THUÊ
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div>
+                            <span class="text-secondary">Trạng thái kho tài khoản:</span>
+                            <?php if ($available_accounts > 0): ?>
+                                <span class="badge bg-success ms-2 fs-6">Sẵn sàng (Còn <?php echo $available_accounts; ?> tài khoản)</span>
+                            <?php else: ?>
+                                <span class="badge bg-danger ms-2 fs-6">Tạm hết tài khoản</span>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+
+                    <?php if ($available_accounts > 0): ?>
+                        <a href="borrow_process.php?game_id=<?php echo $game_id; ?>" class="btn btn-warning fw-bold btn-lg px-5 py-3 text-dark shadow w-100 d-flex justify-content-center align-items-center" style="border-radius: 8px;">
+                            <i class="bi bi-cart-check-fill me-2 fs-4"></i> THUÊ TÀI KHOẢN NGAY
                         </a>
                     <?php else: ?>
                         <button class="btn btn-secondary btn-lg px-5 py-3 fw-bold w-100 d-flex justify-content-center align-items-center" disabled>
-                            <i class="bi bi-x-circle-fill me-2 fs-4"></i> Đã hết bản quyền
+                            <i class="bi bi-x-circle-fill me-2 fs-4"></i> Hiện Đã Hết Tài Khoản Khả Dụng
                         </button>
                     <?php endif; ?>
-
                 <?php endif; ?>
             </div>
         </div>
     </div>
 
-    <!-- KHU VỰC MÔ TẢ VÀ BÌNH LUẬN (GIỮ NGUYÊN) -->
+    <!-- KHU VỰC MÔ TẢ VÀ BÌNH LUẬN -->
     <div class="row mt-5">
-        <!-- Cột Mô Tả -->
         <div class="col-lg-7 mb-4">
             <div class="card bg-transparent border-0 text-white">
-                <h3 class="fw-bold mb-3 border-bottom border-info pb-2">📝 Mô Tả Trò Chơi</h3>
-                <div class="text-white fs-6" style="line-height: 1.8; text-align: justify;">
+                <h3 class="fw-bold mb-3 border-bottom border-info pb-2">📝 Giới Thiệu & Điều Kiện Sử Dụng</h3>
+                <div class="text-white fs-6 mb-4" style="line-height: 1.8; text-align: justify;">
                     <?php 
-                    // ƯU TIÊN HIỂN THỊ BÀI VIẾT CHI TIẾT
                     if (!empty($game['long_description'])) {
                         echo nl2br(htmlspecialchars($game['long_description'])); 
-                    } 
-                    // NẾU CHƯA CÓ BÀI CHI TIẾT THÌ HIỂN THỊ TẠM MÔ TẢ NGẮN
-                    elseif (!empty($game['description'])) {
+                    } elseif (!empty($game['description'])) {
                         echo nl2br(htmlspecialchars($game['description']));
-                    } 
-                    // NẾU KHÔNG CÓ CẢ HAI
-                    else {
+                    } else {
                         echo "<p class='text-secondary fst-italic'>Chưa có thông tin mô tả chi tiết cho tựa game này.</p>";
                     }
                     ?>
+                </div>
+
+                <div class="p-3 rounded border border-secondary" style="background: rgba(0, 243, 255, 0.05);">
+                    <h6 class="text-info fw-bold"><i class="bi bi-shield-exclamation me-1"></i> Chính sách sử dụng tài khoản:</h6>
+                    <ul class="text-secondary small mb-0 ps-3">
+                        <li>Không tự ý đổi mật khẩu, email hoặc cài đặt bảo mật của tài khoản được cấp.</li>
+                        <li>Sau khi hết hạn thuê, thông tin tài khoản sẽ tự động khóa và thu hồi quyền xem trên website.</li>
+                        <li>Khách hàng có thể chọn <strong>Gia hạn</strong> hoặc <strong>Thuê lại tài khoản cũ</strong> để tiếp tục sử dụng.</li>
+                    </ul>
                 </div>
             </div>
         </div>
@@ -146,17 +195,15 @@ if ($user_id) {
         <!-- Cột Bình Luận -->
         <div class="col-lg-5">
             <div class="card shadow-sm border-0 p-4" style="background-color: #202d39; border-radius: 12px;">
-                <h4 class="text-white fw-bold mb-4">💬 Đánh giá & Bình luận</h4>
+                <h4 class="text-white fw-bold mb-4">💬 Đánh Giá Trải Nghiệm</h4>
                 
-                <!-- Form viết bình luận -->
                 <form method="POST" action="" class="mb-4">
                     <div class="form-group mb-3">
-                        <textarea name="comment_content" class="form-control bg-dark text-white border-secondary" rows="3" placeholder="Chia sẻ cảm nghĩ của bạn về tựa game này..." required style="resize: none;"></textarea>
+                        <textarea name="comment_content" class="form-control bg-dark text-white border-secondary" rows="3" placeholder="Chia sẻ đánh giá hoặc trải nghiệm thuê game của bạn..." required style="resize: none;"></textarea>
                     </div>
                     <button type="submit" name="btn_comment" class="btn btn-info fw-bold w-100 py-2">Gửi Bình Luận</button>
                 </form>
 
-                <!-- Danh sách bình luận -->
                 <div class="comments-list pe-2" style="max-height: 500px; overflow-y: auto;">
                     <?php
                     $sql_comments = "SELECT c.*, u.username FROM comments c JOIN users u ON c.user_id = u.user_id WHERE c.game_id = $game_id ORDER BY c.created_at DESC";
@@ -184,7 +231,7 @@ if ($user_id) {
                     else:
                     ?>
                         <div class="text-center py-4">
-                            <p class="text-secondary mb-0">Chưa có bình luận nào. Hãy là người đầu tiên đánh giá siêu phẩm này!</p>
+                            <p class="text-secondary mb-0">Chưa có bình luận nào. Hãy là người đầu tiên trải nghiệm tựa game này!</p>
                         </div>
                     <?php endif; ?>
                 </div>

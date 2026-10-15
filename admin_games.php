@@ -13,15 +13,29 @@ if(!isset($_SESSION['user_id']) || $_SESSION['role'] != 1) {
 // XỬ LÝ: Xóa game
 if(isset($_GET['delete_id'])) {
     $del_id = intval($_GET['delete_id']);
-    $conn->query("DELETE FROM games WHERE game_id = $del_id");
-    echo "<script>alert('Đã xóa game thành công!'); window.location='admin_games.php';</script>";
+    // Kiểm tra xem game có tài khoản đang được thuê không
+    $chk_rent = $conn->query("SELECT COUNT(*) as c FROM game_accounts WHERE game_id = $del_id AND status = 'RENTED'")->fetch_assoc();
+    if ($chk_rent['c'] > 0) {
+        echo "<script>alert('Không thể xóa tựa game đang có tài khoản được khách hàng thuê!'); window.location='admin_games.php';</script>";
+    } else {
+        $conn->query("DELETE FROM games WHERE game_id = $del_id");
+        $conn->query("DELETE FROM game_accounts WHERE game_id = $del_id");
+        $conn->query("DELETE FROM rental_packages WHERE game_id = $del_id");
+        echo "<script>alert('Đã xóa game và dữ liệu liên quan thành công!'); window.location='admin_games.php';</script>";
+    }
 }
 ?>
 
-<div class="container mt-4 text-white">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2>📦 Quản Lý Kho Game</h2>
-        <a href="admin_add_game.php" class="btn btn-success fw-bold">+ Thêm Game Mới</a>
+<div class="container-fluid mt-4 text-white">
+    <div class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom border-secondary">
+        <div>
+            <h2 class="fw-bold m-0 text-info">📦 Quản Lý Cửa Hàng & Kho Game</h2>
+            <p class="text-secondary small mb-0">Quản lý danh sách tựa game, nền tảng, thiết lập giá thuê và theo dõi số lượng tài khoản</p>
+        </div>
+        <div>
+            <a href="admin_accounts.php" class="btn btn-primary fw-bold me-2"><i class="bi bi-box-seam me-1"></i> Quản Lý Kho Tài Khoản</a>
+            <a href="admin_add_game.php" class="btn btn-success fw-bold"><i class="bi bi-plus-circle me-1"></i> + Thêm Game Mới</a>
+        </div>
     </div>
     
     <div class="table-responsive shadow">
@@ -30,55 +44,60 @@ if(isset($_GET['delete_id'])) {
                 <tr>
                     <th style="width: 5%;">ID</th>
                     <th class="text-start" style="width: 25%;">Tên Game</th>
-                    <th style="width: 15%;">Thể Loại</th>
-                    <th style="width: 15%;">Hình Thức</th>
-                    <th style="width: 20%;">Kho (Sẵn sàng/Tổng)</th>
-                    <th style="width: 20%;">Hành động</th>
+                    <th style="width: 12%;">Thể Loại</th>
+                    <th style="width: 10%;">Nền Tảng</th>
+                    <th style="width: 12%;">Mô Hình</th>
+                    <th style="width: 18%;">Kho Tài Khoản (Sẵn / Tổng)</th>
+                    <th style="width: 18%;">Hành Động</th>
                 </tr>
             </thead>
             <tbody>
                 <?php
-                // Lấy danh sách game và tên thể loại
-                $sql = "SELECT games.*, categories.cate_name 
-                        FROM games 
-                        LEFT JOIN categories ON games.category_id = categories.category_id 
-                        ORDER BY game_id DESC";
+                $sql = "SELECT g.*, c.cate_name,
+                        (SELECT COUNT(*) FROM game_accounts ga WHERE ga.game_id = g.game_id) as total_acc,
+                        (SELECT COUNT(*) FROM game_accounts ga WHERE ga.game_id = g.game_id AND ga.status = 'AVAILABLE') as avail_acc
+                        FROM games g 
+                        LEFT JOIN categories c ON g.category_id = c.category_id 
+                        ORDER BY g.game_id DESC";
                 $result = $conn->query($sql);
                 
                 if($result && $result->num_rows > 0) {
                     while($row = $result->fetch_assoc()) {
+                        $total_acc = intval($row['total_acc']);
+                        $avail_acc = intval($row['avail_acc']);
+
                         echo "<tr>";
-                        echo "<td>" . $row['game_id'] . "</td>";
-                        echo "<td class='fw-bold text-info text-start'>" . $row['title'] . "</td>";
-                        echo "<td>" . ($row['cate_name'] ? $row['cate_name'] : '<span class="text-muted">Chưa phân loại</span>') . "</td>";
+                        echo "<td>#" . $row['game_id'] . "</td>";
+                        echo "<td class='fw-bold text-info text-start'>" . htmlspecialchars($row['title']) . "</td>";
+                        echo "<td>" . ($row['cate_name'] ? htmlspecialchars($row['cate_name']) : '<span class="text-muted">Chưa phân loại</span>') . "</td>";
+                        echo "<td><span class='badge bg-secondary'>" . htmlspecialchars($row['platform']) . "</span></td>";
                         
-                        // Phân loại hình thức thu phí
                         echo "<td>";
                         if(isset($row['price_type']) && $row['price_type'] == 'free') {
                             echo "<span class='badge bg-primary'>Miễn phí</span>";
                         } else {
-                            echo "<span class='badge bg-warning text-dark'>Trả phí (Thuê)</span>";
+                            echo "<span class='badge bg-warning text-dark'>Cho thuê tài khoản</span>";
                         }
                         echo "</td>";
 
-                        // Cột Kho dữ liệu
                         echo "<td>";
                         if(isset($row['price_type']) && $row['price_type'] == 'free') {
                             echo "<span class='text-muted small'>Link tải chính thức</span>";
                         } else {
-                            echo "<span class='fw-bold'>" . $row['available_quantity'] . "</span> / " . $row['total_quantity'];
+                            $badge_avail = ($avail_acc > 0) ? 'text-success' : 'text-danger';
+                            echo "<span class='fw-bold fs-6 $badge_avail'>" . $avail_acc . "</span> / " . $total_acc . " tài khoản";
+                            echo "<br><a href='admin_accounts.php?filter_game=" . $row['game_id'] . "' class='small text-info text-decoration-none'>[Quản lý kho TK]</a>";
                         }
                         echo "</td>";
 
-                        // Nút hành động
                         echo "<td>
-                                <a href='admin_edit_game.php?id=" . $row['game_id'] . "' class='btn btn-sm btn-warning me-1 px-3'>Sửa</a>
+                                <a href='admin_edit_game.php?id=" . $row['game_id'] . "' class='btn btn-sm btn-warning me-1 px-3 fw-bold'>Sửa & Giá</a>
                                 <a href='admin_games.php?delete_id=" . $row['game_id'] . "' class='btn btn-sm btn-danger px-3' onclick='return confirm(\"Bạn có chắc chắn muốn xóa tựa game này khỏi hệ thống?\")'>Xóa</a>
                               </td>";
                         echo "</tr>";
                     }
                 } else {
-                    echo "<tr><td colspan='6' class='text-center py-4'>Chưa có tựa game nào trong hệ thống. Hãy thêm game mới!</td></tr>";
+                    echo "<tr><td colspan='7' class='text-center py-4'>Chưa có tựa game nào trong hệ thống. Hãy thêm game mới!</td></tr>";
                 }
                 ?>
             </tbody>
