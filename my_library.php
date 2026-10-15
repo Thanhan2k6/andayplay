@@ -30,15 +30,35 @@ if (isset($_POST['btn_report_error'])) {
 }
 
 // LẤY DANH SÁCH CÁC ĐƠN THUÊ CỦA USER KÈM THÔNG TIN TÀI KHOẢN GAME
-$sql = "SELECT br.borrow_id, br.borrow_date, br.due_date, br.status, br.rent_type, br.duration_hours,
-               g.game_id, g.title, g.image_url, g.platform,
-               ga.account_id, ga.account_username, ga.account_password_encrypted, ga.status as account_status, ga.server_region
-        FROM borrow_records br 
-        JOIN games g ON br.game_id = g.game_id 
-        LEFT JOIN game_accounts ga ON br.account_id = ga.account_id
-        WHERE br.user_id = $user_id
-        ORDER BY br.borrow_id DESC";
-$result = $conn->query($sql);
+$result = false;
+try {
+    $sql = "SELECT br.borrow_id, br.borrow_date, br.due_date, br.status, br.rent_type, br.duration_hours,
+                   g.game_id, g.title, g.image_url, g.platform,
+                   ga.account_id, ga.account_username, ga.account_password_encrypted, ga.status as account_status, ga.server_region
+            FROM borrow_records br 
+            JOIN games g ON br.game_id = g.game_id 
+            LEFT JOIN game_accounts ga ON br.account_id = ga.account_id
+            WHERE br.user_id = $user_id
+            ORDER BY br.borrow_id DESC";
+    $result = $conn->query($sql);
+} catch (Throwable $e) {
+    $result = false;
+}
+
+if (!$result) {
+    try {
+        $sql_fallback = "SELECT br.borrow_id, br.borrow_date, br.due_date, br.status, 'new' as rent_type, 168 as duration_hours,
+                               g.game_id, g.title, g.image_url, g.platform,
+                               NULL as account_id, '' as account_username, '' as account_password_encrypted, 'AVAILABLE' as account_status, 'Global' as server_region
+                        FROM borrow_records br 
+                        JOIN games g ON br.game_id = g.game_id 
+                        WHERE br.user_id = $user_id
+                        ORDER BY br.borrow_id DESC";
+        $result = $conn->query($sql_fallback);
+    } catch (Throwable $e) {
+        $result = false;
+    }
+}
 $csrf_token = generate_csrf_token();
 ?>
 
@@ -189,13 +209,24 @@ $csrf_token = generate_csrf_token();
                                 <div class="input-group input-group-sm">
                                     <select name="extend_pkg_id" class="form-select bg-dark text-white border-secondary">
                                         <?php
-                                        $pkgs_cur = $conn->query("SELECT * FROM rental_packages WHERE game_id = {$row['game_id']} AND is_active = 1 ORDER BY price ASC");
-                                        while ($pkg_item = $pkgs_cur->fetch_assoc()):
+                                        $pkgs_cur = false;
+                                        try {
+                                            $pkgs_cur = $conn->query("SELECT * FROM rental_packages WHERE game_id = {$row['game_id']} AND is_active = 1 ORDER BY price ASC");
+                                        } catch (Throwable $e) {
+                                            $pkgs_cur = false;
+                                        }
+                                        if ($pkgs_cur && $pkgs_cur->num_rows > 0):
+                                            while ($pkg_item = $pkgs_cur->fetch_assoc()):
                                         ?>
                                             <option value="<?php echo $pkg_item['package_id']; ?>">
                                                 +<?php echo htmlspecialchars($pkg_item['package_name']); ?> (<?php echo number_format($pkg_item['price'], 0, ',', '.'); ?>đ)
                                             </option>
-                                        <?php endwhile; ?>
+                                        <?php 
+                                            endwhile; 
+                                        else:
+                                        ?>
+                                            <option value="0">+Gia hạn tiêu chuẩn</option>
+                                        <?php endif; ?>
                                     </select>
                                     <button type="submit" name="btn_extend_submit" class="btn btn-warning fw-bold text-dark">Gia hạn</button>
                                 </div>

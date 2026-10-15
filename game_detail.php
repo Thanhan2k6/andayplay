@@ -42,32 +42,51 @@ $game = $result_game->fetch_assoc();
 $conn->query("UPDATE games SET views = COALESCE(views, 0) + 1 WHERE game_id = $game_id");
 
 // Đồng bộ số lượng tài khoản khả dụng thực tế
-sync_game_inventory($conn, $game_id);
-
-$acc_stat = $conn->query("SELECT 
-    COUNT(*) as total_acc,
-    SUM(CASE WHEN status = 'AVAILABLE' THEN 1 ELSE 0 END) as avail_acc 
-    FROM game_accounts WHERE game_id = $game_id")->fetch_assoc();
-$available_accounts = intval($acc_stat['avail_acc'] ?? 0);
+$available_accounts = intval($game['quantity'] ?? 0);
+try {
+    if (function_exists('sync_game_inventory')) {
+        sync_game_inventory($conn, $game_id);
+    }
+    $acc_query = $conn->query("SELECT 
+        COUNT(*) as total_acc,
+        SUM(CASE WHEN status = 'AVAILABLE' THEN 1 ELSE 0 END) as avail_acc 
+        FROM game_accounts WHERE game_id = $game_id");
+    if ($acc_query && $acc_stat = $acc_query->fetch_assoc()) {
+        $available_accounts = intval($acc_stat['avail_acc'] ?? 0);
+    }
+} catch (Throwable $e) {}
 
 // KIỂM TRA ĐƠN THUÊ ĐANG HIỆU LỰC CỦA NGƯỜI DÙNG HIỆN TẠI
 $is_rented = false;
 $active_order = null;
 if ($user_id) {
-    $check_rent = $conn->query("SELECT * FROM borrow_records WHERE user_id = $user_id AND game_id = $game_id AND status = 'active' AND due_date > NOW() LIMIT 1");
-    if ($check_rent && $check_rent->num_rows > 0) {
-        $is_rented = true;
-        $active_order = $check_rent->fetch_assoc();
-    }
+    try {
+        $check_rent = $conn->query("SELECT * FROM borrow_records WHERE user_id = $user_id AND game_id = $game_id AND status = 'active' AND due_date > NOW() LIMIT 1");
+        if ($check_rent && $check_rent->num_rows > 0) {
+            $is_rented = true;
+            $active_order = $check_rent->fetch_assoc();
+        }
+    } catch (Throwable $e) {}
 }
 
 // Lấy danh sách gói thuê cấu hình cho game này
-$packages_res = $conn->query("SELECT * FROM rental_packages WHERE game_id = $game_id AND is_active = 1 ORDER BY price ASC");
 $packages = [];
-if ($packages_res && $packages_res->num_rows > 0) {
-    while ($p = $packages_res->fetch_assoc()) {
-        $packages[] = $p;
+try {
+    $packages_res = $conn->query("SELECT * FROM rental_packages WHERE game_id = $game_id AND is_active = 1 ORDER BY price ASC");
+    if ($packages_res && $packages_res->num_rows > 0) {
+        while ($p = $packages_res->fetch_assoc()) {
+            $packages[] = $p;
+        }
     }
+} catch (Throwable $e) {}
+
+// Gói dự phòng nếu CSDL chưa nạp bảng rental_packages
+if (empty($packages) && $game['price_type'] == 'paid') {
+    $packages = [
+        ['package_id' => 1, 'package_name' => '1 Giờ (Trải nghiệm)', 'price' => 5000, 'duration_type' => 'hours', 'duration_value' => 1],
+        ['package_id' => 2, 'package_name' => '1 Ngày (24 Giờ)', 'price' => 15000, 'duration_type' => 'days', 'duration_value' => 1],
+        ['package_id' => 3, 'package_name' => '7 Ngày (1 Tuần)', 'price' => 50000, 'duration_type' => 'days', 'duration_value' => 7]
+    ];
 }
 ?>
 

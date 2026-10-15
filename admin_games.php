@@ -59,7 +59,19 @@ if(isset($_GET['delete_id'])) {
                         FROM games g 
                         LEFT JOIN categories c ON g.category_id = c.category_id 
                         ORDER BY g.game_id DESC";
-                $result = $conn->query($sql);
+                $result = false;
+                try {
+                    $result = $conn->query($sql);
+                } catch (Throwable $e) {}
+                if (!$result) {
+                    try {
+                        $sql_fallback = "SELECT g.*, c.cate_name, g.quantity as total_acc, g.quantity as avail_acc 
+                                         FROM games g 
+                                         LEFT JOIN categories c ON g.category_id = c.category_id 
+                                         ORDER BY g.game_id DESC";
+                        $result = $conn->query($sql_fallback);
+                    } catch (Throwable $e) {}
+                }
                 
                 if($result && $result->num_rows > 0) {
                     while($row = $result->fetch_assoc()) {

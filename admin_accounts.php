@@ -90,7 +90,10 @@ if (isset($_GET['delete_account'])) {
 }
 
 // LẤY DANH SÁCH GAME ĐỂ FILTER VÀ CHỌN
-$games_list = $conn->query("SELECT game_id, title FROM games WHERE price_type = 'paid' ORDER BY title ASC");
+$games_list = false;
+try {
+    $games_list = $conn->query("SELECT game_id, title FROM games WHERE price_type = 'paid' ORDER BY title ASC");
+} catch (Throwable $e) {}
 
 // FILTER
 $filter_game = isset($_GET['filter_game']) ? intval($_GET['filter_game']) : 0;
@@ -101,13 +104,16 @@ if ($filter_game > 0) $where[] = "ga.game_id = $filter_game";
 if (!empty($filter_status)) $where[] = "ga.status = '$filter_status'";
 $where_str = count($where) > 0 ? " WHERE " . implode(" AND ", $where) : "";
 
-$accounts_res = $conn->query("SELECT ga.*, g.title, u.username as renter_username, br.due_date as rental_due_date
-    FROM game_accounts ga
-    JOIN games g ON ga.game_id = g.game_id
-    LEFT JOIN borrow_records br ON ga.current_borrow_id = br.borrow_id
-    LEFT JOIN users u ON br.user_id = u.user_id
-    $where_str
-    ORDER BY ga.account_id DESC");
+$accounts_res = false;
+try {
+    $accounts_res = $conn->query("SELECT ga.*, g.title, u.username as renter_username, br.due_date as rental_due_date
+        FROM game_accounts ga
+        JOIN games g ON ga.game_id = g.game_id
+        LEFT JOIN borrow_records br ON ga.current_borrow_id = br.borrow_id
+        LEFT JOIN users u ON br.user_id = u.user_id
+        $where_str
+        ORDER BY ga.account_id DESC");
+} catch (Throwable $e) {}
 
 $csrf_token = generate_csrf_token();
 ?>
@@ -142,14 +148,16 @@ $csrf_token = generate_csrf_token();
             <div class="col-md-4">
                 <label class="form-label text-secondary small mb-1">Lọc theo Tựa Game:</label>
                 <select name="filter_game" class="form-select bg-dark text-white border-secondary">
-                    <option value="">-- Tất cả game trả phí --</option>
                     <?php 
-                    $games_list->data_seek(0);
-                    while ($g = $games_list->fetch_assoc()): ?>
-                        <option value="<?php echo $g['game_id']; ?>" <?php echo ($filter_game == $g['game_id']) ? 'selected' : ''; ?>>
-                            <?php echo htmlspecialchars($g['title']); ?>
-                        </option>
-                    <?php endwhile; ?>
+                    if ($games_list && $games_list->num_rows > 0):
+                        $games_list->data_seek(0);
+                        while ($g = $games_list->fetch_assoc()): ?>
+                            <option value="<?php echo $g['game_id']; ?>" <?php echo ($filter_game == $g['game_id']) ? 'selected' : ''; ?>>
+                                <?php echo htmlspecialchars($g['title']); ?>
+                            </option>
+                    <?php 
+                        endwhile; 
+                    endif; ?>
                 </select>
             </div>
             <div class="col-md-3">
@@ -308,10 +316,13 @@ $csrf_token = generate_csrf_token();
                         <label class="form-label text-info fw-bold">Chọn tựa game:</label>
                         <select name="game_id" class="form-select bg-dark text-white border-secondary" required>
                             <?php 
-                            $games_list->data_seek(0);
-                            while ($g = $games_list->fetch_assoc()): ?>
-                                <option value="<?php echo $g['game_id']; ?>"><?php echo htmlspecialchars($g['title']); ?></option>
-                            <?php endwhile; ?>
+                            if ($games_list && $games_list->num_rows > 0):
+                                $games_list->data_seek(0);
+                                while ($g = $games_list->fetch_assoc()): ?>
+                                    <option value="<?php echo $g['game_id']; ?>"><?php echo htmlspecialchars($g['title']); ?></option>
+                            <?php 
+                                endwhile; 
+                            endif; ?>
                         </select>
                     </div>
 

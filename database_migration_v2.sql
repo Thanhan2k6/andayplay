@@ -36,18 +36,17 @@ CREATE TABLE IF NOT EXISTS game_accounts (
 
 -- 3. CẬP NHẬT HOẶC MỞ RỘNG BẢNG ĐƠN THUÊ (borrow_records)
 -- Thêm các trường hỗ trợ thuê tài khoản, mã đơn, gói thuê, tài khoản cấp, giá, lịch sử
-ALTER TABLE borrow_records 
-    ADD COLUMN IF NOT EXISTS order_code VARCHAR(50) NULL AFTER borrow_id,
-    ADD COLUMN IF NOT EXISTS account_id INT NULL AFTER game_id,
-    ADD COLUMN IF NOT EXISTS package_id INT NULL AFTER account_id,
-    ADD COLUMN IF NOT EXISTS duration_hours INT NOT NULL DEFAULT 168 AFTER package_id,
-    ADD COLUMN IF NOT EXISTS rental_price DECIMAL(12, 2) NOT NULL DEFAULT 0.00 AFTER duration_hours,
-    ADD COLUMN IF NOT EXISTS payment_status ENUM('pending', 'paid', 'failed', 'refunded') DEFAULT 'pending' AFTER rental_price,
-    ADD COLUMN IF NOT EXISTS payment_method VARCHAR(50) NULL AFTER payment_status,
-    ADD COLUMN IF NOT EXISTS rent_type ENUM('new', 'extend', 're-rent') DEFAULT 'new' AFTER payment_method,
-    ADD COLUMN IF NOT EXISTS previous_borrow_id INT NULL AFTER rent_type,
-    ADD COLUMN IF NOT EXISTS revoke_status ENUM('none', 'pending', 'revoked', 'failed') DEFAULT 'none' AFTER status,
-    ADD COLUMN IF NOT EXISTS error_message TEXT NULL AFTER revoke_status;
+ALTER TABLE borrow_records ADD COLUMN order_code VARCHAR(50) NULL AFTER borrow_id;
+ALTER TABLE borrow_records ADD COLUMN account_id INT NULL AFTER game_id;
+ALTER TABLE borrow_records ADD COLUMN package_id INT NULL AFTER account_id;
+ALTER TABLE borrow_records ADD COLUMN duration_hours INT NOT NULL DEFAULT 168 AFTER package_id;
+ALTER TABLE borrow_records ADD COLUMN rental_price DECIMAL(12, 2) NOT NULL DEFAULT 0.00 AFTER duration_hours;
+ALTER TABLE borrow_records ADD COLUMN payment_status ENUM('pending', 'paid', 'failed', 'refunded') DEFAULT 'pending' AFTER rental_price;
+ALTER TABLE borrow_records ADD COLUMN payment_method VARCHAR(50) NULL AFTER payment_status;
+ALTER TABLE borrow_records ADD COLUMN rent_type ENUM('new', 'extend', 're-rent') DEFAULT 'new' AFTER payment_method;
+ALTER TABLE borrow_records ADD COLUMN previous_borrow_id INT NULL AFTER rent_type;
+ALTER TABLE borrow_records ADD COLUMN revoke_status ENUM('none', 'pending', 'revoked', 'failed') DEFAULT 'none' AFTER status;
+ALTER TABLE borrow_records ADD COLUMN error_message TEXT NULL AFTER revoke_status;
 
 -- Cập nhật cột status của borrow_records để chuẩn hóa
 -- active: Đang thuê hiệu lực

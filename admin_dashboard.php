@@ -8,41 +8,58 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] != 1) {
     exit();
 }
 
+function safe_count_query($conn, $sql) {
+    try {
+        $res = $conn->query($sql);
+        if ($res && $row = $res->fetch_assoc()) {
+            return intval($row['c'] ?? 0);
+        }
+    } catch (Throwable $e) {}
+    return 0;
+}
+
 // 1. THỐNG KÊ THỰC TẾ TỪ CƠ SỞ DỮ LIỆU
-$total_users = $conn->query("SELECT COUNT(*) as c FROM users WHERE role = 0")->fetch_assoc()['c'];
-$total_games = $conn->query("SELECT COUNT(*) as c FROM games WHERE price_type = 'paid'")->fetch_assoc()['c'];
+$total_users = safe_count_query($conn, "SELECT COUNT(*) as c FROM users WHERE role = 0");
+$total_games = safe_count_query($conn, "SELECT COUNT(*) as c FROM games WHERE price_type = 'paid'");
 
 // Thống kê kho tài khoản
-$total_accounts = $conn->query("SELECT COUNT(*) as c FROM game_accounts")->fetch_assoc()['c'];
-$available_accounts = $conn->query("SELECT COUNT(*) as c FROM game_accounts WHERE status = 'AVAILABLE'")->fetch_assoc()['c'];
-$rented_accounts = $conn->query("SELECT COUNT(*) as c FROM game_accounts WHERE status = 'RENTED'")->fetch_assoc()['c'];
-$maintenance_accounts = $conn->query("SELECT COUNT(*) as c FROM game_accounts WHERE status = 'MAINTENANCE'")->fetch_assoc()['c'];
+$total_accounts = safe_count_query($conn, "SELECT COUNT(*) as c FROM game_accounts");
+$available_accounts = safe_count_query($conn, "SELECT COUNT(*) as c FROM game_accounts WHERE status = 'AVAILABLE'");
+$rented_accounts = safe_count_query($conn, "SELECT COUNT(*) as c FROM game_accounts WHERE status = 'RENTED'");
+$maintenance_accounts = safe_count_query($conn, "SELECT COUNT(*) as c FROM game_accounts WHERE status = 'MAINTENANCE'");
 
 // Thống kê đơn thuê
-$active_borrows = $conn->query("SELECT COUNT(*) as c FROM borrow_records WHERE status = 'active' AND due_date > NOW()")->fetch_assoc()['c'];
-$expiring_soon = $conn->query("SELECT COUNT(*) as c FROM borrow_records WHERE status = 'active' AND due_date BETWEEN NOW() AND DATE_ADD(NOW(), INTERVAL 24 HOUR)")->fetch_assoc()['c'];
-$expired_borrows = $conn->query("SELECT COUNT(*) as c FROM borrow_records WHERE status = 'expired' OR (status = 'active' AND due_date <= NOW())")->fetch_assoc()['c'];
+$active_borrows = safe_count_query($conn, "SELECT COUNT(*) as c FROM borrow_records WHERE status = 'active' AND due_date > NOW()");
+$expiring_soon = safe_count_query($conn, "SELECT COUNT(*) as c FROM borrow_records WHERE status = 'active' AND due_date BETWEEN NOW() AND DATE_ADD(NOW(), INTERVAL 24 HOUR)");
+$expired_borrows = safe_count_query($conn, "SELECT COUNT(*) as c FROM borrow_records WHERE status = 'expired' OR (status = 'active' AND due_date <= NOW())");
 
 // Doanh thu thực tế từ các đơn đã thanh toán
-$total_revenue_res = $conn->query("SELECT SUM(rental_price) as rev FROM borrow_records WHERE payment_status = 'paid'")->fetch_assoc();
-$total_revenue = floatval($total_revenue_res['rev'] ?? 0);
+$total_revenue = 0.0;
+try {
+    $total_revenue_res = $conn->query("SELECT SUM(rental_price) as rev FROM borrow_records WHERE payment_status = 'paid'");
+    if ($total_revenue_res && $row = $total_revenue_res->fetch_assoc()) {
+        $total_revenue = floatval($row['rev'] ?? 0);
+    }
+} catch (Throwable $e) {}
 
 // Sự cố cấp phát lỗi cần xử lý
-$failed_allocations = $conn->query("SELECT COUNT(*) as c FROM borrow_records WHERE payment_status = 'paid' AND (account_id IS NULL OR status = 'pending')")->fetch_assoc()['c'];
+$failed_allocations = safe_count_query($conn, "SELECT COUNT(*) as c FROM borrow_records WHERE payment_status = 'paid' AND (account_id IS NULL OR status = 'pending')");
 
 // Dữ liệu biểu đồ doanh thu theo 12 tháng của năm hiện tại
 $current_year = date('Y');
 $chart_revenue = array_fill(1, 12, 0);
-$sql_rev = "SELECT MONTH(borrow_date) as m, SUM(rental_price) as sum_rev 
-            FROM borrow_records 
-            WHERE YEAR(borrow_date) = $current_year AND payment_status = 'paid'
-            GROUP BY MONTH(borrow_date)";
-$res_rev = $conn->query($sql_rev);
-if ($res_rev && $res_rev->num_rows > 0) {
-    while ($r = $res_rev->fetch_assoc()) {
-        $chart_revenue[(int)$r['m']] = (float)$r['sum_rev'];
+try {
+    $sql_rev = "SELECT MONTH(borrow_date) as m, SUM(rental_price) as sum_rev 
+                FROM borrow_records 
+                WHERE YEAR(borrow_date) = $current_year AND payment_status = 'paid'
+                GROUP BY MONTH(borrow_date)";
+    $res_rev = $conn->query($sql_rev);
+    if ($res_rev && $res_rev->num_rows > 0) {
+        while ($r = $res_rev->fetch_assoc()) {
+            $chart_revenue[(int)$r['m']] = (float)$r['sum_rev'];
+        }
     }
-}
+} catch (Throwable $e) {}
 $chart_rev_js = implode(',', $chart_revenue);
 ?>
 

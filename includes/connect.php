@@ -21,6 +21,9 @@ if (isset($_SERVER['HTTP_HOST']) && ($_SERVER['HTTP_HOST'] == 'localhost' || $_S
     $db   = "if0_42898364_gamelib";
 }
 
+// Vô hiệu hóa ném ngoại lệ tự động của MySQLi trên PHP 8.1+ để tránh ngắt hiển thị HTML
+mysqli_report(MYSQLI_REPORT_OFF);
+
 // Khởi tạo kết nối đến CSDL
 $conn = new mysqli($host, $user, $pass, $db);
 

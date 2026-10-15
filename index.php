@@ -144,14 +144,40 @@ if (isset($_GET['sort'])) {
     elseif ($_GET['sort'] == 'oldest') { $order_by = " ORDER BY g.game_id ASC"; }
 }
 
-$sql = "SELECT g.*, c.cate_name,
-        (SELECT MIN(price) FROM rental_packages rp WHERE rp.game_id = g.game_id AND rp.is_active = 1) as min_rent_price,
-        (SELECT COUNT(*) FROM game_accounts ga WHERE ga.game_id = g.game_id AND ga.status = 'AVAILABLE') as real_available_acc
-        FROM games g 
-        LEFT JOIN categories c ON g.category_id = c.category_id 
-        $where_clause $order_by";
-$result = $conn->query($sql);
+$result = false;
+$schema_warning = false;
+try {
+    $sql = "SELECT g.*, c.cate_name,
+            (SELECT MIN(price) FROM rental_packages rp WHERE rp.game_id = g.game_id AND rp.is_active = 1) as min_rent_price,
+            (SELECT COUNT(*) FROM game_accounts ga WHERE ga.game_id = g.game_id AND ga.status = 'AVAILABLE') as real_available_acc
+            FROM games g 
+            LEFT JOIN categories c ON g.category_id = c.category_id 
+            $where_clause $order_by";
+    $result = $conn->query($sql);
+} catch (Throwable $e) {
+    $result = false;
+}
+
+if (!$result) {
+    $schema_warning = true;
+    try {
+        $sql_fallback = "SELECT g.*, c.cate_name, 0 as min_rent_price, g.quantity as real_available_acc 
+                         FROM games g 
+                         LEFT JOIN categories c ON g.category_id = c.category_id 
+                         $where_clause $order_by";
+        $result = $conn->query($sql_fallback);
+    } catch (Throwable $e) {
+        $result = false;
+    }
+}
 ?>
+
+<?php if ($schema_warning && isset($_SESSION['role']) && $_SESSION['role'] == 1): ?>
+    <div class="alert alert-warning py-2 mb-3">
+        <i class="bi bi-info-circle-fill me-2"></i>
+        <strong>Lưu ý Admin:</strong> CSDL đang hiển thị ở chế độ tương thích dự phòng. Hãy import file <code>database_migration_v2.sql</code> trên phpMyAdmin để kích hoạt kho tài khoản và bảng giá mới.
+    </div>
+<?php endif; ?>
 
 <!-- THANH CÔNG CỤ LỌC -->
 <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-4 pb-3 border-bottom border-info gap-3">

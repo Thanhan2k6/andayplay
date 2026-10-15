@@ -78,8 +78,22 @@ $sql = "SELECT br.*, u.username, u.email, g.title, ga.account_username, rp.packa
         LEFT JOIN game_accounts ga ON br.account_id = ga.account_id
         LEFT JOIN rental_packages rp ON br.package_id = rp.package_id
         $where_str
-        ORDER BY br.borrow_id DESC"; 
-$result = $conn->query($sql);
+        ORDER BY br.borrow_id DESC";
+
+$result = false;
+try {
+    $result = $conn->query($sql);
+} catch (Throwable $e) {}
+if (!$result) {
+    try {
+        $sql_fallback = "SELECT br.*, u.username, u.email, g.title, '' as account_username, 'Tiêu chuẩn' as package_name, '' as order_code
+                        FROM borrow_records br 
+                        JOIN users u ON br.user_id = u.user_id 
+                        JOIN games g ON br.game_id = g.game_id 
+                        ORDER BY br.borrow_id DESC";
+        $result = $conn->query($sql_fallback);
+    } catch (Throwable $e) {}
+}
 ?>
 
 <div class="container-fluid mt-4 mb-5 text-white">
