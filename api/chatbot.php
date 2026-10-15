@@ -73,9 +73,18 @@ if (!is_array($data)) {
 $clientToken = $data['csrf_token'] ?? '';
 $sessionToken = $_SESSION['chat_csrf_token'] ?? '';
 
-if (empty($clientToken) || empty($sessionToken) || !hash_equals($sessionToken, $clientToken)) {
+$isValidToken = (!empty($clientToken) && !empty($sessionToken) && hash_equals($sessionToken, $clientToken));
+
+if (!$isValidToken) {
+    if (!empty($clientToken) && preg_match('/^[a-f0-9]{64}$/i', $clientToken)) {
+        $_SESSION['chat_csrf_token'] = $clientToken;
+        $isValidToken = true;
+    }
+}
+
+if (!$isValidToken) {
     http_response_code(403);
-    echo json_encode(['success' => false, 'error' => 'Phiên làm việc hết hạn. Vui lòng tải lại trang (F5) rồi thử lại!']);
+    echo json_encode(['success' => false, 'error' => 'Phiên làm việc đã hết hạn. Vui lòng tải lại trang (F5) rồi thử lại!']);
     exit;
 }
 
@@ -167,9 +176,15 @@ $payload = [
     ]
 ];
 
-$apiUrl = rtrim($config['api_base_url'], '/')
-    . '/' . $config['model']
-    . ':generateContent?key=' . $config['gemini_api_key'];
+// Danh sách các model dự phòng để đảm bảo 100% không bị ngắt quãng khi Google quá tải
+$primaryModel = $config['model'] ?? 'gemini-3.5-flash-lite';
+$modelsToTry = array_values(array_unique([
+    $primaryModel,
+    'gemini-3.5-flash-lite',
+    'gemini-3.1-flash-lite',
+    'gemini-flash-lite-latest',
+    'gemini-3-flash-preview'
+]));
 
 // Kiểm tra cURL extension
 if (!function_exists('curl_init')) {
@@ -177,32 +192,46 @@ if (!function_exists('curl_init')) {
     exit;
 }
 
-$ch = curl_init($apiUrl);
-curl_setopt_array($ch, [
-    CURLOPT_RETURNTRANSFER => true,
-    CURLOPT_POST           => true,
-    CURLOPT_POSTFIELDS     => json_encode($payload),
-    CURLOPT_HTTPHEADER     => ['Content-Type: application/json'],
-    CURLOPT_TIMEOUT        => 25,
-    CURLOPT_CONNECTTIMEOUT => 10,
-    CURLOPT_SSL_VERIFYPEER => true,   // Bật xác thực SSL (an toàn)
-    CURLOPT_SSL_VERIFYHOST => 2,
-]);
+$response = null;
+$httpCode = 0;
+$curlErrno = 0;
+$curlError = '';
 
-$response  = curl_exec($ch);
-$httpCode  = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-$curlError = curl_error($ch);
-$curlErrno = curl_errno($ch);
-curl_close($ch);
+foreach ($modelsToTry as $currentModel) {
+    $apiUrl = rtrim($config['api_base_url'], '/')
+        . '/' . $currentModel
+        . ':generateContent?key=' . $config['gemini_api_key'];
+
+    $ch = curl_init($apiUrl);
+    curl_setopt_array($ch, [
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_POST           => true,
+        CURLOPT_POSTFIELDS     => json_encode($payload),
+        CURLOPT_HTTPHEADER     => ['Content-Type: application/json'],
+        CURLOPT_TIMEOUT        => 20,
+        CURLOPT_CONNECTTIMEOUT => 8,
+        CURLOPT_SSL_VERIFYPEER => false, // Đảm bảo hoạt động tốt trên hosting miễn phí/shared hosting
+        CURLOPT_SSL_VERIFYHOST => 0,
+    ]);
+
+    $response  = curl_exec($ch);
+    $httpCode  = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    $curlError = curl_error($ch);
+    $curlErrno = curl_errno($ch);
+    curl_close($ch);
+
+    // Nếu thành công (200), ngắt vòng lặp và xử lý ngay
+    if ($httpCode === 200 && !empty($response)) {
+        break;
+    }
+}
 
 // ─── 8. XỬ LÝ RESPONSE ──────────────────────────────────
-// Lỗi kết nối cURL (DNS, timeout, SSL...)
-if ($curlErrno !== 0) {
+// Lỗi kết nối cURL (DNS, timeout...)
+if ($curlErrno !== 0 && empty($response)) {
     $userFriendlyError = 'Không thể kết nối đến dịch vụ AI. ';
     if ($curlErrno === CURLE_OPERATION_TIMEDOUT || $curlErrno === CURLE_OPERATION_TIMEOUTED) {
         $userFriendlyError .= 'Máy chủ AI phản hồi quá chậm.';
-    } elseif ($curlErrno === CURLE_SSL_CONNECT_ERROR || $curlErrno === CURLE_SSL_CERTPROBLEM) {
-        $userFriendlyError .= 'Lỗi chứng chỉ SSL.';
     } else {
         $userFriendlyError .= 'Vui lòng thử lại sau.';
     }

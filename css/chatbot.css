@@ -5,41 +5,48 @@
 
 /* 1. FLOATING CONTAINER */
 .anplay-chatbot-wrapper {
-    position: fixed;
-    bottom: 28px;
-    right: 28px;
-    z-index: 100050;
-    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    user-select: none;
+    position: fixed !important;
+    bottom: 28px !important;
+    right: 28px !important;
+    z-index: 2147483647 !important;
+    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+    pointer-events: auto !important;
 }
 
 /* 2. FLOATING TRIGGER BUTTON */
 .anplay-chat-toggle {
-    position: relative;
-    width: 60px;
-    height: 60px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #d946ef 100%);
-    border: 2px solid rgba(255, 255, 255, 0.25);
-    box-shadow: 0 10px 30px -5px rgba(99, 102, 241, 0.6), 0 0 20px rgba(168, 85, 247, 0.4);
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #ffffff;
-    font-size: 26px;
-    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-    outline: none;
+    position: relative !important;
+    width: 60px !important;
+    height: 60px !important;
+    border-radius: 50% !important;
+    background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #d946ef 100%) !important;
+    border: 2px solid rgba(255, 255, 255, 0.25) !important;
+    box-shadow: 0 10px 30px -5px rgba(99, 102, 241, 0.6), 0 0 20px rgba(168, 85, 247, 0.4) !important;
+    cursor: pointer !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    color: #ffffff !important;
+    font-size: 26px !important;
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+    outline: none !important;
+    z-index: 2147483647 !important;
+    pointer-events: auto !important;
+    user-select: none !important;
+}
+
+.anplay-chat-toggle * {
+    pointer-events: none !important;
 }
 
 .anplay-chat-toggle:hover {
-    transform: scale(1.1) translateY(-2px);
-    box-shadow: 0 15px 35px -5px rgba(99, 102, 241, 0.8), 0 0 30px rgba(217, 70, 239, 0.6);
-    border-color: rgba(255, 255, 255, 0.5);
+    transform: scale(1.1) translateY(-2px) !important;
+    box-shadow: 0 15px 35px -5px rgba(99, 102, 241, 0.8), 0 0 30px rgba(217, 70, 239, 0.6) !important;
+    border-color: rgba(255, 255, 255, 0.5) !important;
 }
 
 .anplay-chat-toggle:active {
-    transform: scale(0.96);
+    transform: scale(0.96) !important;
 }
 
 .anplay-chat-toggle-icon {
@@ -47,10 +54,11 @@
     align-items: center;
     justify-content: center;
     transition: transform 0.3s ease;
+    pointer-events: none !important;
 }
 
 .anplay-chat-toggle.is-open .anplay-chat-toggle-icon {
-    transform: rotate(90deg);
+    transform: rotate(180deg) scale(0.9);
 }
 
 /* Pulse animation ping */
@@ -63,6 +71,7 @@
     background: #10b981;
     border: 2px solid #08090d;
     border-radius: 50%;
+    pointer-events: none !important;
 }
 
 .anplay-chat-ping::after {
@@ -95,7 +104,7 @@
     font-weight: 700;
     letter-spacing: 0.3px;
     white-space: nowrap;
-    pointer-events: none;
+    pointer-events: none !important;
     opacity: 0;
     transition: all 0.25s ease;
 }
@@ -103,6 +112,11 @@
 .anplay-chatbot-wrapper:hover .anplay-chat-tooltip {
     opacity: 1;
     transform: translateY(-50%) translateX(-4px);
+}
+
+.anplay-chat-toggle.is-open .anplay-chat-tooltip {
+    display: none !important;
+    opacity: 0 !important;
 }
 
 /* 3. CHAT WINDOW CONTAINER */
@@ -115,26 +129,28 @@
     height: 580px;
     max-height: calc(100vh - 120px);
     background: #0c0e15;
-    border: 1px solid rgba(255, 255, 255, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.15);
     border-radius: 22px;
-    box-shadow: 0 25px 60px -10px rgba(0, 0, 0, 0.95), 0 0 40px rgba(99, 102, 241, 0.25);
+    box-shadow: 0 25px 60px -10px rgba(0, 0, 0, 0.95), 0 0 40px rgba(99, 102, 241, 0.3);
     display: flex;
     flex-direction: column;
     overflow: hidden;
     opacity: 0;
     visibility: hidden;
-    transform: translateY(24px) scale(0.94);
+    transform: translateY(20px) scale(0.95);
     pointer-events: none;
-    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    transition: opacity 0.25s ease, transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.25s ease;
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
+    z-index: 2147483647 !important;
 }
 
 .anplay-chat-box.active {
-    opacity: 1;
-    visibility: visible;
-    transform: translateY(0) scale(1);
-    pointer-events: auto;
+    opacity: 1 !important;
+    visibility: visible !important;
+    transform: translateY(0) scale(1) !important;
+    pointer-events: auto !important;
+    display: flex !important;
 }
 
 /* 4. CHAT HEADER */
@@ -145,6 +161,8 @@
     align-items: center;
     justify-content: space-between;
     border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    position: relative;
+    user-select: none;
 }
 
 .anplay-chat-title-group {
@@ -162,10 +180,9 @@
     align-items: center;
     justify-content: center;
     color: #ffffff;
-    font-size: 1.25rem;
-    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.35);
+    font-size: 20px;
     position: relative;
-    flex-shrink: 0;
+    box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
 }
 
 .anplay-chat-avatar-status {
@@ -174,9 +191,9 @@
     right: -2px;
     width: 11px;
     height: 11px;
-    background-color: #10b981;
-    border: 2px solid #0f121c;
     border-radius: 50%;
+    background: #10b981;
+    border: 2px solid #0f121c;
 }
 
 .anplay-chat-title-text h4 {
@@ -196,9 +213,9 @@
     border: 1px solid rgba(99, 102, 241, 0.4);
     font-size: 0.62rem;
     font-weight: 800;
-    padding: 2px 6px;
-    border-radius: 4px;
-    text-transform: uppercase;
+    padding: 1px 6px;
+    border-radius: 6px;
+    letter-spacing: 0.5px;
 }
 
 .anplay-chat-subtitle {
@@ -211,34 +228,34 @@
 }
 
 .anplay-status-pill {
-    display: inline-block;
     width: 6px;
     height: 6px;
     background: #10b981;
     border-radius: 50%;
+    display: inline-block;
     box-shadow: 0 0 6px #10b981;
 }
 
 .anplay-chat-actions {
     display: flex;
     align-items: center;
-    gap: 4px;
+    gap: 6px;
 }
 
 .anplay-header-btn {
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    color: #94a3b8;
     width: 32px;
     height: 32px;
     border-radius: 8px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    color: #94a3b8;
     display: flex;
     align-items: center;
     justify-content: center;
-    cursor: pointer;
-    font-size: 0.95rem;
+    cursor: pointer !important;
     transition: all 0.2s ease;
     outline: none;
+    pointer-events: auto !important;
 }
 
 .anplay-header-btn:hover {
@@ -258,7 +275,7 @@
     border-color: rgba(244, 63, 94, 0.4);
 }
 
-/* 5. QUICK SUGGESTION CHIPS (GỢI Ý CÂU HỎI NHANH) */
+/* 5. QUICK SUGGESTION CHIPS */
 .anplay-chat-suggestions {
     padding: 10px 16px;
     background: #090b10;
@@ -280,15 +297,16 @@
     color: #cbd5e1;
     font-size: 0.73rem;
     font-weight: 600;
-    padding: 5px 12px;
+    padding: 6px 12px;
     border-radius: 9999px;
-    cursor: pointer;
+    cursor: pointer !important;
     transition: all 0.2s ease;
     flex-shrink: 0;
     display: inline-flex;
     align-items: center;
     gap: 5px;
     outline: none;
+    pointer-events: auto !important;
 }
 
 .anplay-suggestion-chip:hover {
@@ -494,12 +512,13 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    cursor: pointer;
+    cursor: pointer !important;
     font-size: 1.1rem;
     transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
     box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
     flex-shrink: 0;
     outline: none;
+    pointer-events: auto !important;
 }
 
 .anplay-chat-send-btn:hover:not(:disabled) {
@@ -513,7 +532,7 @@
 
 .anplay-chat-send-btn:disabled {
     opacity: 0.4;
-    cursor: not-allowed;
+    cursor: not-allowed !important;
     filter: grayscale(80%);
 }
 
@@ -535,14 +554,14 @@
 /* 10. RESPONSIVE DESIGN (MOBILE / TABLET) */
 @media (max-width: 575.98px) {
     .anplay-chatbot-wrapper {
-        bottom: 18px;
-        right: 18px;
+        bottom: 18px !important;
+        right: 18px !important;
     }
 
     .anplay-chat-toggle {
-        width: 52px;
-        height: 52px;
-        font-size: 22px;
+        width: 52px !important;
+        height: 52px !important;
+        font-size: 22px !important;
     }
 
     .anplay-chat-tooltip {
@@ -550,18 +569,18 @@
     }
 
     .anplay-chat-box {
-        position: fixed;
-        top: 0;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        width: 100vw;
-        max-width: 100vw;
-        height: 100vh;
-        max-height: 100vh;
-        border-radius: 0;
-        border: none;
-        z-index: 100100;
+        position: fixed !important;
+        top: 0 !important;
+        bottom: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        width: 100vw !important;
+        max-width: 100vw !important;
+        height: 100vh !important;
+        max-height: 100vh !important;
+        border-radius: 0 !important;
+        border: none !important;
+        z-index: 2147483647 !important;
     }
 
     .anplay-chat-header {

@@ -17,7 +17,7 @@ $cfg = [
     'gemini_api_key' => base64_decode('QVEuQWI4Uk42SmtVdDNtbUhUWFh4MlVNUTAtLVA0ajVnRG04MkJmbzVRVGFFcE9DcWhGU0E='),
 
     // Model mới nhất chính thức từ Google Gemini
-    'model' => 'gemini-3.8-flash',
+    'model' => 'gemini-3.5-flash-lite',
 
     // Endpoint chuẩn Gemini API v1beta
     'api_base_url' => 'https://generativelanguage.googleapis.com/v1beta/models/',
