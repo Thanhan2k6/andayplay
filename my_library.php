@@ -317,42 +317,44 @@ if ($result && $result->num_rows > 0) {
 
                     <!-- ACTION FOOTER: EXTEND / REPORT / RE-RENT -->
                     <div class="mt-auto">
-                        <?php if ($is_active): ?>
-                            <!-- GIA HẠN ĐƠN HIỆU LỰC -->
-                            <form method="POST" action="checkout_qr.php" class="p-2 rounded-3 mb-2" style="background: rgba(255,255,255,0.03); border: 1px solid var(--border-color);">
-                                <input type="hidden" name="borrow_id_to_extend" value="<?php echo $row['borrow_id']; ?>">
-                                <div class="d-flex justify-content-between align-items-center mb-1">
-                                    <small class="text-light fw-bold" style="font-size: 0.75rem;"><i class="bi bi-arrow-repeat text-warning me-1"></i> Gia hạn thêm giờ chơi:</small>
-                                </div>
-                                <div class="input-group input-group-sm">
-                                    <select name="extend_pkg_id" class="form-select form-select-sm form-control-gaming text-white">
-                                        <?php
+                        <!-- FORM GIA HẠN THỜI GIAN THUÊ (HỖ TRỢ CẢ ĐƠN ĐANG CHẠY LẪN ĐƠN ĐÃ HẾT HẠN) -->
+                        <form method="POST" action="checkout_qr.php" class="p-2 rounded-3 mb-2" style="background: rgba(255,255,255,0.03); border: 1px solid var(--border-color);">
+                            <input type="hidden" name="borrow_id_to_extend" value="<?php echo $row['borrow_id']; ?>">
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <small class="text-light fw-bold" style="font-size: 0.75rem;">
+                                    <i class="bi bi-arrow-repeat text-warning me-1"></i> <?php echo $is_active ? 'Gia hạn thêm giờ chơi:' : '⚡ Kích hoạt lại / Gia hạn tiếp:'; ?>
+                                </small>
+                            </div>
+                            <div class="input-group input-group-sm">
+                                <select name="extend_pkg_id" class="form-select form-select-sm form-control-gaming text-white">
+                                    <?php
+                                    $pkgs_cur = false;
+                                    try {
+                                        $pkgs_cur = $conn->query("SELECT * FROM rental_packages WHERE game_id = {$row['game_id']} AND is_active = 1 ORDER BY price ASC");
+                                    } catch (Throwable $e) {
                                         $pkgs_cur = false;
-                                        try {
-                                            $pkgs_cur = $conn->query("SELECT * FROM rental_packages WHERE game_id = {$row['game_id']} AND is_active = 1 ORDER BY price ASC");
-                                        } catch (Throwable $e) {
-                                            $pkgs_cur = false;
-                                        }
-                                        if ($pkgs_cur && $pkgs_cur->num_rows > 0):
-                                            while ($pkg_item = $pkgs_cur->fetch_assoc()):
-                                        ?>
-                                            <option value="<?php echo $pkg_item['package_id']; ?>">
-                                                +<?php echo htmlspecialchars($pkg_item['package_name']); ?> (<?php echo number_format($pkg_item['price'], 0, ',', '.'); ?>đ)
-                                            </option>
-                                        <?php 
-                                            endwhile; 
-                                        else:
-                                        ?>
-                                            <option value="0">+Gia hạn tiêu chuẩn</option>
-                                        <?php endif; ?>
-                                    </select>
-                                    <button type="submit" name="btn_extend_submit" class="btn btn-sm btn-gaming-primary">
-                                        Gia Hạn
-                                    </button>
-                                </div>
-                            </form>
-                            
-                            <!-- Báo lỗi tài khoản -->
+                                    }
+                                    if ($pkgs_cur && $pkgs_cur->num_rows > 0):
+                                        while ($pkg_item = $pkgs_cur->fetch_assoc()):
+                                    ?>
+                                        <option value="<?php echo $pkg_item['package_id']; ?>">
+                                            +<?php echo htmlspecialchars($pkg_item['package_name']); ?> (<?php echo number_format($pkg_item['price'], 0, ',', '.'); ?>đ)
+                                        </option>
+                                    <?php 
+                                        endwhile; 
+                                    else:
+                                    ?>
+                                        <option value="0">+Gói 24h tiêu chuẩn (15.000đ)</option>
+                                    <?php endif; ?>
+                                </select>
+                                <button type="submit" name="btn_extend_submit" class="btn btn-sm btn-gaming-primary">
+                                    <?php echo $is_active ? 'Gia Hạn' : 'Kích Hoạt'; ?>
+                                </button>
+                            </div>
+                        </form>
+
+                        <?php if ($is_active): ?>
+                            <!-- Báo lỗi tài khoản & Tải game -->
                             <div class="d-flex gap-2">
                                 <a href="download_game.php?id=<?php echo $row['game_id']; ?>" class="btn btn-sm btn-gaming-secondary flex-grow-1 text-center text-decoration-none">
                                     <i class="bi bi-cloud-arrow-down me-1"></i> Bộ cài game
@@ -362,17 +364,17 @@ if ($result && $result->num_rows > 0) {
                                 </button>
                             </div>
                         <?php else: ?>
-                            <!-- KHI ĐÃ HẾT HẠN: CHO PHÉP THUÊ LẠI HOẶC THUÊ MỚI -->
+                            <!-- KHI ĐÃ HẾT HẠN: LỰA CHỌN THUÊ LẠI HOẶC THUÊ MỚI -->
                             <div class="d-grid gap-2">
                                 <?php if ($row['account_id']): ?>
                                     <a href="borrow_process.php?game_id=<?php echo $row['game_id']; ?>&type=re-rent&re_rent_acc=<?php echo $row['account_id']; ?>&old_borrow_id=<?php echo $row['borrow_id']; ?>" 
-                                       class="btn btn-sm btn-gaming-primary text-white text-decoration-none py-2">
+                                       class="btn btn-sm btn-gaming-secondary text-white text-decoration-none py-1">
                                         <i class="bi bi-arrow-repeat me-1"></i> Thuê lại tài khoản cũ (Giữ Save)
                                     </a>
                                 <?php endif; ?>
 
                                 <a href="borrow_process.php?game_id=<?php echo $row['game_id']; ?>&type=new" 
-                                   class="btn btn-sm btn-gaming-secondary text-decoration-none py-2">
+                                   class="btn btn-sm btn-outline-info text-decoration-none py-1">
                                     <i class="bi bi-plus-circle me-1"></i> Thuê tài khoản mới khác
                                 </a>
                             </div>

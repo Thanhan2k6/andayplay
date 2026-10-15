@@ -1,45 +1,59 @@
 <?php
 if (session_status() === PHP_SESSION_NONE) { session_start(); }
-require_once __DIR__ . '/includes/header.php'; 
+require_once __DIR__ . '/includes/connect.php'; 
 
 // KIỂM TRA ID TRÒ CHƠI
-if (!isset($_GET['id']) || empty($_GET['id'])) {
+$game_id = isset($_GET['id']) ? intval($_GET['id']) : 0;
+$user_id = isset($_SESSION['user_id']) ? intval($_SESSION['user_id']) : null;
+
+// XỬ LÝ: Khi người dùng gửi bình luận (Xử lý TRƯỚC KHI output header để redirect an toàn)
+if (isset($_POST['btn_comment'])) {
+    if (!$user_id) {
+        header("Location: login.php");
+        exit();
+    }
+    
+    $content = trim($_POST['comment_content'] ?? '');
+    if (!empty($content) && $game_id > 0) {
+        $clean_content = $conn->real_escape_string($content);
+        try {
+            $conn->query("INSERT INTO comments (game_id, user_id, content) VALUES ($game_id, $user_id, '$clean_content')");
+        } catch (Throwable $e) {}
+    }
+    
+    header("Location: game_detail.php?id=$game_id#commentsSection");
+    exit();
+}
+
+// BẮT ĐẦU OUTPUT GIAO DIỆN CHUNG
+require_once __DIR__ . '/includes/header.php'; 
+
+if ($game_id <= 0) {
     echo "<div class='container mt-5 text-center text-white'><div class='panel-dark p-5'><h3>Không tìm thấy tựa game yêu cầu.</h3><a href='index.php' class='btn btn-gaming-primary mt-3'>Về Cửa Hàng</a></div></div>";
     include 'includes/footer.php';
     exit();
 }
 
-$game_id = intval($_GET['id']);
-$user_id = isset($_SESSION['user_id']) ? $_SESSION['user_id'] : null;
-
-// XỬ LÝ: Khi người dùng gửi bình luận
-if (isset($_POST['btn_comment'])) {
-    if (!$user_id) {
-        echo "<script>alert('Vui lòng đăng nhập để bình luận!'); window.location='login.php';</script>";
-        exit();
-    } else {
-        $content = $conn->real_escape_string($_POST['comment_content']);
-        if (!empty($content)) {
-            $conn->query("INSERT INTO comments (game_id, user_id, content) VALUES ($game_id, $user_id, '$content')");
-            echo "<script>window.location='game_detail.php?id=$game_id#commentsSection';</script>";
-            exit();
-        }
-    }
-}
-
 // LẤY THÔNG TIN GAME
-$sql_game = "SELECT g.*, c.cate_name FROM games g LEFT JOIN categories c ON g.category_id = c.category_id WHERE g.game_id = $game_id";
-$result_game = $conn->query($sql_game);
+$game = null;
+try {
+    $sql_game = "SELECT g.*, c.cate_name FROM games g LEFT JOIN categories c ON g.category_id = c.category_id WHERE g.game_id = $game_id";
+    $result_game = $conn->query($sql_game);
+    if ($result_game && $result_game->num_rows > 0) {
+        $game = $result_game->fetch_assoc();
+    }
+} catch (Throwable $e) {}
 
-if (!$result_game || $result_game->num_rows == 0) {
+if (!$game) {
     echo "<div class='container mt-5 text-center text-white'><div class='panel-dark p-5'><h3>Trò chơi không tồn tại hoặc đã bị ẩn.</h3><a href='index.php' class='btn btn-gaming-primary mt-3'>Về Cửa Hàng</a></div></div>";
     include 'includes/footer.php';
     exit();
 }
-$game = $result_game->fetch_assoc();
 
-// Tăng lượt xem (Views)
-$conn->query("UPDATE games SET views = COALESCE(views, 0) + 1 WHERE game_id = $game_id");
+// Tăng lượt xem (Views) an toàn
+try {
+    $conn->query("UPDATE games SET views = COALESCE(views, 0) + 1 WHERE game_id = $game_id");
+} catch (Throwable $e) {}
 
 // Đồng bộ số lượng tài khoản khả dụng thực tế
 $available_accounts = intval($game['quantity'] ?? 0);
@@ -81,7 +95,7 @@ try {
 } catch (Throwable $e) {}
 
 // Gói dự phòng nếu CSDL chưa nạp bảng rental_packages
-if (empty($packages) && $game['price_type'] == 'paid') {
+if (empty($packages) && ($game['price_type'] ?? 'paid') == 'paid') {
     $packages = [
         ['package_id' => 1, 'package_name' => '1 Giờ (Trải nghiệm nhanh)', 'price' => 5000, 'duration_type' => 'hours', 'duration_value' => 1],
         ['package_id' => 2, 'package_name' => '1 Ngày (24 Giờ trọn gói)', 'price' => 15000, 'duration_type' => 'days', 'duration_value' => 1],
@@ -95,7 +109,7 @@ if (empty($packages) && $game['price_type'] == 'paid') {
     <nav aria-label="breadcrumb" class="mb-4">
         <ol class="breadcrumb" style="font-size: 0.88rem;">
             <li class="breadcrumb-item"><a href="index.php" class="text-secondary"><i class="bi bi-house me-1"></i> Trang chủ</a></li>
-            <li class="breadcrumb-item"><a href="index.php?category=<?php echo $game['category_id']; ?>" class="text-secondary"><?php echo htmlspecialchars($game['cate_name'] ?? 'Thể loại'); ?></a></li>
+            <li class="breadcrumb-item"><a href="index.php?category=<?php echo intval($game['category_id'] ?? 0); ?>" class="text-secondary"><?php echo htmlspecialchars($game['cate_name'] ?? 'Thể loại'); ?></a></li>
             <li class="breadcrumb-item active text-white" aria-current="page"><?php echo htmlspecialchars($game['title']); ?></li>
         </ol>
     </nav>
@@ -107,7 +121,7 @@ if (empty($packages) && $game['price_type'] == 'paid') {
             <div class="col-lg-5 col-md-6 text-center">
                 <div class="position-relative rounded-4 overflow-hidden shadow-lg border border-secondary border-opacity-25" style="background: #0b0d13;">
                     <?php if (!empty($game['image_url']) && file_exists($game['image_url'])): ?>
-                        <img src="<?php echo $game['image_url']; ?>" class="img-fluid w-100" alt="<?php echo htmlspecialchars($game['title']); ?>" style="max-height: 480px; object-fit: cover;">
+                        <img src="<?php echo htmlspecialchars($game['image_url']); ?>" class="img-fluid w-100" alt="<?php echo htmlspecialchars($game['title']); ?>" style="max-height: 480px; object-fit: cover;">
                     <?php else: ?>
                         <div class="d-flex flex-column align-items-center justify-content-center text-muted" style="height: 380px;">
                             <i class="bi bi-controller fs-1 mb-2 text-secondary"></i>
@@ -118,9 +132,9 @@ if (empty($packages) && $game['price_type'] == 'paid') {
                     <!-- Platform Tag góc trên ảnh -->
                     <div class="position-absolute top-0 start-0 m-3 d-flex gap-2">
                         <span class="badge-platform px-3 py-2 fs-6">
-                            <?php echo ($game['platform'] == 'PC') ? '<i class="bi bi-display me-1"></i>PC Game' : '<i class="bi bi-phone me-1"></i>Mobile Game'; ?>
+                            <?php echo (($game['platform'] ?? 'PC') == 'PC') ? '<i class="bi bi-display me-1"></i>PC Game' : '<i class="bi bi-phone me-1"></i>Mobile Game'; ?>
                         </span>
-                        <?php if ($game['price_type'] == 'free'): ?>
+                        <?php if (($game['price_type'] ?? '') == 'free'): ?>
                             <span class="badge-gaming badge-gaming-free px-3 py-2 fs-6">Miễn Phí</span>
                         <?php else: ?>
                             <span class="badge-gaming badge-gaming-paid px-3 py-2 fs-6">Tài Khoản Thuê</span>
@@ -129,7 +143,7 @@ if (empty($packages) && $game['price_type'] == 'paid') {
                 </div>
 
                 <!-- Tình trạng kho tài khoản -->
-                <?php if ($game['price_type'] != 'free'): ?>
+                <?php if (($game['price_type'] ?? '') != 'free'): ?>
                 <div class="mt-3 p-3 rounded-3 bg-dark border border-secondary border-opacity-25 d-flex justify-content-between align-items-center">
                     <span class="text-secondary small fw-bold"><i class="bi bi-box-seam me-1"></i> Trạng thái kho:</span>
                     <?php if ($available_accounts > 0): ?>
@@ -172,7 +186,7 @@ if (empty($packages) && $game['price_type'] == 'paid') {
                 <?php endif; ?>
 
                 <!-- BẢNG BÁO GIÁ CÁC GÓI THUÊ -->
-                <?php if ($game['price_type'] != 'free'): ?>
+                <?php if (($game['price_type'] ?? '') != 'free'): ?>
                     <div class="my-3 p-3 rounded-4" style="background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border-subtle);">
                         <div class="d-flex justify-content-between align-items-center mb-3">
                             <span class="fw-bold text-white small text-uppercase tracking-wider">
@@ -195,7 +209,7 @@ if (empty($packages) && $game['price_type'] == 'paid') {
 
                 <!-- KHU VỰC NÚT THUÊ CHÍNH -->
                 <div class="mt-4 pt-3 border-top border-white border-opacity-10">
-                    <?php if ($game['price_type'] == 'free'): ?>
+                    <?php if (($game['price_type'] ?? '') == 'free'): ?>
                         <div class="p-3 rounded-3 mb-3" style="background: rgba(6, 182, 212, 0.1); border: 1px solid rgba(6, 182, 212, 0.3);">
                             <span class="text-info fw-bold"><i class="bi bi-gift-fill me-1"></i> Trò chơi này được phát hành hoàn toàn miễn phí.</span>
                         </div>
@@ -286,7 +300,7 @@ if (empty($packages) && $game['price_type'] == 'paid') {
                 </h4>
                 
                 <!-- Form gửi bình luận -->
-                <form method="POST" action="" class="mb-4">
+                <form method="POST" action="game_detail.php?id=<?php echo $game_id; ?>#commentsSection" class="mb-4">
                     <div class="mb-3">
                         <textarea name="comment_content" class="form-control" rows="3" placeholder="Chia sẻ cảm nhận hoặc trải nghiệm chơi game của bạn..." required style="resize: none;"></textarea>
                     </div>
@@ -298,28 +312,39 @@ if (empty($packages) && $game['price_type'] == 'paid') {
                 <!-- Danh sách bình luận -->
                 <div class="comments-list pe-1" style="max-height: 480px; overflow-y: auto;">
                     <?php
-                    $sql_comments = "SELECT c.*, u.username FROM comments c JOIN users u ON c.user_id = u.user_id WHERE c.game_id = $game_id ORDER BY c.created_at DESC";
-                    $result_comments = $conn->query($sql_comments);
-                    
-                    if ($result_comments && $result_comments->num_rows > 0):
-                        while ($cmt = $result_comments->fetch_assoc()):
+                    $comments_loaded = false;
+                    try {
+                        $sql_comments = "SELECT c.*, u.username FROM comments c JOIN users u ON c.user_id = u.user_id WHERE c.game_id = $game_id ORDER BY c.comment_id DESC";
+                        $result_comments = $conn->query($sql_comments);
+                        
+                        if ($result_comments && $result_comments->num_rows > 0) {
+                            $comments_loaded = true;
+                            while ($cmt = $result_comments->fetch_assoc()) {
                     ?>
                         <div class="d-flex gap-3 mb-3 pb-3 border-bottom border-white border-opacity-10">
-                            <img src="https://ui-avatars.com/api/?name=<?php echo urlencode($cmt['username']); ?>&background=1e293b&color=38bdf8&bold=true&rounded=true" width="40" height="40" class="rounded-circle flex-shrink-0" alt="Avatar">
+                            <img src="https://ui-avatars.com/api/?name=<?php echo urlencode($cmt['username'] ?? 'Gamer'); ?>&background=1e293b&color=38bdf8&bold=true&rounded=true" width="40" height="40" class="rounded-circle flex-shrink-0" alt="Avatar">
                             <div class="w-100">
                                 <div class="d-flex justify-content-between align-items-center mb-1">
-                                    <strong class="text-white small">@<?php echo htmlspecialchars($cmt['username']); ?></strong>
-                                    <span class="text-dim" style="font-size: 0.75rem;"><?php echo date('d/m/Y H:i', strtotime($cmt['created_at'])); ?></span>
+                                    <strong class="text-white small">@<?php echo htmlspecialchars($cmt['username'] ?? 'Gamer'); ?></strong>
+                                    <span class="text-secondary" style="font-size: 0.75rem;">
+                                        <?php 
+                                        $ctime = isset($cmt['created_at']) ? strtotime($cmt['created_at']) : (isset($cmt['comment_date']) ? strtotime($cmt['comment_date']) : time());
+                                        echo date('d/m/Y H:i', $ctime); 
+                                        ?>
+                                    </span>
                                 </div>
-                                <p class="text-light mb-0" style="font-size: 0.9rem; line-height: 1.5;"><?php echo nl2br(htmlspecialchars($cmt['content'])); ?></p>
+                                <p class="text-light mb-0" style="font-size: 0.9rem; line-height: 1.5;"><?php echo nl2br(htmlspecialchars($cmt['content'] ?? '')); ?></p>
                             </div>
                         </div>
                     <?php 
-                        endwhile;
-                    else:
+                            }
+                        }
+                    } catch (Throwable $e) {}
+                    
+                    if (!$comments_loaded):
                     ?>
                         <div class="text-center py-4 text-secondary">
-                            <i class="bi bi-chat-dots fs-2 d-block mb-2 text-dim"></i>
+                            <i class="bi bi-chat-dots fs-2 d-block mb-2 text-secondary"></i>
                             <p class="small mb-0">Chưa có bình luận nào. Hãy là người đầu tiên trải nghiệm tựa game này!</p>
                         </div>
                     <?php endif; ?>

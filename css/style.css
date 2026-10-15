@@ -60,11 +60,13 @@
 }
 
 body {
+    --bs-body-bg: #08090d !important;
+    --bs-body-color: #f8fafc !important;
     margin: 0;
     padding: 0;
     font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    background-color: var(--bg-base);
-    color: var(--text-main);
+    background-color: var(--bg-base) !important;
+    color: var(--text-main) !important;
     display: flex;
     height: 100vh;
     overflow: hidden;
@@ -687,40 +689,58 @@ a:hover {
     box-shadow: var(--shadow-card);
 }
 
+.table-responsive {
+    background-color: transparent !important;
+}
+
+.table,
 .table-gaming {
+    --bs-table-bg: transparent !important;
+    --bs-table-accent-bg: transparent !important;
+    --bs-table-striped-color: var(--text-main) !important;
+    --bs-table-striped-bg: rgba(255, 255, 255, 0.02) !important;
+    --bs-table-active-color: var(--text-main) !important;
+    --bs-table-active-bg: rgba(255, 255, 255, 0.05) !important;
+    --bs-table-hover-color: var(--text-white) !important;
+    --bs-table-hover-bg: rgba(99, 102, 241, 0.08) !important;
+    --bs-table-color: var(--text-main) !important;
+    --bs-table-border-color: rgba(255, 255, 255, 0.05) !important;
+    background-color: transparent !important;
+    color: var(--text-main) !important;
     width: 100%;
     margin-bottom: 0;
-    color: var(--text-main);
     border-collapse: separate;
     border-spacing: 0;
 }
 
 .table-gaming th {
-    background: #0d0f17;
-    color: var(--text-muted);
+    background-color: #0d0f17 !important;
+    color: var(--text-muted) !important;
     font-weight: 700;
     font-size: 0.82rem;
     text-transform: uppercase;
     letter-spacing: 0.8px;
     padding: 16px 20px;
-    border-bottom: 1px solid var(--border-subtle);
+    border-bottom: 1px solid var(--border-subtle) !important;
     white-space: nowrap;
 }
 
 .table-gaming td {
     padding: 16px 20px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.04) !important;
     vertical-align: middle;
     font-size: 0.92rem;
-    color: var(--text-main);
+    color: var(--text-main) !important;
+    background-color: transparent !important;
 }
 
 .table-gaming tbody tr {
     transition: background-color var(--transition-fast);
 }
 
-.table-gaming tbody tr:hover {
-    background-color: var(--bg-surface-elevated);
+.table-gaming tbody tr:hover td {
+    background-color: var(--bg-surface-elevated) !important;
+    color: var(--text-white) !important;
 }
 
 /* =========================================================
