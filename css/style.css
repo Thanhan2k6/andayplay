@@ -775,30 +775,93 @@ a:hover {
 }
 
 /* =========================================================
-   MODALS
+   MODALS (100% OPAQUE GAMING MODAL SYSTEM)
    ========================================================= */
+.modal-backdrop {
+    background-color: #040508 !important;
+}
+
+.modal-backdrop.show {
+    opacity: 0.82 !important;
+}
+
+.modal-content,
 .modal-content.modal-gaming {
-    background: #0f121a;
-    border: 1px solid var(--border-subtle);
-    border-radius: var(--radius-xl);
-    box-shadow: var(--shadow-elevated);
+    background-color: #0d0f17 !important;
+    background-image: none !important;
+    border: 1px solid rgba(255, 255, 255, 0.12) !important;
+    border-radius: var(--radius-xl) !important;
+    box-shadow: 0 25px 60px -10px rgba(0, 0, 0, 0.95), 0 0 30px rgba(99, 102, 241, 0.15) !important;
+    color: var(--text-white) !important;
+    opacity: 1 !important;
     overflow: hidden;
 }
 
+.modal-header,
 .modal-gaming .modal-header {
-    border-bottom: 1px solid var(--border-subtle);
-    padding: 20px 24px;
-    background: #0b0d13;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+    padding: 20px 24px !important;
+    background: #090b10 !important;
 }
 
+.modal-body,
 .modal-gaming .modal-body {
-    padding: 24px;
+    padding: 24px !important;
+    background: #0d0f17 !important;
+    color: var(--text-main) !important;
 }
 
+.modal-footer,
 .modal-gaming .modal-footer {
-    border-top: 1px solid var(--border-subtle);
-    padding: 16px 24px;
-    background: #0b0d13;
+    border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
+    padding: 16px 24px !important;
+    background: #090b10 !important;
+}
+
+.modal-content textarea.form-control,
+.modal-content input.form-control {
+    background-color: #141724 !important;
+    border: 1px solid rgba(255, 255, 255, 0.12) !important;
+    color: #ffffff !important;
+}
+
+.modal-content textarea.form-control:focus,
+.modal-content input.form-control:focus {
+    background-color: #191d2d !important;
+    border-color: var(--primary) !important;
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.25) !important;
+}
+
+/* Dropdown Menu System */
+.dropdown-menu-gaming,
+.dropdown-menu-dark {
+    background-color: #0f121a !important;
+    border: 1px solid rgba(255, 255, 255, 0.12) !important;
+    border-radius: var(--radius-md) !important;
+    box-shadow: 0 20px 45px -10px rgba(0, 0, 0, 0.9) !important;
+    padding: 8px !important;
+}
+
+.dropdown-item-gaming,
+.dropdown-menu-dark .dropdown-item {
+    color: var(--text-main) !important;
+    border-radius: var(--radius-sm) !important;
+    padding: 8px 14px !important;
+    font-size: 0.88rem !important;
+    font-weight: 500 !important;
+    transition: all var(--transition-fast) !important;
+}
+
+.dropdown-item-gaming:hover,
+.dropdown-menu-dark .dropdown-item:hover {
+    background-color: rgba(99, 102, 241, 0.15) !important;
+    color: #ffffff !important;
+}
+
+.dropdown-item-gaming.text-danger:hover,
+.dropdown-menu-dark .dropdown-item.text-danger:hover {
+    background-color: rgba(244, 63, 94, 0.15) !important;
+    color: #f43f5e !important;
 }
 
 /* =========================================================

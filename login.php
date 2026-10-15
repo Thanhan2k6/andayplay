@@ -21,6 +21,7 @@ if (isset($_POST['btn_login'])) {
         if (password_verify($password, $user['password']) || $password == $user['password']) {
             $_SESSION['user_id'] = $user['user_id'];
             $_SESSION['username'] = $user['username'];
+            $_SESSION['email'] = $user['email'];
             $_SESSION['role'] = $user['role'];
 
             $script_hieu_ung = "

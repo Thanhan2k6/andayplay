@@ -388,14 +388,14 @@ if ($result && $result->num_rows > 0) {
         <?php if ($is_active): ?>
         <div class="modal fade" id="reportModal_<?php echo $row['borrow_id']; ?>" tabindex="-1" aria-hidden="true">
             <div class="modal-dialog modal-dialog-centered">
-                <div class="modal-content" style="background: var(--bg-card); border: 1px solid var(--border-color); color: #fff;">
+                <div class="modal-content modal-gaming shadow-lg">
                     <form method="POST" action="">
                         <input type="hidden" name="csrf_token" value="<?php echo $csrf_token; ?>">
                         <input type="hidden" name="report_borrow_id" value="<?php echo $row['borrow_id']; ?>">
                         
-                        <div class="modal-header border-secondary border-opacity-25">
-                            <h5 class="modal-title fw-bold text-warning">
-                                <i class="bi bi-exclamation-triangle-fill me-2"></i> Báo Lỗi Tài Khoản Game
+                        <div class="modal-header">
+                            <h5 class="modal-title fw-bold text-warning d-flex align-items-center">
+                                <i class="bi bi-exclamation-triangle-fill me-2 fs-5"></i> Báo Lỗi Tài Khoản Game
                             </h5>
                             <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                         </div>

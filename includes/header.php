@@ -128,28 +128,91 @@ $current_page = basename($_SERVER['PHP_SELF']);
                 <i class="bi bi-headset"></i>
             </a>
 
-            <?php if(isset($_SESSION['user_id'])): ?>
+            <?php if(isset($_SESSION['user_id'])): 
+                $hdr_username = htmlspecialchars($_SESSION['username'] ?? 'User');
+                $hdr_email = htmlspecialchars($_SESSION['email'] ?? '');
+                $hdr_is_admin = (isset($_SESSION['role']) && $_SESSION['role'] == 1);
+            ?>
                 <div class="dropdown">
-                    <a href="#" class="user-profile-btn dropdown-toggle text-decoration-none" data-bs-toggle="dropdown" aria-expanded="false">
-                        <img src="https://ui-avatars.com/api/?name=<?php echo urlencode($_SESSION['username']); ?>&background=6366f1&color=fff&bold=true&rounded=true" width="34" height="34" class="rounded-circle shadow-sm" alt="Avatar">
+                    <button class="user-profile-btn dropdown-toggle text-decoration-none border-0" type="button" id="userMenuDropdown" data-bs-toggle="dropdown" aria-expanded="false" style="cursor: pointer;">
+                        <img src="https://ui-avatars.com/api/?name=<?php echo urlencode($hdr_username); ?>&background=6366f1&color=fff&bold=true&rounded=true" width="34" height="34" class="rounded-circle shadow-sm" alt="Avatar">
                         <div class="d-none d-md-flex flex-column text-start">
-                            <span class="fw-bold" style="font-size: 0.88rem; line-height: 1.2;">@<?php echo htmlspecialchars($_SESSION['username']); ?></span>
+                            <span class="fw-bold" style="font-size: 0.88rem; line-height: 1.2;">@<?php echo $hdr_username; ?></span>
                             <span class="text-secondary" style="font-size: 0.72rem;">
-                                <?php echo ($_SESSION['role'] == 1) ? '<span class="text-danger fw-bold">Admin</span>' : '<span class="text-info">Thành viên VIP</span>'; ?>
+                                <?php echo $hdr_is_admin ? '<span class="text-danger fw-bold"><i class="bi bi-shield-check"></i> Admin</span>' : '<span class="text-info"><i class="bi bi-patch-check-fill"></i> Thành viên VIP</span>'; ?>
                             </span>
                         </div>
-                    </a>
-                    <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-end shadow border-secondary mt-2" style="background-color: #12151e; border: 1px solid rgba(255,255,255,0.1); border-radius: 12px;">
-                        <li class="px-3 py-2 border-bottom border-secondary border-opacity-25 d-md-none">
-                            <span class="fw-bold text-white d-block">@<?php echo htmlspecialchars($_SESSION['username']); ?></span>
-                            <small class="text-muted"><?php echo ($_SESSION['role'] == 1) ? 'Quản trị viên' : 'Khách hàng'; ?></small>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-end shadow-lg mt-2 p-2" aria-labelledby="userMenuDropdown" style="min-width: 270px; background-color: #0f121a; border: 1px solid rgba(255,255,255,0.12); border-radius: 16px; box-shadow: 0 20px 40px -10px rgba(0,0,0,0.9);">
+                        <!-- USER SUMMARY CARD IN DROPDOWN -->
+                        <li class="px-3 py-3 mb-2 rounded-3" style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06);">
+                            <div class="d-flex align-items-center gap-3">
+                                <img src="https://ui-avatars.com/api/?name=<?php echo urlencode($hdr_username); ?>&background=6366f1&color=fff&bold=true&rounded=true" width="42" height="42" class="rounded-circle shadow" alt="Avatar">
+                                <div class="overflow-hidden">
+                                    <div class="fw-bold text-white text-truncate" style="font-size: 0.95rem;">@<?php echo $hdr_username; ?></div>
+                                    <?php if(!empty($hdr_email)): ?>
+                                        <div class="text-secondary small text-truncate" style="font-size: 0.75rem;"><?php echo $hdr_email; ?></div>
+                                    <?php endif; ?>
+                                    <div class="mt-1">
+                                        <?php if($hdr_is_admin): ?>
+                                            <span class="badge" style="background: rgba(244,63,94,0.2); color: #f43f5e; border: 1px solid rgba(244,63,94,0.4); font-size: 0.68rem; padding: 2px 6px;">
+                                                <i class="bi bi-shield-lock-fill me-1"></i> Quản Trị Viên
+                                            </span>
+                                        <?php else: ?>
+                                            <span class="badge" style="background: rgba(6,182,212,0.15); color: #06b6d4; border: 1px solid rgba(6,182,212,0.35); font-size: 0.68rem; padding: 2px 6px;">
+                                                <i class="bi bi-gem me-1"></i> Khách Hàng VIP
+                                            </span>
+                                        <?php endif; ?>
+                                    </div>
+                                </div>
+                            </div>
                         </li>
-                        <li><a class="dropdown-item py-2" href="my_library.php"><i class="bi bi-collection-play me-2 text-success"></i> Thư viện của tôi</a></li>
-                        <?php if($_SESSION['role'] == 1): ?>
-                            <li><a class="dropdown-item py-2" href="admin_dashboard.php"><i class="bi bi-speedometer2 me-2 text-danger"></i> Trang Quản Trị</a></li>
+
+                        <!-- SECTION: QUẢN LÝ TÀI KHOẢN -->
+                        <li><h6 class="dropdown-header text-uppercase text-secondary fw-bold px-3 py-1" style="font-size: 0.68rem; letter-spacing: 0.5px;">Tài Khoản & Cá Nhân</h6></li>
+                        <li>
+                            <a class="dropdown-item py-2 px-3 rounded-2 d-flex align-items-center justify-content-between" href="profile.php?tab=overview">
+                                <span><i class="bi bi-person-circle me-2 text-primary"></i> Thông tin tài khoản</span>
+                                <i class="bi bi-chevron-right text-secondary" style="font-size: 0.75rem;"></i>
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item py-2 px-3 rounded-2 d-flex align-items-center justify-content-between" href="my_library.php">
+                                <span><i class="bi bi-collection-play me-2 text-success"></i> Thư viện & Game thuê</span>
+                                <span class="badge bg-success bg-opacity-25 text-success border border-success border-opacity-25" style="font-size: 0.65rem;">Active</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item py-2 px-3 rounded-2 d-flex align-items-center justify-content-between" href="profile.php?tab=orders">
+                                <span><i class="bi bi-receipt-cutoff me-2 text-info"></i> Lịch sử thuê & Đơn hàng</span>
+                                <i class="bi bi-chevron-right text-secondary" style="font-size: 0.75rem;"></i>
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item py-2 px-3 rounded-2 d-flex align-items-center justify-content-between" href="profile.php?tab=security">
+                                <span><i class="bi bi-shield-lock me-2 text-warning"></i> Đổi mật khẩu & Bảo mật</span>
+                                <i class="bi bi-chevron-right text-secondary" style="font-size: 0.75rem;"></i>
+                            </a>
+                        </li>
+
+                        <!-- SECTION: QUẢN TRỊ VIÊN NẾU CÓ -->
+                        <?php if($hdr_is_admin): ?>
+                            <li><hr class="dropdown-divider border-secondary border-opacity-25 my-2"></li>
+                            <li><h6 class="dropdown-header text-uppercase text-danger fw-bold px-3 py-1" style="font-size: 0.68rem; letter-spacing: 0.5px;">Khu Vực Quản Trị</h6></li>
+                            <li>
+                                <a class="dropdown-item py-2 px-3 rounded-2 d-flex align-items-center text-danger" href="admin_dashboard.php">
+                                    <i class="bi bi-speedometer2 me-2"></i> Bảng điều khiển Admin
+                                </a>
+                            </li>
                         <?php endif; ?>
-                        <li><hr class="dropdown-divider border-secondary border-opacity-25"></li>
-                        <li><a class="dropdown-item py-2 text-danger fw-bold" href="logout.php"><i class="bi bi-box-arrow-right me-2"></i> Đăng xuất</a></li>
+
+                        <!-- LOGOUT -->
+                        <li><hr class="dropdown-divider border-secondary border-opacity-25 my-2"></li>
+                        <li>
+                            <a class="dropdown-item py-2 px-3 rounded-2 text-danger fw-bold d-flex align-items-center" href="logout.php">
+                                <i class="bi bi-box-arrow-right me-2"></i> Đăng xuất an toàn
+                            </a>
+                        </li>
                     </ul>
                 </div>
             <?php else: ?>
