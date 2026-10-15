@@ -100,10 +100,10 @@ function sync_game_inventory($conn, $game_id) {
     $total = intval($res['total_acc'] ?? 0);
     $available = intval($res['available_acc'] ?? 0);
 
-    $upd = $conn->prepare("UPDATE games SET total_quantity = ?, available_quantity = ? WHERE game_id = ?");
-    $upd->bind_param("iii", $total, $available, $game_id);
-    $upd->execute();
-    $upd->close();
+    // Đồng bộ số lượng tài khoản khả dụng vào cột quantity của bảng games
+    try {
+        $conn->query("UPDATE games SET quantity = $available WHERE game_id = $game_id");
+    } catch (Throwable $e) {}
 }
 
 /**

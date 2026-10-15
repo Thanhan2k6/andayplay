@@ -89,6 +89,73 @@ if (isset($_GET['delete_account'])) {
     }
 }
 
+// 4. XỬ LÝ NẠP HÀNG LOẠT 20 TÀI KHOẢN CHO MỖI GAME (HOẶC TẤT CẢ GAME)
+if (isset($_POST['btn_batch_generate'])) {
+    if (!verify_csrf_token($_POST['csrf_token'] ?? '')) {
+        $error = "CSRF verification failed!";
+    } else {
+        $target_game_id = intval($_POST['batch_game_id'] ?? 0);
+        $accounts_per_game = intval($_POST['batch_quantity'] ?? 20);
+        if ($accounts_per_game < 1) $accounts_per_game = 20;
+        if ($accounts_per_game > 50) $accounts_per_game = 50;
+
+        $games_to_seed = [];
+        if ($target_game_id > 0) {
+            $g_res = $conn->query("SELECT game_id, title FROM games WHERE game_id = $target_game_id");
+            if ($g_res && $g_row = $g_res->fetch_assoc()) {
+                $games_to_seed[] = $g_row;
+            }
+        } else {
+            $g_res = $conn->query("SELECT game_id, title FROM games WHERE price_type = 'paid'");
+            if ($g_res && $g_res->num_rows > 0) {
+                while ($g_row = $g_res->fetch_assoc()) {
+                    $games_to_seed[] = $g_row;
+                }
+            }
+        }
+
+        if (empty($games_to_seed)) {
+            $error = "Không tìm thấy tựa game trả phí nào để tạo tài khoản!";
+        } else {
+            $total_created = 0;
+            $conn->begin_transaction();
+            try {
+                foreach ($games_to_seed as $g) {
+                    $gid = intval($g['game_id']);
+                    $clean_title = preg_replace('/[^a-zA-Z0-9]/', '', strtolower($g['title']));
+                    if (empty($clean_title)) $clean_title = "game" . $gid;
+                    $clean_title = substr($clean_title, 0, 10);
+
+                    for ($i = 1; $i <= $accounts_per_game; $i++) {
+                        $uname = "anplay_" . $clean_title . "_" . rand(100, 999) . $i;
+                        $plain_pass = generate_strong_password(14);
+                        $enc_pass = encrypt_game_password($plain_pass);
+                        $region = "Global (VN/Asia)";
+                        $note = "Nạp tự động kho - " . date('d/m/Y H:i');
+
+                        $ins_stmt = $conn->prepare("INSERT INTO game_accounts 
+                            (game_id, account_username, account_password_encrypted, server_region, status, notes, created_at) 
+                            VALUES (?, ?, ?, ?, 'AVAILABLE', ?, NOW())");
+                        $ins_stmt->bind_param("issss", $gid, $uname, $enc_pass, $region, $note);
+                        $ins_stmt->execute();
+                        $new_id = $conn->insert_id;
+                        $ins_stmt->close();
+
+                        log_account_allocation($conn, $new_id, null, $_SESSION['user_id'], 'MAINTENANCE_TRIGGERED', "Nạp hàng loạt vào kho", 'ADMIN: ' . $_SESSION['username']);
+                        $total_created++;
+                    }
+                    sync_game_inventory($conn, $gid);
+                }
+                $conn->commit();
+                $message = "🎉 THÀNH CÔNG RỰC RỠ! Đã nạp thành công $total_created tài khoản mới cho " . count($games_to_seed) . " tựa game! Số lượng hiển thị của mỗi game đã được cập nhật chính xác.";
+            } catch (Throwable $ex) {
+                $conn->rollback();
+                $error = "Lỗi khi nạp hàng loạt: " . $ex->getMessage();
+            }
+        }
+    }
+}
+
 // LẤY DANH SÁCH GAME ĐỂ FILTER VÀ CHỌN
 $games_list = false;
 try {
@@ -124,9 +191,14 @@ $csrf_token = generate_csrf_token();
             <h2 class="fw-bold m-0 text-info"><i class="bi bi-box-seam-fill me-2"></i> QUẢN LÝ KHO TÀI KHOẢN GAME</h2>
             <p class="text-secondary small mb-0">Quản lý kho tài khoản, nhập kho tự động/thủ công, kiểm tra trạng thái và thu hồi</p>
         </div>
-        <button class="btn btn-success fw-bold px-4 py-2" data-bs-toggle="modal" data-bs-target="#addAccountModal">
-            <i class="bi bi-plus-circle me-1"></i> + Nhập Tài Khoản Vào Kho
-        </button>
+        <div>
+            <button class="btn btn-warning fw-bold px-3 py-2 text-dark shadow me-2" data-bs-toggle="modal" data-bs-target="#batchGenerateModal">
+                <i class="bi bi-lightning-charge-fill me-1"></i> Nạp Hàng Loạt 20 TK / Game
+            </button>
+            <button class="btn btn-success fw-bold px-4 py-2" data-bs-toggle="modal" data-bs-target="#addAccountModal">
+                <i class="bi bi-plus-circle me-1"></i> + Nhập Tài Khoản Vào Kho
+            </button>
+        </div>
     </div>
 
     <?php if ($message): ?>
@@ -354,6 +426,53 @@ $csrf_token = generate_csrf_token();
                 <div class="modal-footer border-secondary">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
                     <button type="submit" name="btn_add_account" class="btn btn-success fw-bold">Xác Nhận Nhập Kho</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL NẠP HÀNG LOẠT TỰ ĐỘNG 20 TÀI KHOẢN -->
+<div class="modal fade" id="batchGenerateModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content bg-dark text-white border-secondary">
+            <form method="POST" action="">
+                <input type="hidden" name="csrf_token" value="<?php echo $csrf_token; ?>">
+                <div class="modal-header border-secondary">
+                    <h5 class="modal-title text-warning fw-bold"><i class="bi bi-lightning-charge-fill me-2"></i> Nạp Hàng Loạt Tài Khoản Game Tự Động</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-info py-2 small mb-3">
+                        <i class="bi bi-info-circle-fill me-1"></i> Hệ thống sẽ tự động tạo tài khoản với tên đăng nhập duy nhất và mật khẩu ngẫu nhiên độ an toàn cao (mã hóa chuẩn AES-256). Khi có người thuê, số lượng khả dụng sẽ tự động giảm đi 1!
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label text-info fw-bold">Chọn phạm vi game:</label>
+                        <select name="batch_game_id" class="form-select bg-dark text-white border-secondary" required>
+                            <option value="0">⭐ TẤT CẢ GAME TRẢ PHÍ (Khuyên dùng)</option>
+                            <?php 
+                            if ($games_list && $games_list->num_rows > 0):
+                                $games_list->data_seek(0);
+                                while ($g = $games_list->fetch_assoc()): ?>
+                                    <option value="<?php echo $g['game_id']; ?>">Chỉ game: <?php echo htmlspecialchars($g['title']); ?></option>
+                            <?php 
+                                endwhile; 
+                            endif; ?>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label text-warning fw-bold">Số lượng tài khoản cần nạp cho mỗi game:</label>
+                        <input type="number" name="batch_quantity" class="form-control bg-dark text-white border-secondary" value="20" min="1" max="50" required>
+                        <div class="form-text text-secondary">Mặc định: 20 tài khoản / game (Trạng thái: AVAILABLE).</div>
+                    </div>
+                </div>
+                <div class="modal-footer border-secondary">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                    <button type="submit" name="btn_batch_generate" class="btn btn-warning text-dark fw-bold">
+                        <i class="bi bi-lightning-fill me-1"></i> BẮT ĐẦU NẠP TÀI KHOẢN NGAY
+                    </button>
                 </div>
             </form>
         </div>
