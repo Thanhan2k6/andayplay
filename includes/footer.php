@@ -360,10 +360,12 @@ window.ANPLAY_CHAT_CSRF = "<?php echo htmlspecialchars($_SESSION['chat_csrf_toke
         }
 
         try {
-            // Adaptive endpoint URL resolution pointing to root chatbot_handler.php
-            let apiEndpoint = '/chatbot_handler.php';
+            // Adaptive endpoint URL resolution pointing to assistant.php (hoàn toàn không bị InfinityFree chặn)
+            let apiEndpoint = 'assistant.php';
             if (window.location.pathname.includes('/quan_ly_thu_vien_game/')) {
-                apiEndpoint = '/quan_ly_thu_vien_game/chatbot_handler.php';
+                apiEndpoint = '/quan_ly_thu_vien_game/assistant.php';
+            } else if (window.location.pathname.startsWith('/')) {
+                apiEndpoint = '/assistant.php';
             }
 
             // Dùng FormData để tương thích 100% với InfinityFree và mọi hosting Apache
