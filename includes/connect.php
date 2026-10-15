@@ -7,8 +7,15 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-// Kiểm tra xem code đang chạy trên máy tính (localhost) hay chạy trên Hosting thật
-if (isset($_SERVER['HTTP_HOST']) && ($_SERVER['HTTP_HOST'] == 'localhost' || $_SERVER['HTTP_HOST'] == '127.0.0.1')) {
+// Kiểm tra xem code đang chạy trên máy tính (localhost / CLI) hay chạy trên Hosting thật
+$is_local = (
+    php_sapi_name() === 'cli' ||
+    !isset($_SERVER['HTTP_HOST']) ||
+    strpos($_SERVER['HTTP_HOST'], 'localhost') !== false ||
+    strpos($_SERVER['HTTP_HOST'], '127.0.0.1') !== false
+);
+
+if ($is_local) {
     $host = "localhost";
     $user = "root";
     $pass = "";
@@ -29,11 +36,15 @@ $conn = new mysqli($host, $user, $pass, $db);
 
 // Kiểm tra kết nối
 if ($conn->connect_error) {
-    die("Kết nối thất bại. Vui lòng kiểm tra lại thông số Database: " . $conn->connect_error);
+    if (defined('ANPLAY_CHATBOT_NO_DIE')) {
+        $conn = null;
+    } else {
+        die("Kết nối thất bại. Vui lòng kiểm tra lại thông số Database: " . $conn->connect_error);
+    }
+} else {
+    // Thiết lập font chữ tiếng Việt
+    $conn->set_charset("utf8mb4");
 }
-
-// Thiết lập font chữ tiếng Việt
-$conn->set_charset("utf8mb4");
 
 // Nạp thư viện dịch vụ tài khoản và bảo mật
 require_once __DIR__ . '/account_service.php';

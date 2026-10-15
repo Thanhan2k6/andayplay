@@ -182,6 +182,8 @@ window.ANPLAY_CHAT_CSRF = "<?php echo htmlspecialchars($_SESSION['chat_csrf_toke
 
 (function() {
     let isSending = false;
+    let chatHistory = [];
+    let lastFailedMessage = '';
 
     // Toggle Chat Window
     window.anplayToggleChat = function(e) {
@@ -247,7 +249,7 @@ window.ANPLAY_CHAT_CSRF = "<?php echo htmlspecialchars($_SESSION['chat_csrf_toke
     }
 
     // Append Message Row
-    function appendMessage(role, text, isError) {
+    function appendMessage(role, text, isError, allowRetry) {
         const messagesArea = document.getElementById('anplay-chat-messages');
         const typingIndicator = document.getElementById('anplay-typing');
         if (!messagesArea) return;
@@ -256,12 +258,17 @@ window.ANPLAY_CHAT_CSRF = "<?php echo htmlspecialchars($_SESSION['chat_csrf_toke
         row.className = 'anplay-msg-row ' + role;
         const timeStr = getCurrentTime();
 
+        let retryHtml = '';
+        if (isError && allowRetry) {
+            retryHtml = '<div class="mt-2"><button type="button" class="btn btn-sm btn-outline-light py-0 px-2" style="font-size:0.75rem;" onclick="anplayRetryLastMessage()"><i class="bi bi-arrow-clockwise me-1"></i>Thử lại</button></div>';
+        }
+
         if (role === 'bot') {
             row.innerHTML = 
                 '<div class="anplay-msg-avatar"><i class="bi bi-robot"></i></div>' +
                 '<div class="anplay-msg-content">' +
                     '<div class="anplay-msg bot ' + (isError ? 'error' : '') + '">' +
-                        formatMessage(text) +
+                        formatMessage(text) + retryHtml +
                     '</div>' +
                     '<span class="anplay-msg-time">' + timeStr + '</span>' +
                 '</div>';
@@ -293,6 +300,9 @@ window.ANPLAY_CHAT_CSRF = "<?php echo htmlspecialchars($_SESSION['chat_csrf_toke
         const messagesArea = document.getElementById('anplay-chat-messages');
         if (!messagesArea) return;
 
+        chatHistory = [];
+        lastFailedMessage = '';
+
         const rows = messagesArea.querySelectorAll('.anplay-msg-row');
         rows.forEach(function(r) { r.remove(); });
 
@@ -316,6 +326,17 @@ window.ANPLAY_CHAT_CSRF = "<?php echo htmlspecialchars($_SESSION['chat_csrf_toke
         anplaySendMessage();
     };
 
+    // Retry last failed message
+    window.anplayRetryLastMessage = function() {
+        if (lastFailedMessage && !isSending) {
+            const inputField = document.getElementById('anplay-chat-input');
+            if (inputField) {
+                inputField.value = lastFailedMessage;
+                anplaySendMessage();
+            }
+        }
+    };
+
     // Send Message core logic
     async function anplaySendMessage() {
         const inputField = document.getElementById('anplay-chat-input');
@@ -327,6 +348,7 @@ window.ANPLAY_CHAT_CSRF = "<?php echo htmlspecialchars($_SESSION['chat_csrf_toke
         if (!message) return;
 
         isSending = true;
+        lastFailedMessage = message;
         appendMessage('user', message);
         inputField.value = '';
         inputField.disabled = true;
@@ -338,22 +360,26 @@ window.ANPLAY_CHAT_CSRF = "<?php echo htmlspecialchars($_SESSION['chat_csrf_toke
         }
 
         try {
-            // Adaptive endpoint URL resolution
-            let apiEndpoint = '/api/chatbot.php';
+            // Adaptive endpoint URL resolution pointing to root chatbot_handler.php
+            let apiEndpoint = '/chatbot_handler.php';
             if (window.location.pathname.includes('/quan_ly_thu_vien_game/')) {
-                apiEndpoint = '/quan_ly_thu_vien_game/api/chatbot.php';
+                apiEndpoint = '/quan_ly_thu_vien_game/chatbot_handler.php';
             }
+
+            // Dùng FormData để tương thích 100% với InfinityFree và mọi hosting Apache
+            const formData = new FormData();
+            formData.append('message', message);
+            formData.append('csrf_token', window.ANPLAY_CHAT_CSRF || '');
+            formData.append('history', JSON.stringify(chatHistory));
 
             const response = await fetch(apiEndpoint, {
                 method: 'POST',
+                body: formData,
+                credentials: 'same-origin',
                 headers: {
-                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
                     'Accept': 'application/json'
-                },
-                body: JSON.stringify({
-                    message: message,
-                    csrf_token: window.ANPLAY_CHAT_CSRF
-                })
+                }
             });
 
             if (typingIndicator) typingIndicator.style.display = 'none';
@@ -365,21 +391,35 @@ window.ANPLAY_CHAT_CSRF = "<?php echo htmlspecialchars($_SESSION['chat_csrf_toke
                 data = null;
             }
 
+            // Đồng bộ lại CSRF token nếu backend cấp mới
+            if (data && data.new_csrf_token) {
+                window.ANPLAY_CHAT_CSRF = data.new_csrf_token;
+            }
+
             if (response.ok && data && data.success) {
                 appendMessage('bot', data.reply);
+                lastFailedMessage = '';
+
+                // Lưu vào lịch sử hội thoại nhiều lượt
+                chatHistory.push({ role: 'user', text: message });
+                chatHistory.push({ role: 'model', text: data.reply });
+                if (chatHistory.length > 8) {
+                    chatHistory = chatHistory.slice(-8);
+                }
             } else if (response.status === 429) {
-                appendMessage('bot', 'Bạn gửi tin nhắn quá nhanh! Vui lòng chờ 1 phút rồi tiếp tục.', true);
+                appendMessage('bot', 'Bạn gửi tin nhắn quá nhanh! Vui lòng chờ 30 giây rồi tiếp tục.', true, true);
             } else if (response.status === 403) {
-                appendMessage('bot', 'Phiên làm việc bảo mật đã hết hạn. Vui lòng tải lại trang (F5) để tiếp tục!', true);
+                const errMsg = (data && data.error) ? data.error : 'Phiên làm việc bảo mật đã hết hạn. Vui lòng tải lại trang (F5) để tiếp tục!';
+                appendMessage('bot', errMsg, true, false);
             } else if (response.status === 503) {
-                appendMessage('bot', (data && data.error) ? data.error : 'Hệ thống AI đang được bảo trì. Vui lòng thử lại sau ít phút!', true);
+                appendMessage('bot', (data && data.error) ? data.error : 'Hệ thống AI đang bảo trì. Vui lòng thử lại sau ít phút!', true, true);
             } else {
-                const errMsg = (data && data.error) ? data.error : 'Đã có sự cố khi kết nối tới trợ lý AI. Vui lòng thử lại!';
-                appendMessage('bot', errMsg, true);
+                const errMsg = (data && data.error) ? data.error : 'Đã có sự cố khi kết nối tới trợ lý AI. Vui lòng bấm Thử lại!';
+                appendMessage('bot', errMsg, true, true);
             }
         } catch (netErr) {
             if (typingIndicator) typingIndicator.style.display = 'none';
-            appendMessage('bot', 'Không thể kết nối đến máy chủ. Vui lòng kiểm tra lại đường truyền mạng hoặc thử lại sau!', true);
+            appendMessage('bot', 'Không thể kết nối đến máy chủ. Vui lòng kiểm tra đường truyền mạng và bấm Thử lại!', true, true);
         } finally {
             isSending = false;
             if (inputField) {
