@@ -1,0 +1,211 @@
+/* Container Chatbot Floating Widget */
+.anplay-chatbot-wrapper {
+    position: fixed;
+    bottom: 25px;
+    right: 25px;
+    z-index: 99999;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Nút bong bóng chat */
+.anplay-chat-toggle {
+    width: 58px;
+    height: 58px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #00f2fe 0%, #4facfe 100%);
+    border: 2px solid #00f2fe;
+    box-shadow: 0 0 15px rgba(0, 242, 254, 0.5);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 26px;
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.anplay-chat-toggle:hover {
+    transform: scale(1.08);
+    box-shadow: 0 0 25px rgba(0, 242, 254, 0.8);
+}
+
+/* Khung trò chuyện */
+.anplay-chat-box {
+    position: absolute;
+    bottom: 75px;
+    right: 0;
+    width: 360px;
+    height: 500px;
+    background: #11141e;
+    border: 1px solid #1f293d;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8), 0 0 15px rgba(79, 172, 254, 0.2);
+    border-radius: 16px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    opacity: 0;
+    transform: translateY(20px) scale(0.95);
+    pointer-events: none;
+    transition: all 0.25s ease;
+}
+
+.anplay-chat-box.active {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    pointer-events: auto;
+}
+
+/* Header */
+.anplay-chat-header {
+    background: #181d2c;
+    padding: 14px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid #232b3e;
+}
+
+.anplay-chat-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #fff;
+    font-size: 14px;
+    font-weight: 700;
+}
+
+.anplay-status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: #00ff66;
+    box-shadow: 0 0 8px #00ff66;
+}
+
+.anplay-chat-actions button {
+    background: transparent;
+    border: none;
+    color: #8fa0bc;
+    cursor: pointer;
+    font-size: 16px;
+    margin-left: 8px;
+}
+
+.anplay-chat-actions button:hover {
+    color: #00f2fe;
+}
+
+/* Khu vực tin nhắn */
+.anplay-chat-messages {
+    flex: 1;
+    padding: 16px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.anplay-chat-messages::-webkit-scrollbar {
+    width: 5px;
+}
+.anplay-chat-messages::-webkit-scrollbar-thumb {
+    background: #252e42;
+    border-radius: 10px;
+}
+
+/* Bong bóng chat */
+.anplay-msg {
+    max-width: 82%;
+    padding: 10px 14px;
+    font-size: 13.5px;
+    line-height: 1.45;
+    border-radius: 12px;
+    word-break: break-word;
+}
+
+.anplay-msg.bot {
+    align-self: flex-start;
+    background: #1d2334;
+    color: #e2e8f0;
+    border: 1px solid #28324a;
+    border-bottom-left-radius: 2px;
+}
+
+.anplay-msg.user {
+    align-self: flex-end;
+    background: linear-gradient(135deg, #0052d4, #4364f7);
+    color: #ffffff;
+    border-bottom-right-radius: 2px;
+}
+
+.anplay-msg.error {
+    background: rgba(239, 68, 68, 0.15);
+    color: #f87171;
+    border: 1px solid #ef4444;
+}
+
+/* Đang gõ phím */
+.anplay-typing-indicator {
+    display: none;
+    align-self: flex-start;
+    background: #1d2334;
+    padding: 10px 14px;
+    border-radius: 12px;
+    gap: 4px;
+}
+.anplay-typing-indicator span {
+    width: 6px;
+    height: 6px;
+    background: #00f2fe;
+    border-radius: 50%;
+    animation: anplay-typing 1s infinite ease-in-out;
+}
+.anplay-typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
+.anplay-typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes anplay-typing {
+    0%, 100% { transform: translateY(0); opacity: 0.4; }
+    50% { transform: translateY(-4px); opacity: 1; }
+}
+
+/* Nhập liệu */
+.anplay-chat-input-area {
+    padding: 12px;
+    background: #181d2c;
+    border-top: 1px solid #232b3e;
+    display: flex;
+    gap: 8px;
+}
+
+.anplay-chat-input-area input {
+    flex: 1;
+    background: #10131d;
+    border: 1px solid #2d374d;
+    border-radius: 8px;
+    padding: 10px 14px;
+    color: #fff;
+    font-size: 13.5px;
+    outline: none;
+}
+.anplay-chat-input-area input:focus {
+    border-color: #00f2fe;
+}
+
+.anplay-chat-input-area button {
+    background: #00f2fe;
+    color: #0c1017;
+    border: none;
+    border-radius: 8px;
+    padding: 0 16px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+@media (max-width: 480px) {
+    .anplay-chat-box {
+        position: fixed;
+        top: 0; bottom: 0; left: 0; right: 0;
+        width: 100vw; height: 100vh;
+        border-radius: 0;
+    }
+}

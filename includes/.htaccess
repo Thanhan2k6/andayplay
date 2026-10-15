@@ -1,0 +1,6 @@
+# Chặn truy cập trực tiếp vào thư mục includes/ từ trình duyệt
+# Bảo vệ API key, thông tin kết nối database, và cấu hình chatbot
+<FilesMatch "\.php$">
+    Deny from all
+</FilesMatch>
+

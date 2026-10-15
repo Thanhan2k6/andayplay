@@ -67,5 +67,52 @@
 
 <!-- Bootstrap JS Bundle -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<?php
+// Khởi tạo phiên và mã CSRF token cho chatbot
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+if (empty($_SESSION['chat_csrf_token'])) {
+    $_SESSION['chat_csrf_token'] = bin2hex(random_bytes(32));
+}
+?>
+<meta name="chat-csrf" content="<?php echo $_SESSION['chat_csrf_token']; ?>">
+<link rel="stylesheet" href="css/chatbot.css">
+
+<!-- Nút mở Chatbot và Khung Chat -->
+<div class="anplay-chatbot-wrapper">
+    <div class="anplay-chat-toggle" id="anplay-chat-toggle" title="Chat với AI">
+        💬
+    </div>
+
+    <div class="anplay-chat-box" id="anplay-chat-box">
+        <div class="anplay-chat-header">
+            <div class="anplay-chat-title">
+                <span class="anplay-status-dot"></span>
+                <span>ANPLAY ASSISTANT</span>
+            </div>
+            <div class="anplay-chat-actions">
+                <button id="anplay-chat-clear" title="Làm mới">🔄</button>
+                <button id="anplay-chat-close" title="Đóng">✕</button>
+            </div>
+        </div>
+
+        <div class="anplay-chat-messages" id="anplay-chat-messages">
+            <div class="anplay-msg bot">
+                Xin chào! Tôi là trợ lý AI của ANPLAY STORE. Bạn cần tìm game gì hay hỗ trợ thuê tài khoản nào không?
+            </div>
+            <div class="anplay-typing-indicator" id="anplay-typing" style="display:none;">
+                <span></span><span></span><span></span>
+            </div>
+        </div>
+
+        <div class="anplay-chat-input-area">
+            <input type="text" id="anplay-chat-input" placeholder="Hỏi gì đó..." autocomplete="off" maxlength="600">
+            <button id="anplay-chat-send">Gửi</button>
+        </div>
+    </div>
+</div>
+
+<script src="assets/js/chatbot.js"></script>
 </body>
 </html>
