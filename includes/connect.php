@@ -32,7 +32,7 @@ if ($is_local) {
 mysqli_report(MYSQLI_REPORT_OFF);
 
 // Khởi tạo kết nối đến CSDL
-$conn = new mysqli($host, $user, $pass, $db);
+$conn = @new mysqli($host, $user, $pass, $db);
 
 // Kiểm tra kết nối
 if ($conn->connect_error) {

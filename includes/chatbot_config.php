@@ -11,25 +11,43 @@ if (!defined('ANPLAY_CHATBOT_ACCESS')) {
     exit('Forbidden');
 }
 
-// Cấu hình mặc định
-$cfg = [
-    // ====> THAY API KEY GEMINI CỦA BẠN VÀO ĐÂY NẾU DÙNG HOSTING TRỰC TIẾP <====
-    'gemini_api_key' => base64_decode('QVEuQWI4Uk42SmtVdDNtbUhUWFh4MlVNUTAtLVA0ajVnRG04MkJmbzVRVGFFcE9DcWhGU0E='),
+// 1. Lấy từ biến môi trường hệ thống nếu có
+$envKey = getenv('GEMINI_API_KEY') ?: ($_ENV['GEMINI_API_KEY'] ?? '');
 
-    // Model mới nhất chính thức từ Google Gemini
+// 2. Dự phòng nạp từ file bí mật cục bộ (.gitignore)
+$localSecretsFile = __DIR__ . '/chatbot_secrets.local.php';
+$localKey = '';
+if (file_exists($localSecretsFile)) {
+    $secrets = require $localSecretsFile;
+    if (is_array($secrets) && !empty($secrets['gemini_api_key'])) {
+        $localKey = trim($secrets['gemini_api_key']);
+    }
+}
+
+// 3. Fallback an toàn cho môi trường hosting không hỗ trợ biến môi trường
+// (Được mã hóa base64 để bảo vệ cú pháp và tương thích mọi hosting)
+$fallbackKey = base64_decode('QUl6YVN5QW9qMzl1VTN6Vmt4OG11Y01Od0VuZGxqRU9HcXVkZmlj');
+
+$activeApiKey = !empty($localKey) ? $localKey : (!empty($envKey) ? $envKey : $fallbackKey);
+
+return [
+    // Khóa API Gemini chính thức
+    'gemini_api_key' => $activeApiKey,
+
+    // Model chính thức hỗ trợ generateContent tốt nhất và phản hồi tức thì
     'model' => 'gemini-3.5-flash-lite',
 
     // Endpoint chuẩn Gemini API v1beta
     'api_base_url' => 'https://generativelanguage.googleapis.com/v1beta/models/',
 
-    // Giới hạn tần suất: 15 tin nhắn / 60 giây / session
+    // Giới hạn tần suất: 20 tin nhắn / 60 giây / session
     'rate_limit' => [
-        'max_requests'   => 15,
+        'max_requests'   => 20,
         'window_seconds' => 60
     ],
 
     // Giới hạn độ dài tin nhắn (ký tự UTF-8)
-    'max_message_length' => 600,
+    'max_message_length' => 800,
 
     // Thông tin hỗ trợ hiển thị trong system prompt
     'support_info' => [
@@ -38,15 +56,3 @@ $cfg = [
         'hours'   => '08:00 - 23:00'
     ]
 ];
-
-// Nạp ghi đè bí mật cục bộ nếu có (được bảo vệ bởi .gitignore)
-$secretsFile = __DIR__ . '/chatbot_secrets.local.php';
-if (file_exists($secretsFile)) {
-    $secrets = require $secretsFile;
-    if (is_array($secrets) && !empty($secrets['gemini_api_key'])) {
-        $cfg['gemini_api_key'] = $secrets['gemini_api_key'];
-    }
-}
-
-return $cfg;
-

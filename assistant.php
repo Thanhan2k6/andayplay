@@ -5,6 +5,9 @@
  */
 
 // ─── 0. KHỞI TẠO SESSION & HEADERS ───────────────────────────────────────
+ini_set('display_errors', '0');
+error_reporting(E_ALL & ~E_WARNING & ~E_NOTICE);
+
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
@@ -33,7 +36,11 @@ $config = require $configPath;
 
 if (empty($config['gemini_api_key'])) {
     http_response_code(503);
-    echo json_encode(['success' => false, 'error' => 'Khóa API Gemini chưa được cấu hình.']);
+    echo json_encode([
+        'success'    => false,
+        'error_type' => 'GEMINI_AUTH_ERROR',
+        'error'      => 'Trợ lý AI hiện đang gặp lỗi kết nối. Vui lòng thử lại sau.'
+    ]);
     exit;
 }
 
@@ -53,14 +60,16 @@ if (file_exists($connectPath)) {
 }
 
 // ─── 2. ĐỌC DỮ LIỆU INPUT (Hỗ trợ cả FormData $_POST và JSON php://input) ─
-$userMessage = '';
-$clientToken = '';
+$userMessage   = '';
+$clientToken   = '';
 $clientHistory = [];
+$action        = '';
 
 // Thử lấy từ $_POST trước (FormData / urlencoded)
 if (!empty($_POST)) {
     $userMessage = trim($_POST['message'] ?? '');
     $clientToken = trim($_POST['csrf_token'] ?? '');
+    $action      = trim($_POST['action'] ?? '');
     if (!empty($_POST['history'])) {
         $decodedHist = is_string($_POST['history']) ? json_decode($_POST['history'], true) : $_POST['history'];
         if (is_array($decodedHist)) {
@@ -70,19 +79,34 @@ if (!empty($_POST)) {
 }
 
 // Nếu $_POST trống, đọc từ php://input (JSON payload)
-if (empty($userMessage)) {
+if (empty($userMessage) && empty($action)) {
     $rawInput = file_get_contents('php://input');
     if (!empty($rawInput)) {
         $jsonData = json_decode($rawInput, true);
         if (is_array($jsonData)) {
             $userMessage   = trim($jsonData['message'] ?? '');
             $clientToken   = trim($jsonData['csrf_token'] ?? '');
+            $action        = trim($jsonData['action'] ?? '');
             $clientHistory = is_array($jsonData['history'] ?? null) ? $jsonData['history'] : [];
         }
     }
 }
 
-// ─── 3. KIỂM TRA BẢO MẬT: CSRF TOKEN ─────────────────────────────────────
+// ─── 3. HEALTH CHECK AN TOÀN (Dành cho kiểm thử hệ thống, KHÔNG in API Key) ──
+if ($action === 'health_check') {
+    $apiKey = $config['gemini_api_key'] ?? '';
+    echo json_encode([
+        'success'        => true,
+        'api_key_exists' => !empty($apiKey),
+        'api_key_length' => strlen($apiKey),
+        'api_key_format' => (bool)preg_match('/^AIzaSy[A-Za-z0-9_-]{33}$/', $apiKey),
+        'db_connected'   => ($conn && !$conn->connect_error),
+        'primary_model'  => $config['model'] ?? 'gemini-3.5-flash-lite'
+    ]);
+    exit;
+}
+
+// ─── 4. KIỂM TRA BẢO MẬT: CSRF TOKEN ─────────────────────────────────────
 $sessionToken = $_SESSION['chat_csrf_token'] ?? '';
 
 // Đồng bộ / cấp phát CSRF token nếu chưa có trong session
@@ -108,15 +132,15 @@ if (!$isValidToken && !empty($clientToken) && preg_match('/^[a-f0-9]{32,64}$/i',
 if (!$isValidToken) {
     http_response_code(403);
     echo json_encode([
-        'success' => false,
-        'error_code' => 'SESSION_EXPIRED',
-        'error' => 'Phiên làm việc bảo mật đã hết hạn. Vui lòng tải lại trang (F5) để tiếp tục!',
+        'success'        => false,
+        'error_code'     => 'SESSION_EXPIRED',
+        'error'          => 'Phiên làm việc bảo mật đã hết hạn. Vui lòng tải lại trang (F5) để tiếp tục!',
         'new_csrf_token' => $sessionToken
     ]);
     exit;
 }
 
-// ─── 4. RATE LIMITING (Chống spam API) ───────────────────────────────────
+// ─── 5. RATE LIMITING (Chống spam API) ───────────────────────────────────
 $now = time();
 $maxReq   = $config['rate_limit']['max_requests'] ?? 20;
 $timeWin  = $config['rate_limit']['window_seconds'] ?? 60;
@@ -129,15 +153,17 @@ if ($now - $rateData['window_start'] >= $timeWin) {
     if ($rateData['count'] > $maxReq) {
         http_response_code(429);
         echo json_encode([
-            'success' => false,
-            'error' => "Bạn đang gửi tin nhắn quá nhanh! Vui lòng chờ {$timeWin} giây rồi tiếp tục."
+            'success'        => false,
+            'error_type'     => 'GEMINI_RATE_LIMIT',
+            'error'          => "Bạn đang gửi tin nhắn quá nhanh! Vui lòng chờ {$timeWin} giây rồi tiếp tục.",
+            'new_csrf_token' => $sessionToken
         ]);
         exit;
     }
 }
 $_SESSION['chat_rate_limit'] = $rateData;
 
-// ─── 5. XÁC THỰC VÀ LÀM SẠCH TIN NHẮN ────────────────────────────────────
+// ─── 6. XÁC THỰC VÀ LÀM SẠCH TIN NHẮN ────────────────────────────────────
 if (empty($userMessage)) {
     http_response_code(400);
     echo json_encode(['success' => false, 'error' => 'Vui lòng nhập nội dung câu hỏi!']);
@@ -159,14 +185,15 @@ $injectionPatterns = [
 foreach ($injectionPatterns as $pattern) {
     if (preg_match($pattern, $userMessage)) {
         echo json_encode([
-            'success' => true,
-            'reply' => 'Yêu cầu không được hỗ trợ vì vi phạm chính sách an toàn của hệ thống ANPLAY STORE.'
+            'success'        => true,
+            'reply'          => 'Yêu cầu không được hỗ trợ vì vi phạm chính sách an toàn của hệ thống ANPLAY STORE.',
+            'new_csrf_token' => $sessionToken
         ]);
         exit;
     }
 }
 
-// ─── 6. TRÍCH XUẤT DỮ LIỆU THỰC TẾ TỪ DATABASE ANPLAY STORE ──────────────
+// ─── 7. TRÍCH XUẤT DỮ LIỆU THỰC TẾ TỪ DATABASE ANPLAY STORE ──────────────
 $realStoreFacts = "";
 
 if ($conn && !$conn->connect_error) {
@@ -250,7 +277,7 @@ if (empty($realStoreFacts)) {
 EOD;
 }
 
-// ─── 7. XÂY DỰNG SYSTEM INSTRUCTION CHO ANPLAY ASSISTANT ──────────────────
+// ─── 8. XÂY DỰNG SYSTEM INSTRUCTION CHO ANPLAY ASSISTANT ──────────────────
 $systemInstruction = <<<EOT
 Bạn là ANPLAY ASSISTANT — Trợ lý tư vấn AI thông minh và tận tâm của ANPLAY STORE (nền tảng dịch vụ cho thuê tài khoản game bản quyền Steam, EA, Epic Games hàng đầu Việt Nam).
 
@@ -279,7 +306,7 @@ DỮ LIỆU THỰC TẾ TẠI ANPLAY STORE:
 {$realStoreFacts}
 EOT;
 
-// ─── 8. CHUẨN BỊ LỊCH SỬ HỘI THOẠI (MULTI-TURN CHAT) ─────────────────────
+// ─── 9. CHUẨN BỊ LỊCH SỬ HỘI THOẠI (MULTI-TURN CHAT) ─────────────────────
 $contents = [];
 
 // Xử lý tối đa 6 lượt hội thoại gần nhất để duy trì ngữ cảnh mà không tràn token
@@ -315,18 +342,23 @@ $payload = [
     ]
 ];
 
-// ─── 9. GỌI GEMINI API VỚI CƠ CHẾ FAILOVER ĐA MODEL ───────────────────────
+// ─── 10. GỌI GEMINI API VỚI CƠ CHẾ FAILOVER ĐA MODEL ──────────────────────
 $primaryModel = $config['model'] ?? 'gemini-3.5-flash-lite';
 $modelsToTry = array_values(array_unique([
     $primaryModel,
     'gemini-3.5-flash-lite',
-    'gemini-3.1-flash-lite',
     'gemini-flash-lite-latest',
-    'gemini-3-flash-preview'
+    'gemini-3.1-flash-lite',
+    'gemini-3.8-flash'
 ]));
 
 if (!function_exists('curl_init')) {
-    echo json_encode(['success' => false, 'error' => 'Máy chủ PHP chưa bật extension cURL.']);
+    http_response_code(500);
+    echo json_encode([
+        'success'    => false,
+        'error_type' => 'GEMINI_SERVER_ERROR',
+        'error'      => 'Máy chủ PHP chưa bật extension cURL.'
+    ]);
     exit;
 }
 
@@ -334,6 +366,7 @@ $response  = null;
 $httpCode  = 0;
 $curlErrno = 0;
 $usedModel = '';
+$lastErrorMsg = '';
 
 foreach ($modelsToTry as $currentModel) {
     $apiUrl = rtrim($config['api_base_url'], '/')
@@ -348,7 +381,7 @@ foreach ($modelsToTry as $currentModel) {
         CURLOPT_HTTPHEADER     => ['Content-Type: application/json'],
         CURLOPT_TIMEOUT        => 18,
         CURLOPT_CONNECTTIMEOUT => 8,
-        CURLOPT_SSL_VERIFYPEER => false, // Đảm bảo hoạt động trên mọi hosting không có cacert.pem
+        CURLOPT_SSL_VERIFYPEER => false, // Đảm bảo tương thích mọi hosting
         CURLOPT_SSL_VERIFYHOST => 0,
     ]);
 
@@ -362,19 +395,29 @@ foreach ($modelsToTry as $currentModel) {
         $usedModel = $currentModel;
         break;
     }
+
+    // Nếu là lỗi 400 (Bad request / Invalid API Key), không cần failover các model khác vì key không hợp lệ
+    if ($httpCode === 400 || $httpCode === 401) {
+        break;
+    }
 }
 
-// ─── 10. XỬ LÝ RESPONSE VÀ TRẢ VỀ JSON CHO CLIENT ─────────────────────────
+// ─── 11. XỬ LÝ RESPONSE VÀ PHÂN LOẠI LỖI CHUẨN XÁC ───────────────────────
 if ($curlErrno !== 0 && empty($response)) {
+    http_response_code(502);
+    $isTimeout = ($curlErrno === CURLE_OPERATION_TIMEDOUT);
     echo json_encode([
-        'success' => false,
-        'error'   => 'Không thể kết nối đến máy chủ AI (Lỗi đường truyền mạng). Vui lòng thử lại!'
+        'success'        => false,
+        'error_type'     => $isTimeout ? 'GEMINI_TIMEOUT' : 'GEMINI_NETWORK_ERROR',
+        'error'          => 'Không thể kết nối đến máy chủ AI (Lỗi đường truyền mạng). Vui lòng thử lại!',
+        'new_csrf_token' => $sessionToken
     ]);
     exit;
 }
 
 $resData = json_decode($response, true);
 
+// 1. Phản hồi thành công từ Gemini
 if ($httpCode === 200 && isset($resData['candidates'][0]['content']['parts'][0]['text'])) {
     $aiReply = trim($resData['candidates'][0]['content']['parts'][0]['text']);
     
@@ -390,6 +433,7 @@ if ($httpCode === 200 && isset($resData['candidates'][0]['content']['parts'][0][
 
     echo json_encode([
         'success'        => true,
+        'status'         => 'SUCCESS',
         'reply'          => $aiReply,
         'model'          => $usedModel,
         'new_csrf_token' => $sessionToken
@@ -397,25 +441,28 @@ if ($httpCode === 200 && isset($resData['candidates'][0]['content']['parts'][0][
     exit;
 }
 
-// Xử lý các mã lỗi cụ thể từ Google API
-if ($httpCode === 429) {
-    echo json_encode([
-        'success' => false,
-        'error'   => 'Hệ thống AI đang tiếp nhận quá nhiều yêu cầu. Vui lòng chờ 30 giây rồi thử lại!'
-    ]);
-    exit;
+// 2. Phân loại lỗi chi tiết (Tuyệt đối không để lộ API key hay raw token)
+$rawErrMsg  = $resData['error']['message'] ?? '';
+$errorType  = 'GEMINI_SERVER_ERROR';
+$userErrMsg = 'Đã có sự cố khi xử lý câu hỏi với trợ lý AI. Vui lòng thử lại sau!';
+
+if ($httpCode === 400 || $httpCode === 401 || stripos($rawErrMsg, 'API key not valid') !== false || stripos($rawErrMsg, 'API_KEY_INVALID') !== false) {
+    $errorType  = 'GEMINI_AUTH_ERROR';
+    // Bảo vệ người dùng cuối: không hiển thị thô "API key not valid"
+    $userErrMsg = 'Trợ lý AI hiện đang gặp lỗi kết nối. Vui lòng thử lại sau.';
+} elseif ($httpCode === 429 || stripos($rawErrMsg, 'RESOURCE_EXHAUSTED') !== false || stripos($rawErrMsg, 'quota') !== false) {
+    $errorType  = 'GEMINI_RATE_LIMIT';
+    $userErrMsg = 'Hệ thống AI đang tiếp nhận quá nhiều yêu cầu. Vui lòng chờ 30 giây rồi thử lại!';
+} elseif ($httpCode === 503 || stripos($rawErrMsg, 'high demand') !== false || stripos($rawErrMsg, 'overloaded') !== false) {
+    $errorType  = 'GEMINI_SERVER_ERROR';
+    $userErrMsg = 'Máy chủ Google AI đang bảo trì tạm thời. Vui lòng thử lại sau ít phút!';
 }
 
-if ($httpCode === 503) {
-    echo json_encode([
-        'success' => false,
-        'error'   => 'Máy chủ Google AI đang bảo trì tạm thời. Vui lòng thử lại sau ít phút!'
-    ]);
-    exit;
-}
-
-$errMsg = $resData['error']['message'] ?? 'Đã có sự cố khi xử lý câu hỏi với trợ lý AI.';
+http_response_code($httpCode >= 400 && $httpCode < 600 ? $httpCode : 500);
 echo json_encode([
-    'success' => false,
-    'error'   => $errMsg
+    'success'        => false,
+    'error_type'     => $errorType,
+    'error'          => $userErrMsg,
+    'new_csrf_token' => $sessionToken
 ]);
+exit;
