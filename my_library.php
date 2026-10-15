@@ -24,7 +24,7 @@ if (isset($_POST['btn_report_error'])) {
             // Chuyển tài khoản sang trạng thái MAINTENANCE để admin kiểm tra
             $conn->query("UPDATE game_accounts SET status = 'MAINTENANCE', notes = CONCAT(COALESCE(notes, ''), ' | Khách báo lỗi: $rep_issue') WHERE account_id = $rep_acc_id");
             log_account_allocation($conn, $rep_acc_id, $rep_borrow_id, $user_id, 'MAINTENANCE_TRIGGERED', "Báo lỗi từ khách: $rep_issue", 'USER');
-            $report_message = "Đã gửi báo lỗi thành công! Đội ngũ kỹ thuật sẽ kiểm tra và hỗ trợ bạn sớm nhất.";
+            $report_message = "Đã gửi báo lỗi thành công! Đội ngũ hỗ trợ kỹ thuật 24/7 sẽ kiểm tra và cấp đổi tài khoản mới cho bạn sớm nhất.";
         }
     }
 }
@@ -60,106 +60,224 @@ if (!$result) {
     }
 }
 $csrf_token = generate_csrf_token();
+
+// Tính sơ bộ thống kê của khách
+$total_orders = 0;
+$active_orders = 0;
+$expired_orders = 0;
+$rows_data = [];
+
+if ($result && $result->num_rows > 0) {
+    while ($r = $result->fetch_assoc()) {
+        $due_t = strtotime($r['due_date']);
+        $is_over = ($r['status'] === 'expired' || ($r['status'] === 'active' && $due_t < time()));
+        $is_act = ($r['status'] === 'active' && !$is_over);
+        if ($is_act) {
+            $active_orders++;
+        } else {
+            $expired_orders++;
+        }
+        $total_orders++;
+        $rows_data[] = $r;
+    }
+}
 ?>
 
-<div class="container mt-5 mb-5">
-    <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom border-secondary">
-        <div>
-            <h2 class="text-white fw-bold mb-1"><i class="bi bi-controller text-info"></i> Quản Lý Tài Khoản Thuê Của Tôi</h2>
-            <p class="text-secondary small mb-0">Theo dõi thời hạn thuê, nhận thông tin đăng nhập và quản lý gia hạn</p>
+<div class="container py-4 my-2">
+    <!-- Breadcrumb & Top Bar -->
+    <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb small">
+            <li class="breadcrumb-item"><a href="index.php" class="text-decoration-none text-secondary"><i class="bi bi-house me-1"></i>Trang chủ</a></li>
+            <li class="breadcrumb-item active text-white" aria-current="page">Kho Game & Tài Khoản Thuê</li>
+        </ol>
+    </nav>
+
+    <!-- Header Section -->
+    <div class="row align-items-center mb-4 g-3">
+        <div class="col-lg-7">
+            <div class="d-flex align-items-center gap-3">
+                <div class="p-3 rounded-4 d-inline-flex align-items-center justify-content-center" style="background: rgba(99,102,241,0.15); border: 1px solid rgba(99,102,241,0.3);">
+                    <i class="bi bi-controller fs-2" style="color: var(--primary);"></i>
+                </div>
+                <div>
+                    <h2 class="fw-bold text-white mb-1">Kho Game & Tài Khoản Thuê</h2>
+                    <p class="text-secondary small mb-0">Quản lý các tài khoản game đang thuê, đồng hồ đếm ngược, lấy mật khẩu và gia hạn nhanh.</p>
+                </div>
+            </div>
         </div>
-        <span class="text-info fw-bold bg-dark px-3 py-2 rounded border border-secondary">
-            <i class="bi bi-person-circle me-1"></i> @<?php echo htmlspecialchars($_SESSION['username']); ?>
-        </span>
+        <div class="col-lg-5 text-lg-end">
+            <div class="d-inline-flex gap-2 align-items-center p-2 px-3 rounded-pill" style="background: var(--bg-card); border: 1px solid var(--border-color);">
+                <img src="https://ui-avatars.com/api/?name=<?php echo urlencode($_SESSION['username']); ?>&background=6366f1&color=fff&rounded=true" width="28" height="28" class="rounded-circle">
+                <span class="text-light small fw-bold">@<?php echo htmlspecialchars($_SESSION['username']); ?></span>
+                <span class="badge" style="background: rgba(99,102,241,0.2); color: var(--primary); font-size: 0.72rem;">VIP MEMBER</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- KPI Metric Quick Summary -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <div class="p-3 rounded-4 h-100 d-flex align-items-center justify-content-between" style="background: var(--bg-card); border: 1px solid var(--border-color);">
+                <div>
+                    <span class="text-secondary small text-uppercase fw-bold">Tổng lượt thuê</span>
+                    <h3 class="fw-bold text-white mb-0 mt-1"><?php echo $total_orders; ?></h3>
+                </div>
+                <div class="p-3 rounded-3" style="background: rgba(255,255,255,0.05); color: #cbd5e1;">
+                    <i class="bi bi-collection-play fs-4"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="p-3 rounded-4 h-100 d-flex align-items-center justify-content-between" style="background: var(--bg-card); border: 1px solid rgba(16,185,129,0.3);">
+                <div>
+                    <span class="text-secondary small text-uppercase fw-bold">Đang hiệu lực</span>
+                    <h3 class="fw-bold text-success mb-0 mt-1"><?php echo $active_orders; ?></h3>
+                </div>
+                <div class="p-3 rounded-3" style="background: rgba(16,185,129,0.15); color: #10b981;">
+                    <i class="bi bi-shield-check fs-4"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="p-3 rounded-4 h-100 d-flex align-items-center justify-content-between" style="background: var(--bg-card); border: 1px solid rgba(239,68,68,0.25);">
+                <div>
+                    <span class="text-secondary small text-uppercase fw-bold">Đã hoàn tất / Hết hạn</span>
+                    <h3 class="fw-bold text-secondary mb-0 mt-1"><?php echo $expired_orders; ?></h3>
+                </div>
+                <div class="p-3 rounded-3" style="background: rgba(239,68,68,0.12); color: #ef4444;">
+                    <i class="bi bi-hourglass-bottom fs-4"></i>
+                </div>
+            </div>
+        </div>
     </div>
 
     <?php if ($report_message): ?>
-        <div class="alert alert-success alert-dismissible fade show" role="alert">
-            <i class="bi bi-check-circle-fill me-2"></i><?php echo htmlspecialchars($report_message); ?>
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        <div class="alert alert-dismissible fade show mb-4 text-white" style="background: rgba(16,185,129,0.15); border: 1px solid #10b981;" role="alert">
+            <div class="d-flex align-items-center">
+                <i class="bi bi-check-circle-fill text-success fs-5 me-2"></i>
+                <div><?php echo htmlspecialchars($report_message); ?></div>
+            </div>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
     <?php endif; ?>
 
-    <div class="row">
+    <!-- Main Grid of Rented Games -->
+    <div class="row g-4">
         <?php 
-        if ($result && $result->num_rows > 0): 
-            while ($row = $result->fetch_assoc()): 
+        if (count($rows_data) > 0): 
+            foreach ($rows_data as $row): 
                 $due_timestamp = strtotime($row['due_date']);
                 $is_overdue = ($row['status'] === 'expired' || ($row['status'] === 'active' && $due_timestamp < time()));
                 $is_active = ($row['status'] === 'active' && !$is_overdue);
                 
                 $countdown_id = "timer_" . $row['borrow_id'];
                 
-                // Giải mã mật khẩu game an toàn (Chỉ giải mã khi đơn ĐANG CÒN HIỆU LỰC)
+                // Giải mã mật khẩu game an toàn (Chỉ khi active)
                 $plain_password = "";
                 if ($is_active && !empty($row['account_password_encrypted'])) {
                     $plain_password = decrypt_game_password($row['account_password_encrypted']);
                 }
         ?>
-        <div class="col-md-6 col-lg-4 mb-4">
-            <div class="card h-100 shadow-sm border-0" style="background-color: #1a222c; border: 1px solid #2d3b4e; border-radius: 12px; overflow: hidden;">
-                
-                <?php if (!empty($row['image_url']) && file_exists($row['image_url'])): ?>
-                    <img src="<?php echo $row['image_url']; ?>" class="card-img-top" alt="<?php echo htmlspecialchars($row['title']); ?>" style="height: 200px; object-fit: cover;">
-                <?php else: ?>
-                    <div class="card-img-top d-flex align-items-center justify-content-center bg-dark text-muted" style="height: 200px;">NO COVER</div>
-                <?php endif; ?>
+        <div class="col-md-6 col-lg-4">
+            <div class="gaming-card h-100 d-flex flex-column">
+                <!-- Cover Image & Overlays -->
+                <div class="gaming-card-img-wrapper" style="aspect-ratio: 16/9; position: relative;">
+                    <?php if (!empty($row['image_url']) && file_exists($row['image_url'])): ?>
+                        <img src="<?php echo htmlspecialchars($row['image_url']); ?>" class="gaming-card-img" alt="<?php echo htmlspecialchars($row['title']); ?>">
+                    <?php else: ?>
+                        <div class="w-100 h-100 d-flex flex-column align-items-center justify-content-center bg-dark text-secondary">
+                            <i class="bi bi-image fs-1 mb-2"></i>
+                            <span class="small fw-bold">ANPLAY GAME</span>
+                        </div>
+                    <?php endif; ?>
 
-                <div class="card-body d-flex flex-column p-4">
-                    <div class="d-flex justify-content-between align-items-start mb-2">
-                        <h4 class="card-title text-info fw-bold mb-0"><?php echo htmlspecialchars($row['title']); ?></h4>
+                    <!-- Platform Pill -->
+                    <span class="platform-pill position-absolute top-0 start-0 m-3">
+                        <i class="bi bi-display me-1"></i><?php echo htmlspecialchars($row['platform'] ?? 'PC'); ?>
+                    </span>
+
+                    <!-- Status Pill -->
+                    <div class="position-absolute top-0 end-0 m-3">
                         <?php if ($is_active): ?>
-                            <span class="badge bg-success">Đang thuê</span>
+                            <span class="status-pill status-pill-success">
+                                <span class="status-dot"></span> ĐANG KÍCH HOẠT
+                            </span>
                         <?php elseif ($is_overdue): ?>
-                            <span class="badge bg-danger">Hết hạn</span>
+                            <span class="status-pill status-pill-danger">
+                                <span class="status-dot"></span> ĐÃ HẾT HẠN
+                            </span>
                         <?php else: ?>
-                            <span class="badge bg-secondary"><?php echo htmlspecialchars($row['status']); ?></span>
+                            <span class="status-pill status-pill-warning">
+                                <span class="status-dot"></span> <?php echo strtoupper(htmlspecialchars($row['status'])); ?>
+                            </span>
                         <?php endif; ?>
                     </div>
-                    
-                    <p class="card-text mb-1 text-secondary small">
-                        Bắt đầu: <span class="text-light"><?php echo date('d/m/Y H:i', strtotime($row['borrow_date'])); ?></span>
-                    </p>
-                    <p class="card-text mb-3 text-secondary small">
-                        Hết hạn: <span class="text-light fw-bold"><?php echo date('d/m/Y H:i', $due_timestamp); ?></span>
-                    </p>
+                </div>
 
-                    <!-- KHU VỰC THÔNG TIN ĐĂNG NHẬP TÀI KHOẢN GAME -->
-                    <div class="mt-2 mb-3 p-3 rounded" style="background-color: rgba(13, 110, 253, 0.08); border: 1px solid rgba(13, 110, 253, 0.3);">
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <small class="text-info fw-bold"><i class="bi bi-shield-lock-fill me-1"></i> THÔNG TIN ĐĂNG NHẬP</small>
-                            <span class="badge bg-dark text-light border border-secondary"><?php echo htmlspecialchars($row['server_region'] ?? 'Global'); ?></span>
+                <!-- Card Body -->
+                <div class="card-body p-4 d-flex flex-column flex-grow-1">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <h4 class="fw-bold text-white mb-0 text-truncate" title="<?php echo htmlspecialchars($row['title']); ?>">
+                            <?php echo htmlspecialchars($row['title']); ?>
+                        </h4>
+                    </div>
+
+                    <div class="d-flex justify-content-between text-secondary small mb-3">
+                        <span><i class="bi bi-calendar-event me-1"></i> Thuê: <span class="text-light"><?php echo date('d/m/Y H:i', strtotime($row['borrow_date'])); ?></span></span>
+                        <span>Hạn: <strong class="text-warning"><?php echo date('d/m/Y H:i', $due_timestamp); ?></strong></span>
+                    </div>
+
+                    <!-- THÔNG TIN TÀI KHOẢN (CREDENTIALS BOX) -->
+                    <div class="p-3 rounded-3 mb-3" style="background: rgba(15, 17, 24, 0.8); border: 1px solid var(--border-color);">
+                        <div class="d-flex justify-content-between align-items-center mb-2 pb-1 border-bottom border-secondary border-opacity-25">
+                            <span class="small fw-bold text-info"><i class="bi bi-shield-lock-fill me-1"></i> THÔNG TIN ĐĂNG NHẬP</span>
+                            <span class="badge" style="background: rgba(255,255,255,0.06); color: #94a3b8; font-size: 0.7rem; border: 1px solid var(--border-color);">
+                                <?php echo htmlspecialchars($row['server_region'] ?? 'Global'); ?>
+                            </span>
                         </div>
-                        
+
                         <?php if ($is_active && !empty($row['account_username'])): ?>
+                            <!-- Username -->
                             <div class="mb-2">
-                                <small class="text-secondary d-block">Tên đăng nhập / Email:</small>
-                                <div class="d-flex align-items-center justify-content-between bg-dark p-2 rounded border border-secondary">
-                                    <strong class="text-white user-select-all"><?php echo htmlspecialchars($row['account_username']); ?></strong>
-                                    <button class="btn btn-sm btn-outline-info py-0 px-2" onclick="navigator.clipboard.writeText('<?php echo htmlspecialchars($row['account_username']); ?>')">Copy</button>
+                                <label class="small text-secondary d-block mb-1" style="font-size: 0.75rem;">Tài khoản / Email:</label>
+                                <div class="input-group input-group-sm">
+                                    <input type="text" class="form-control form-control-sm form-control-gaming text-white fw-bold user-select-all" value="<?php echo htmlspecialchars($row['account_username']); ?>" readonly id="user_<?php echo $row['borrow_id']; ?>">
+                                    <button class="btn btn-sm btn-gaming-secondary copy-btn" type="button" data-clipboard-target="#user_<?php echo $row['borrow_id']; ?>" onclick="copyText('user_<?php echo $row['borrow_id']; ?>', this)">
+                                        <i class="bi bi-clipboard"></i>
+                                    </button>
                                 </div>
                             </div>
+
+                            <!-- Password with Show/Hide -->
                             <div>
-                                <small class="text-secondary d-block">Mật khẩu game:</small>
-                                <div class="d-flex align-items-center justify-content-between bg-dark p-2 rounded border border-secondary">
-                                    <strong class="text-warning user-select-all" id="pass_<?php echo $row['borrow_id']; ?>"><?php echo htmlspecialchars($plain_password); ?></strong>
-                                    <button class="btn btn-sm btn-outline-warning py-0 px-2" onclick="navigator.clipboard.writeText('<?php echo htmlspecialchars($plain_password); ?>')">Copy</button>
+                                <label class="small text-secondary d-block mb-1" style="font-size: 0.75rem;">Mật khẩu game:</label>
+                                <div class="input-group input-group-sm">
+                                    <input type="password" class="form-control form-control-sm form-control-gaming text-warning fw-bold user-select-all" value="<?php echo htmlspecialchars($plain_password); ?>" readonly id="pass_<?php echo $row['borrow_id']; ?>">
+                                    <button class="btn btn-sm btn-gaming-secondary" type="button" onclick="togglePass('pass_<?php echo $row['borrow_id']; ?>', this)">
+                                        <i class="bi bi-eye"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-gaming-secondary copy-btn" type="button" onclick="copyText('pass_<?php echo $row['borrow_id']; ?>', this)">
+                                        <i class="bi bi-clipboard"></i>
+                                    </button>
                                 </div>
                             </div>
                         <?php else: ?>
                             <div class="text-center py-2">
-                                <span class="text-danger small fst-italic">
-                                    <i class="bi bi-lock-fill"></i> Thông tin đăng nhập đã bị khóa do hết hạn thuê hoặc đơn chưa hoàn tất.
+                                <i class="bi bi-lock-fill text-danger d-block mb-1 fs-5"></i>
+                                <span class="text-danger small fw-semibold">
+                                    Thông tin tài khoản đã khóa do hết hạn thuê hoặc chưa thanh toán.
                                 </span>
                             </div>
                         <?php endif; ?>
                     </div>
 
-                    <!-- ĐỒNG HỒ ĐẾM NGƯỢC THỜI HẠN -->
-                    <div class="p-3 rounded mb-3 text-center shadow-sm" style="background-color: #202d39;">
+                    <!-- COUNTDOWN TIMER BOX -->
+                    <div class="p-3 rounded-3 mb-3 text-center" style="background: rgba(99, 102, 241, 0.08); border: 1px dashed rgba(99, 102, 241, 0.3);">
                         <?php if ($is_active): ?>
-                            <span class="text-muted small d-block mb-1">Thời gian thuê còn lại:</span>
-                            <h4 class="text-warning fw-bold mb-0" id="<?php echo $countdown_id; ?>">Đang tính toán...</h4>
+                            <span class="text-secondary small d-block mb-1" style="font-size: 0.75rem;">THỜI GIAN THUÊ CÒN LẠI</span>
+                            <div class="fw-bold fs-5 text-warning font-monospace" id="<?php echo $countdown_id; ?>">
+                                <span class="spinner-border spinner-border-sm me-1" role="status"></span> Đang đồng bộ...
+                            </div>
                             
                             <script>
                                 (function() {
@@ -167,13 +285,12 @@ $csrf_token = generate_csrf_token();
                                     var x_<?php echo $row['borrow_id']; ?> = setInterval(function() {
                                         var now = new Date().getTime();
                                         var distance = countDownDate_<?php echo $row['borrow_id']; ?> - now;
+                                        var el = document.getElementById("<?php echo $countdown_id; ?>");
                                         
                                         if (distance < 0) {
                                             clearInterval(x_<?php echo $row['borrow_id']; ?>);
-                                            var el = document.getElementById("<?php echo $countdown_id; ?>");
                                             if (el) {
-                                                el.innerHTML = "ĐÃ HẾT HẠN";
-                                                el.classList.replace('text-warning', 'text-danger');
+                                                el.innerHTML = "<span class='text-danger'>ĐÃ HẾT HẠN</span>";
                                             }
                                         } else {
                                             var days = Math.floor(distance / (1000 * 60 * 60 * 24));
@@ -182,32 +299,33 @@ $csrf_token = generate_csrf_token();
                                             var seconds = Math.floor((distance % (1000 * 60)) / 1000);
                                             
                                             var timeStr = "";
-                                            if (days > 0) timeStr += days + " ngày ";
+                                            if (days > 0) timeStr += days + "d ";
                                             timeStr += (hours < 10 ? "0" + hours : hours) + ":" + 
                                                        (minutes < 10 ? "0" + minutes : minutes) + ":" + 
                                                        (seconds < 10 ? "0" + seconds : seconds);
                                             
-                                            var el = document.getElementById("<?php echo $countdown_id; ?>");
                                             if (el) { el.innerHTML = timeStr; }
                                         }
                                     }, 1000);
                                 })();
                             </script>
                         <?php else: ?>
-                            <h5 class="text-danger fw-bold mb-0">HẾT HẠN THUÊ</h5>
-                            <small class="text-secondary">Quyền xem thông tin tài khoản đã bị thu hồi.</small>
+                            <span class="text-danger fw-bold d-block">HẾT HẠN SỬ DỤNG</span>
+                            <small class="text-secondary" style="font-size: 0.75rem;">Quyền đăng nhập đã được thu hồi an toàn.</small>
                         <?php endif; ?>
                     </div>
 
-                    <!-- KHU VỰC HÀNH ĐỘNG: GIA HẠN / THUÊ LẠI TÀI KHOẢN CŨ / THUÊ TÀI KHOẢN MỚI -->
+                    <!-- ACTION FOOTER: EXTEND / REPORT / RE-RENT -->
                     <div class="mt-auto">
                         <?php if ($is_active): ?>
-                            <!-- GIA HẠN ĐƠN ĐANG CÒN HIỆU LỰC -->
-                            <form method="POST" action="checkout_qr.php" class="p-2 border rounded border-secondary mb-2" style="background-color: #151d26;">
+                            <!-- GIA HẠN ĐƠN HIỆU LỰC -->
+                            <form method="POST" action="checkout_qr.php" class="p-2 rounded-3 mb-2" style="background: rgba(255,255,255,0.03); border: 1px solid var(--border-color);">
                                 <input type="hidden" name="borrow_id_to_extend" value="<?php echo $row['borrow_id']; ?>">
-                                <small class="text-info fw-bold d-block mb-1">🔄 Gia hạn thêm thời gian:</small>
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <small class="text-light fw-bold" style="font-size: 0.75rem;"><i class="bi bi-arrow-repeat text-warning me-1"></i> Gia hạn thêm giờ chơi:</small>
+                                </div>
                                 <div class="input-group input-group-sm">
-                                    <select name="extend_pkg_id" class="form-select bg-dark text-white border-secondary">
+                                    <select name="extend_pkg_id" class="form-select form-select-sm form-control-gaming text-white">
                                         <?php
                                         $pkgs_cur = false;
                                         try {
@@ -228,29 +346,34 @@ $csrf_token = generate_csrf_token();
                                             <option value="0">+Gia hạn tiêu chuẩn</option>
                                         <?php endif; ?>
                                     </select>
-                                    <button type="submit" name="btn_extend_submit" class="btn btn-warning fw-bold text-dark">Gia hạn</button>
+                                    <button type="submit" name="btn_extend_submit" class="btn btn-sm btn-gaming-primary">
+                                        Gia Hạn
+                                    </button>
                                 </div>
                             </form>
                             
                             <!-- Báo lỗi tài khoản -->
-                            <button type="button" class="btn btn-outline-danger btn-sm w-100" data-bs-toggle="modal" data-bs-target="#reportModal_<?php echo $row['borrow_id']; ?>">
-                                <i class="bi bi-flag-fill me-1"></i> Báo lỗi tài khoản
-                            </button>
+                            <div class="d-flex gap-2">
+                                <a href="download_game.php?id=<?php echo $row['game_id']; ?>" class="btn btn-sm btn-gaming-secondary flex-grow-1 text-center text-decoration-none">
+                                    <i class="bi bi-cloud-arrow-down me-1"></i> Bộ cài game
+                                </a>
+                                <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#reportModal_<?php echo $row['borrow_id']; ?>" title="Báo lỗi đổi tài khoản">
+                                    <i class="bi bi-flag-fill"></i> Báo lỗi
+                                </button>
+                            </div>
                         <?php else: ?>
-                            <!-- HAI LỰA CHỌN SAU KHI HẾT HẠN THEO ĐÚNG MỤC 8 -->
+                            <!-- KHI ĐÃ HẾT HẠN: CHO PHÉP THUÊ LẠI HOẶC THUÊ MỚI -->
                             <div class="d-grid gap-2">
-                                <!-- LỰA CHỌN A: THUÊ LẠI TÀI KHOẢN CŨ -->
                                 <?php if ($row['account_id']): ?>
                                     <a href="borrow_process.php?game_id=<?php echo $row['game_id']; ?>&type=re-rent&re_rent_acc=<?php echo $row['account_id']; ?>&old_borrow_id=<?php echo $row['borrow_id']; ?>" 
-                                       class="btn btn-warning fw-bold text-dark shadow-sm">
-                                        🔁 Thuê lại tài khoản cũ
+                                       class="btn btn-sm btn-gaming-primary text-white text-decoration-none py-2">
+                                        <i class="bi bi-arrow-repeat me-1"></i> Thuê lại tài khoản cũ (Giữ Save)
                                     </a>
                                 <?php endif; ?>
 
-                                <!-- LỰA CHỌN B: THUÊ TÀI KHOẢN MỚI -->
                                 <a href="borrow_process.php?game_id=<?php echo $row['game_id']; ?>&type=new" 
-                                   class="btn btn-outline-info fw-bold">
-                                    ✨ Thuê tài khoản mới
+                                   class="btn btn-sm btn-gaming-secondary text-decoration-none py-2">
+                                    <i class="bi bi-plus-circle me-1"></i> Thuê tài khoản mới khác
                                 </a>
                             </div>
                         <?php endif; ?>
@@ -259,25 +382,41 @@ $csrf_token = generate_csrf_token();
             </div>
         </div>
 
-        <!-- MODAL BÁO LỖI -->
+        <!-- MODAL BÁO LỖI TÀI KHOẢN -->
         <?php if ($is_active): ?>
         <div class="modal fade" id="reportModal_<?php echo $row['borrow_id']; ?>" tabindex="-1" aria-hidden="true">
-            <div class="modal-dialog">
-                <div class="modal-content bg-dark text-white border-secondary">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content" style="background: var(--bg-card); border: 1px solid var(--border-color); color: #fff;">
                     <form method="POST" action="">
                         <input type="hidden" name="csrf_token" value="<?php echo $csrf_token; ?>">
                         <input type="hidden" name="report_borrow_id" value="<?php echo $row['borrow_id']; ?>">
-                        <div class="modal-header border-secondary">
-                            <h5 class="modal-title text-warning fw-bold"><i class="bi bi-exclamation-octagon-fill me-2"></i> Báo Lỗi Tài Khoản Game</h5>
+                        
+                        <div class="modal-header border-secondary border-opacity-25">
+                            <h5 class="modal-title fw-bold text-warning">
+                                <i class="bi bi-exclamation-triangle-fill me-2"></i> Báo Lỗi Tài Khoản Game
+                            </h5>
                             <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                         </div>
                         <div class="modal-body">
-                            <p class="text-secondary small">Nếu bạn không thể đăng nhập hoặc tài khoản gặp sự cố (sai pass, bị khóa...), hãy gửi mô tả bên dưới:</p>
-                            <textarea name="issue_description" class="form-control bg-secondary bg-opacity-25 text-white border-secondary" rows="4" placeholder="Ví dụ: Mật khẩu báo không đúng trên Steam / Game yêu cầu mã xác minh OTP..." required></textarea>
+                            <p class="text-secondary small mb-3">
+                                Bạn đang báo lỗi cho game <strong class="text-white"><?php echo htmlspecialchars($row['title']); ?></strong>. 
+                                Đội ngũ kỹ thuật ANPLAY STORE cam kết hỗ trợ đổi tài khoản ngay nếu phát hiện lỗi sai mật khẩu, bị khóa Steam Guard hoặc tài khoản bị ban.
+                            </p>
+                            
+                            <label class="form-label text-light small fw-bold">Chi tiết sự cố gặp phải:</label>
+                            <textarea name="issue_description" class="form-control form-control-gaming" rows="4" placeholder="Ví dụ: Báo sai mật khẩu, Steam yêu cầu mã OTP, tài khoản đang có người khác đăng nhập..." required></textarea>
+                            
+                            <div class="mt-3 p-2 rounded" style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.2);">
+                                <small class="text-danger d-block">
+                                    <i class="bi bi-info-circle me-1"></i> Lưu ý: Khi báo lỗi, tài khoản sẽ được chuyển sang chế độ bảo trì để kỹ thuật viên kiểm tra.
+                                </small>
+                            </div>
                         </div>
-                        <div class="modal-footer border-secondary">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
-                            <button type="submit" name="btn_report_error" class="btn btn-danger fw-bold">Gửi Báo Cáo Kỹ Thuật</button>
+                        <div class="modal-footer border-secondary border-opacity-25">
+                            <button type="button" class="btn btn-gaming-secondary" data-bs-dismiss="modal">Đóng</button>
+                            <button type="submit" name="btn_report_error" class="btn btn-danger fw-bold">
+                                <i class="bi bi-send-fill me-1"></i> Gửi Yêu Cầu Hỗ Trợ
+                            </button>
                         </div>
                     </form>
                 </div>
@@ -285,18 +424,49 @@ $csrf_token = generate_csrf_token();
         </div>
         <?php endif; ?>
 
-        <?php endwhile; else: ?>
-        <div class="col-12 text-center py-5">
-            <div class="card border-0 p-5 shadow" style="background-color: #1a222c; border-radius: 15px;">
-                <h4 class="text-light mb-3">Bạn chưa có đơn thuê tài khoản game nào!</h4>
-                <p class="text-secondary mb-4">Khám phá ngay các tựa game đình đám để trải nghiệm với giá thuê cực kỳ tiết kiệm.</p>
-                <div>
-                    <a href="index.php" class="btn btn-primary fw-bold px-4 py-2 fs-5 shadow">🎮 Khám Phá Cửa Hàng Game</a>
+        <?php endforeach; else: ?>
+        <!-- EMPTY STATE -->
+        <div class="col-12 py-5 text-center">
+            <div class="p-5 rounded-4 mx-auto" style="max-width: 600px; background: var(--bg-card); border: 1px solid var(--border-color);">
+                <div class="mb-3 d-inline-flex p-4 rounded-circle" style="background: rgba(99,102,241,0.1); border: 1px solid rgba(99,102,241,0.25);">
+                    <i class="bi bi-controller fs-1" style="color: var(--primary);"></i>
                 </div>
+                <h3 class="fw-bold text-white mb-2">Thư Viện Trống Trải!</h3>
+                <p class="text-secondary mb-4">Bạn chưa thuê bất kỳ tài khoản game nào. Hãy khám phá ngay kho game AAA bản quyền của ANPLAY với giá chỉ từ 5.000đ.</p>
+                <a href="index.php" class="btn btn-gaming-primary px-4 py-2 text-decoration-none">
+                    <i class="bi bi-compass me-1"></i> Khám Phá Cửa Hàng Game
+                </a>
             </div>
         </div>
         <?php endif; ?>
     </div>
 </div>
+
+<script>
+function copyText(inputId, btn) {
+    var copyText = document.getElementById(inputId);
+    copyText.select();
+    copyText.setSelectionRange(0, 99999);
+    navigator.clipboard.writeText(copyText.value).then(function() {
+        var originalHtml = btn.innerHTML;
+        btn.innerHTML = '<i class="bi bi-check2 text-success"></i>';
+        setTimeout(function() {
+            btn.innerHTML = originalHtml;
+        }, 1500);
+    });
+}
+
+function togglePass(inputId, btn) {
+    var input = document.getElementById(inputId);
+    var icon = btn.querySelector('i');
+    if (input.type === 'password') {
+        input.type = 'text';
+        icon.className = 'bi bi-eye-slash';
+    } else {
+        input.type = 'password';
+        icon.className = 'bi bi-eye';
+    }
+}
+</script>
 
 <?php include 'includes/footer.php'; ?>

@@ -1,202 +1,170 @@
 <?php
 if (session_status() === PHP_SESSION_NONE) { session_start(); }
-// Kết nối Database cùng thư mục includes
 require_once __DIR__ . '/connect.php'; 
+
+$current_page = basename($_SERVER['PHP_SELF']);
 ?>
 <!DOCTYPE html>
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <!-- CẤU HÌNH QUAN TRỌNG ĐỂ RESPONSIVE DI ĐỘNG -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ANPLAY STORE</title>
+    <title>ANPLAY STORE — Gaming Store & Thuê Tài Khoản Game Bản Quyền</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     
     <!-- Bootstrap 5 & Icons -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     
-    <!-- ĐƯỜNG DẪN CSS CHUẨN CỦA BẠN (Cộng thêm thẻ time() chống lưu cache) -->
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <!-- Main Stylesheet -->
     <link rel="stylesheet" href="css/style.css?v=<?php echo time(); ?>">
-
-    <style>
-        /* =========================================================
-           CSS TỐI ƯU HÓA GIAO DIỆN DI ĐỘNG (Dưới 992px - Mobile & Tablet)
-        ========================================================= */
-        @media (max-width: 991.98px) {
-            /* 1. Xử lý Sidebar Trượt (Offcanvas) */
-            .sidebar {
-                position: fixed !important;
-                top: 0;
-                left: -280px; /* Ẩn ra ngoài màn hình */
-                height: 100vh;
-                width: 280px;
-                z-index: 1045; /* Đè lên mọi thứ */
-                transition: left 0.3s ease-in-out;
-                display: flex !important; /* Ghi đè class d-none d-lg-flex của Bootstrap */
-                flex-direction: column;
-                background-color: #111827; /* Màu nền sidebar */
-                padding: 20px;
-                overflow-y: auto;
-                box-shadow: 5px 0 15px rgba(0,0,0,0.5);
-            }
-
-            /* Class được Javascript thêm vào khi bấm nút mở Menu */
-            .sidebar.active {
-                left: 0;
-            }
-
-            /* 2. Mở rộng khung nội dung chính tràn màn hình */
-            .main-wrapper {
-                margin-left: 0 !important;
-                width: 100% !important;
-            }
-
-            /* 3. Tối ưu Topbar và Nút tìm kiếm */
-            .topbar {
-                justify-content: space-between;
-                padding: 10px 15px;
-            }
-            .search-container {
-                display: none !important; /* Có thể ẩn thanh tìm kiếm dài trên đt hoặc tạo nút thu gọn */
-            }
-
-            /* 4. Điều chỉnh Card Game và Nút bấm */
-            .card { margin-bottom: 20px; }
-            img.card-img-top { height: 180px !important; }
-            .btn { width: 100%; display: block; margin-bottom: 10px; }
-            .btn-outline-danger { margin-top: 10px; }
-            
-            h1, h2 { font-size: 1.5rem !important; }
-            
-            /* Lớp phủ đen màn hình khi mở Menu Mobile */
-            .sidebar-overlay {
-                display: none;
-                position: fixed;
-                top: 0; left: 0; width: 100%; height: 100%;
-                background: rgba(0,0,0,0.7);
-                z-index: 1040;
-            }
-            .sidebar-overlay.active { display: block; }
-        }
-
-        /* =========================================================
-           CSS BỔ SUNG: LÀM SÁNG CHỮ VÀ BẢNG TRÊN NỀN CYBERPUNK
-        ========================================================= */
-        /* Tăng độ sáng cho các chữ màu xám để dễ đọc hơn */
-        .text-secondary, .text-muted {
-            color: rgba(255, 255, 255, 0.75) !important;
-        }
-
-        /* Làm sáng placeholder của thanh tìm kiếm */
-        .search-container input::placeholder {
-            color: rgba(255, 255, 255, 0.6) !important;
-        }
-
-        /* Đổi màu viền và chữ trong các Bảng (Table) của Admin */
-        .table, .table td, .table th {
-            border-color: rgba(0, 243, 255, 0.2) !important;
-            color: #fff !important; 
-        }
-
-        /* Làm sáng chữ liên kết (link) trong bảng */
-        td a {
-            color: #00f3ff !important;
-        }
-        td a:hover {
-            color: #fce205 !important;
-        }
-    </style>
 </head>
 <body>
 
-<!-- LỚP PHỦ ĐEN (Tự động hiện khi mở Menu trên Điện thoại) -->
+<!-- Lớp phủ mờ khi mở Menu Mobile -->
 <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
-<!-- SIDEBAR BÊN TRÁI -->
+<!-- SIDEBAR ĐIỀU HƯỚNG BÊN TRÁI -->
 <aside class="sidebar" id="mobileSidebar">
-    <div class="d-flex justify-content-between align-items-center mb-4">
+    <!-- Brand Logo -->
+    <div class="d-flex justify-content-between align-items-center mb-2">
         <a href="index.php" class="sidebar-brand text-decoration-none">
-            <i class="bi bi-controller text-info me-2 fs-2"></i> <span class="text-white fs-4 fw-bold">ANPLAY</span>
+            <div class="brand-icon-box">
+                <i class="bi bi-controller"></i>
+            </div>
+            <span class="brand-text">ANPLAY</span>
         </a>
-        <!-- Nút đóng Menu trên Mobile -->
-        <button class="btn btn-dark d-lg-none" id="closeSidebarBtn"><i class="bi bi-x-lg"></i></button>
+        <button class="btn btn-sm btn-outline-secondary d-lg-none me-3" id="closeSidebarBtn">
+            <i class="bi bi-x-lg"></i>
+        </button>
     </div>
     
-    <div class="sidebar-title text-secondary small fw-bold mb-2">Menu Chính</div>
-    <a href="index.php" class="sidebar-item d-block text-light py-2 text-decoration-none hover-item"><i class="bi bi-house-door-fill text-primary me-2"></i> Trang chủ</a>
+    <!-- Menu Chính -->
+    <div class="sidebar-title">Khám Phá</div>
+    <a href="index.php" class="sidebar-item <?php echo ($current_page == 'index.php') ? 'active' : ''; ?>">
+        <i class="bi bi-grid-1x2-fill"></i> Cửa Hàng Game
+    </a>
     
     <?php if(isset($_SESSION['user_id'])): ?>
-        <a href="my_library.php" class="sidebar-item d-block text-light py-2 text-decoration-none hover-item"><i class="bi bi-collection-play-fill text-success me-2"></i> Thư viện của tôi</a>
+        <a href="my_library.php" class="sidebar-item <?php echo ($current_page == 'my_library.php') ? 'active' : ''; ?>">
+            <i class="bi bi-collection-play-fill text-success"></i> Thư viện của tôi
+        </a>
         
-        <?php if($_SESSION['role'] == 1): ?>
-            <div class="sidebar-title text-danger small fw-bold mt-4 mb-2">Quản Trị Admin</div>
-            <a href="admin_dashboard.php" class="sidebar-item d-block text-light py-2 text-decoration-none hover-item"><i class="bi bi-graph-up-arrow text-danger me-2"></i> Thống kê</a>
-            <a href="admin_games.php" class="sidebar-item d-block text-light py-2 text-decoration-none hover-item"><i class="bi bi-grid-fill text-danger me-2"></i> Cửa Hàng Game</a>
-            <a href="admin_accounts.php" class="sidebar-item d-block text-light py-2 text-decoration-none hover-item"><i class="bi bi-box-seam text-danger me-2"></i> Kho Tài Khoản Game</a>
-            <a href="admin_borrow.php" class="sidebar-item d-block text-light py-2 text-decoration-none hover-item"><i class="bi bi-card-checklist text-danger me-2"></i> Quản Lý Đơn Thuê</a>
-            <a href="admin_users.php" class="sidebar-item d-block text-light py-2 text-decoration-none hover-item"><i class="bi bi-people-fill text-danger me-2"></i> Quản lý Thành viên</a>
+        <?php if(isset($_SESSION['role']) && $_SESSION['role'] == 1): ?>
+            <!-- Khu vực Quản trị Admin -->
+            <div class="sidebar-title mt-4" style="color: #f43f5e;">Quản Trị Hệ Thống</div>
+            <a href="admin_dashboard.php" class="sidebar-item <?php echo ($current_page == 'admin_dashboard.php') ? 'active' : ''; ?>">
+                <i class="bi bi-graph-up-arrow text-danger"></i> Thống kê doanh thu
+            </a>
+            <a href="admin_games.php" class="sidebar-item <?php echo ($current_page == 'admin_games.php' || $current_page == 'admin_add_game.php' || $current_page == 'admin_edit_game.php') ? 'active' : ''; ?>">
+                <i class="bi bi-joystick text-danger"></i> Quản lý Cửa Hàng
+            </a>
+            <a href="admin_accounts.php" class="sidebar-item <?php echo ($current_page == 'admin_accounts.php') ? 'active' : ''; ?>">
+                <i class="bi bi-box-seam-fill text-danger"></i> Kho Tài Khoản Game
+            </a>
+            <a href="admin_borrow.php" class="sidebar-item <?php echo ($current_page == 'admin_borrow.php') ? 'active' : ''; ?>">
+                <i class="bi bi-receipt-cutoff text-danger"></i> Quản lý Đơn Thuê
+            </a>
+            <a href="admin_users.php" class="sidebar-item <?php echo ($current_page == 'admin_users.php') ? 'active' : ''; ?>">
+                <i class="bi bi-people-fill text-danger"></i> Quản lý Khách Hàng
+            </a>
         <?php endif; ?>
     <?php endif; ?>
 
-    <div class="sidebar-title text-secondary small fw-bold mt-4 mb-2">Thể Loại Game</div>
+    <!-- Thể loại Game -->
+    <div class="sidebar-title mt-4">Thể Loại Trò Chơi</div>
     <?php
     if (isset($conn)) {
-        $cate_query = $conn->query("SELECT * FROM categories");
+        $cate_query = $conn->query("SELECT * FROM categories ORDER BY cate_name ASC");
         if ($cate_query && $cate_query->num_rows > 0) {
-            $icons = ['bi-crosshair', 'bi-puzzle', 'bi-car-front', 'bi-shield-sword', 'bi-lightning'];
+            $icons = ['bi-crosshair', 'bi-shield-shaded', 'bi-car-front-fill', 'bi-lightning-charge-fill', 'bi-compass-fill', 'bi-puzzle-fill'];
             $i = 0;
+            $active_cate = isset($_GET['category']) ? intval($_GET['category']) : 0;
             while ($c = $cate_query->fetch_assoc()) {
                 $icon = $icons[$i % count($icons)];
-                echo '<a href="index.php?category='.$c['category_id'].'" class="sidebar-item d-block text-light py-2 text-decoration-none hover-item"><i class="bi '.$icon.' text-secondary me-2"></i> ' . htmlspecialchars($c['cate_name']) . '</a>';
+                $is_cat_active = ($active_cate == $c['category_id']) ? 'active' : '';
+                echo '<a href="index.php?category='.$c['category_id'].'" class="sidebar-item '.$is_cat_active.'"><i class="bi '.$icon.'"></i> ' . htmlspecialchars($c['cate_name']) . '</a>';
                 $i++;
             }
         }
     }
     ?>
+    
+    <div class="mt-auto p-3 text-center border-top border-secondary border-opacity-10">
+        <small class="text-secondary d-block" style="font-size: 0.72rem;">ANPLAY STORE v2.5</small>
+        <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 mt-1" style="font-size: 0.68rem;">
+            <i class="bi bi-shield-check me-1"></i> Hệ thống 24/7
+        </span>
+    </div>
 </aside>
 
 <!-- KHUNG LÀM VIỆC CHÍNH BÊN PHẢI -->
 <div class="main-wrapper">
-    <!-- TOPBAR -->
-    <header class="topbar d-flex align-items-center bg-dark p-3 shadow-sm border-bottom border-secondary border-opacity-25">
-        
-        <!-- NÚT MỞ MENU TRÊN MOBILE (Thay thế d-none d-lg-flex cũ) -->
-        <button class="btn text-white d-lg-none me-3" id="openSidebarBtn"><i class="bi bi-list fs-2"></i></button>
+    <!-- TOPBAR TRÊN CÙNG -->
+    <header class="topbar">
+        <!-- Nút mở Menu trên Mobile -->
+        <button class="btn text-white d-lg-none me-2 p-1" id="openSidebarBtn" aria-label="Open Menu">
+            <i class="bi bi-list fs-2"></i>
+        </button>
 
-        <!-- ĐOẠN ĐƯỢC CHỈNH SỬA: Form tìm kiếm sáng và viền màu Cyan -->
-        <form action="index.php" method="GET" class="search-container d-none d-md-flex align-items-center rounded-pill px-3 py-1 me-auto" style="width: 300px; background: rgba(0, 243, 255, 0.1); border: 1px solid #00f3ff;">
-            <i class="bi bi-search me-2" style="color: #00f3ff;"></i>
-            <input type="text" name="search" class="form-control bg-transparent border-0 text-white shadow-none" placeholder="Tìm kiếm trò chơi..." value="<?php echo isset($_GET['search']) ? htmlspecialchars($_GET['search']) : ''; ?>">
+        <!-- Form tìm kiếm thông minh -->
+        <form action="index.php" method="GET" class="search-container d-none d-md-block">
+            <i class="bi bi-search search-icon-left"></i>
+            <input type="text" name="search" class="search-input-box" placeholder="Tìm kiếm bom tấn, tài khoản Steam, EA, Epic..." value="<?php echo isset($_GET['search']) ? htmlspecialchars($_GET['search']) : ''; ?>">
+            <span class="search-kbd-hint">Ctrl + K</span>
         </form>
 
+        <!-- Menu Action bên phải -->
         <div class="d-flex align-items-center gap-3 ms-auto">
-            <a href="#" class="btn btn-dark rounded-circle border-0 d-none d-sm-block" style="background: #1c1c28;"><i class="bi bi-bookmark text-white"></i></a>
-            <a href="#" class="btn btn-dark rounded-circle border-0 d-none d-sm-block" style="background: #1c1c28;"><i class="bi bi-bell text-white"></i></a>
-            
+            <!-- Nút liên hệ hỗ trợ nhanh -->
+            <a href="https://t.me" target="_blank" class="topbar-action-btn d-none d-sm-inline-flex" title="Hỗ trợ trực tuyến 24/7">
+                <i class="bi bi-headset"></i>
+            </a>
+
             <?php if(isset($_SESSION['user_id'])): ?>
                 <div class="dropdown">
-                    <a href="#" class="d-flex align-items-center text-white text-decoration-none dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
-                        <img src="https://ui-avatars.com/api/?name=<?php echo urlencode($_SESSION['username']); ?>&background=6366f1&color=fff&rounded=true" width="38" height="38" class="me-2 shadow-sm rounded-circle">
-                        <!-- Ẩn tên user trên mobile cho gọn -->
-                        <span class="d-none d-md-inline fw-bold">@<?php echo htmlspecialchars($_SESSION['username']); ?></span>
+                    <a href="#" class="user-profile-btn dropdown-toggle text-decoration-none" data-bs-toggle="dropdown" aria-expanded="false">
+                        <img src="https://ui-avatars.com/api/?name=<?php echo urlencode($_SESSION['username']); ?>&background=6366f1&color=fff&bold=true&rounded=true" width="34" height="34" class="rounded-circle shadow-sm" alt="Avatar">
+                        <div class="d-none d-md-flex flex-column text-start">
+                            <span class="fw-bold" style="font-size: 0.88rem; line-height: 1.2;">@<?php echo htmlspecialchars($_SESSION['username']); ?></span>
+                            <span class="text-secondary" style="font-size: 0.72rem;">
+                                <?php echo ($_SESSION['role'] == 1) ? '<span class="text-danger fw-bold">Admin</span>' : '<span class="text-info">Thành viên VIP</span>'; ?>
+                            </span>
+                        </div>
                     </a>
-                    <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-end shadow border-secondary mt-2">
-                        <li><h6 class="dropdown-header text-info d-md-none">@<?php echo htmlspecialchars($_SESSION['username']); ?></h6></li>
-                        <li><a class="dropdown-item py-2" href="my_library.php"><i class="bi bi-collection-play me-2"></i>Thư viện Game</a></li>
-                        <li><hr class="dropdown-divider"></li>
-                        <li><a class="dropdown-item text-danger py-2" href="logout.php"><i class="bi bi-box-arrow-right me-2"></i>Đăng xuất</a></li>
+                    <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-end shadow border-secondary mt-2" style="background-color: #12151e; border: 1px solid rgba(255,255,255,0.1); border-radius: 12px;">
+                        <li class="px-3 py-2 border-bottom border-secondary border-opacity-25 d-md-none">
+                            <span class="fw-bold text-white d-block">@<?php echo htmlspecialchars($_SESSION['username']); ?></span>
+                            <small class="text-muted"><?php echo ($_SESSION['role'] == 1) ? 'Quản trị viên' : 'Khách hàng'; ?></small>
+                        </li>
+                        <li><a class="dropdown-item py-2" href="my_library.php"><i class="bi bi-collection-play me-2 text-success"></i> Thư viện của tôi</a></li>
+                        <?php if($_SESSION['role'] == 1): ?>
+                            <li><a class="dropdown-item py-2" href="admin_dashboard.php"><i class="bi bi-speedometer2 me-2 text-danger"></i> Trang Quản Trị</a></li>
+                        <?php endif; ?>
+                        <li><hr class="dropdown-divider border-secondary border-opacity-25"></li>
+                        <li><a class="dropdown-item py-2 text-danger fw-bold" href="logout.php"><i class="bi bi-box-arrow-right me-2"></i> Đăng xuất</a></li>
                     </ul>
                 </div>
             <?php else: ?>
-                <a href="login.php" class="btn btn-primary btn-sm px-4 rounded-pill fw-bold">Đăng nhập</a>
+                <div class="d-flex align-items-center gap-2">
+                    <a href="login.php" class="btn btn-gaming-secondary py-1 px-3" style="font-size: 0.85rem;">Đăng nhập</a>
+                    <a href="register.php" class="btn btn-gaming-primary py-1 px-3" style="font-size: 0.85rem;">Đăng ký</a>
+                </div>
             <?php endif; ?>
         </div>
     </header>
 
     <!-- BẮT ĐẦU VÙNG CUỘN NỘI DUNG -->
-    <div class="content-scroll p-3 p-md-4">
+    <div class="content-scroll">
         
-    <!-- JAVASCRIPT XỬ LÝ MENU TRƯỢT TRÊN ĐIỆN THOẠI -->
+    <!-- JAVASCRIPT XỬ LÝ MENU MOBILE & PHÍM TẮT -->
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const openBtn = document.getElementById('openSidebarBtn');
@@ -204,19 +172,28 @@ require_once __DIR__ . '/connect.php';
             const sidebar = document.getElementById('mobileSidebar');
             const overlay = document.getElementById('sidebarOverlay');
 
-            // Mở Menu
-            openBtn.addEventListener('click', function() {
-                sidebar.classList.add('active');
-                overlay.classList.add('active');
-            });
-
-            // Đóng Menu bằng nút X hoặc click vào màn tối
-            function closeMenu() {
-                sidebar.classList.remove('active');
-                overlay.classList.remove('active');
+            if (openBtn && sidebar && overlay) {
+                openBtn.addEventListener('click', function() {
+                    sidebar.classList.add('active');
+                    overlay.classList.add('active');
+                });
             }
 
-            closeBtn.addEventListener('click', closeMenu);
-            overlay.addEventListener('click', closeMenu);
+            function closeMenu() {
+                if (sidebar) sidebar.classList.remove('active');
+                if (overlay) overlay.classList.remove('active');
+            }
+
+            if (closeBtn) closeBtn.addEventListener('click', closeMenu);
+            if (overlay) overlay.addEventListener('click', closeMenu);
+
+            // Phím tắt Ctrl + K để focus ô tìm kiếm
+            document.addEventListener('keydown', function(e) {
+                if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+                    e.preventDefault();
+                    const searchInput = document.querySelector('.search-input-box');
+                    if (searchInput) searchInput.focus();
+                }
+            });
         });
     </script>

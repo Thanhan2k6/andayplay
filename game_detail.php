@@ -1,11 +1,11 @@
 <?php
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
-require_once __DIR__ . '/includes/header.php';
+if (session_status() === PHP_SESSION_NONE) { session_start(); }
+require_once __DIR__ . '/includes/header.php'; 
 
-if (!isset($_GET['id'])) {
-    echo "<script>window.location='index.php';</script>";
+// KIỂM TRA ID TRÒ CHƠI
+if (!isset($_GET['id']) || empty($_GET['id'])) {
+    echo "<div class='container mt-5 text-center text-white'><div class='panel-dark p-5'><h3>Không tìm thấy tựa game yêu cầu.</h3><a href='index.php' class='btn btn-gaming-primary mt-3'>Về Cửa Hàng</a></div></div>";
+    include 'includes/footer.php';
     exit();
 }
 
@@ -21,7 +21,7 @@ if (isset($_POST['btn_comment'])) {
         $content = $conn->real_escape_string($_POST['comment_content']);
         if (!empty($content)) {
             $conn->query("INSERT INTO comments (game_id, user_id, content) VALUES ($game_id, $user_id, '$content')");
-            echo "<script>window.location='game_detail.php?id=$game_id';</script>";
+            echo "<script>window.location='game_detail.php?id=$game_id#commentsSection';</script>";
             exit();
         }
     }
@@ -32,7 +32,7 @@ $sql_game = "SELECT g.*, c.cate_name FROM games g LEFT JOIN categories c ON g.ca
 $result_game = $conn->query($sql_game);
 
 if (!$result_game || $result_game->num_rows == 0) {
-    echo "<div class='container mt-5 text-center text-white'><h3>Trò chơi không tồn tại.</h3></div>";
+    echo "<div class='container mt-5 text-center text-white'><div class='panel-dark p-5'><h3>Trò chơi không tồn tại hoặc đã bị ẩn.</h3><a href='index.php' class='btn btn-gaming-primary mt-3'>Về Cửa Hàng</a></div></div>";
     include 'includes/footer.php';
     exit();
 }
@@ -83,112 +83,166 @@ try {
 // Gói dự phòng nếu CSDL chưa nạp bảng rental_packages
 if (empty($packages) && $game['price_type'] == 'paid') {
     $packages = [
-        ['package_id' => 1, 'package_name' => '1 Giờ (Trải nghiệm)', 'price' => 5000, 'duration_type' => 'hours', 'duration_value' => 1],
-        ['package_id' => 2, 'package_name' => '1 Ngày (24 Giờ)', 'price' => 15000, 'duration_type' => 'days', 'duration_value' => 1],
-        ['package_id' => 3, 'package_name' => '7 Ngày (1 Tuần)', 'price' => 50000, 'duration_type' => 'days', 'duration_value' => 7]
+        ['package_id' => 1, 'package_name' => '1 Giờ (Trải nghiệm nhanh)', 'price' => 5000, 'duration_type' => 'hours', 'duration_value' => 1],
+        ['package_id' => 2, 'package_name' => '1 Ngày (24 Giờ trọn gói)', 'price' => 15000, 'duration_type' => 'days', 'duration_value' => 1],
+        ['package_id' => 3, 'package_name' => '7 Ngày (1 Tuần phá đảo)', 'price' => 50000, 'duration_type' => 'days', 'duration_value' => 7]
     ];
 }
 ?>
 
-<div class="container mt-4 mb-5">
-    <!-- KHU VỰC THÔNG TIN CHÍNH -->
-    <div class="row p-4 rounded shadow-sm border border-secondary" style="background-color: #1a222c;">
-        <!-- Ảnh Bìa -->
-        <div class="col-md-4 mb-4 mb-md-0 text-center">
-            <?php if (!empty($game['image_url']) && file_exists($game['image_url'])): ?>
-                <img src="<?php echo $game['image_url']; ?>" class="img-fluid rounded shadow w-100" alt="<?php echo htmlspecialchars($game['title']); ?>" style="max-height: 400px; object-fit: cover;">
-            <?php else: ?>
-                <div class="d-flex align-items-center justify-content-center bg-dark text-white rounded shadow border border-secondary w-100" style="height: 350px;">NO COVER</div>
-            <?php endif; ?>
-        </div>
-        
-        <!-- Thông số & Nút Action -->
-        <div class="col-md-8 text-white ps-md-4 d-flex flex-column">
-            <h1 class="fw-bold text-info mb-2" style="font-size: 2.3rem;"><?php echo htmlspecialchars($game['title']); ?></h1>
-            <p class="mb-3">
-                <span class="badge bg-secondary px-3 py-2 fs-6"><i class="bi bi-tag-fill"></i> <?php echo !empty($game['cate_name']) ? $game['cate_name'] : 'Khác'; ?></span>
-                <?php if($game['platform'] == 'Mobile'): ?>
-                    <span class="badge bg-success px-3 py-2 fs-6 ms-1"><i class="bi bi-phone"></i> Mobile</span>
-                <?php else: ?>
-                    <span class="badge bg-primary px-3 py-2 fs-6 ms-1"><i class="bi bi-pc-display"></i> PC</span>
-                <?php endif; ?>
-            </p>
-            
-            <div class="d-flex flex-wrap text-light mb-4 mt-2 fs-6 fw-bold" style="background-color: #202d39; padding: 12px; border-radius: 8px;">
-                <span class="me-4 mb-1">⭐ Đánh giá: <span class="text-warning">4.9/5</span></span>
-                <span class="me-4 mb-1">👁️ Lượt xem: <span class="text-white"><?php echo number_format($game['views'] ?? 0); ?></span></span>
-                <span class="mb-1">⚡ Hình thức: <span class="text-info"><?php echo ($game['price_type'] == 'free') ? 'Game Miễn Phí' : 'Cho thuê tài khoản trả phí'; ?></span></span>
-            </div>
+<div class="container-fluid px-0 px-md-3 mt-2 mb-5">
+    <!-- Breadcrumb điều hướng -->
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb" style="font-size: 0.88rem;">
+            <li class="breadcrumb-item"><a href="index.php" class="text-secondary"><i class="bi bi-house me-1"></i> Trang chủ</a></li>
+            <li class="breadcrumb-item"><a href="index.php?category=<?php echo $game['category_id']; ?>" class="text-secondary"><?php echo htmlspecialchars($game['cate_name'] ?? 'Thể loại'); ?></a></li>
+            <li class="breadcrumb-item active text-white" aria-current="page"><?php echo htmlspecialchars($game['title']); ?></li>
+        </ol>
+    </nav>
 
-            <!-- BẢNG BÁO GIÁ CÁC GÓI THUÊ -->
-            <?php if ($game['price_type'] != 'free'): ?>
-                <div class="mb-4">
-                    <h5 class="fw-bold text-warning mb-2"><i class="bi bi-tags-fill me-1"></i> Bảng giá các gói thời hạn thuê:</h5>
-                    <div class="row g-2">
-                        <?php if (count($packages) > 0): ?>
-                            <?php foreach ($packages as $pkg): ?>
-                                <div class="col-6 col-md-3">
-                                    <div class="p-2 rounded text-center border border-secondary" style="background: rgba(255, 255, 255, 0.05);">
-                                        <small class="text-secondary d-block"><?php echo htmlspecialchars($pkg['package_name']); ?></small>
-                                        <strong class="text-info fs-6"><?php echo number_format($pkg['price'], 0, ',', '.'); ?>đ</strong>
-                                    </div>
-                                </div>
-                            <?php endforeach; ?>
+    <!-- KHU VỰC THÔNG TIN CHÍNH (PRODUCT SHOWCASE) -->
+    <div class="panel-dark p-4 p-lg-5 mb-5">
+        <div class="row g-4 align-items-start">
+            <!-- Cột 1: Ảnh Bìa Game -->
+            <div class="col-lg-5 col-md-6 text-center">
+                <div class="position-relative rounded-4 overflow-hidden shadow-lg border border-secondary border-opacity-25" style="background: #0b0d13;">
+                    <?php if (!empty($game['image_url']) && file_exists($game['image_url'])): ?>
+                        <img src="<?php echo $game['image_url']; ?>" class="img-fluid w-100" alt="<?php echo htmlspecialchars($game['title']); ?>" style="max-height: 480px; object-fit: cover;">
+                    <?php else: ?>
+                        <div class="d-flex flex-column align-items-center justify-content-center text-muted" style="height: 380px;">
+                            <i class="bi bi-controller fs-1 mb-2 text-secondary"></i>
+                            <span>CHƯA CÓ ẢNH BÌA</span>
+                        </div>
+                    <?php endif; ?>
+
+                    <!-- Platform Tag góc trên ảnh -->
+                    <div class="position-absolute top-0 start-0 m-3 d-flex gap-2">
+                        <span class="badge-platform px-3 py-2 fs-6">
+                            <?php echo ($game['platform'] == 'PC') ? '<i class="bi bi-display me-1"></i>PC Game' : '<i class="bi bi-phone me-1"></i>Mobile Game'; ?>
+                        </span>
+                        <?php if ($game['price_type'] == 'free'): ?>
+                            <span class="badge-gaming badge-gaming-free px-3 py-2 fs-6">Miễn Phí</span>
                         <?php else: ?>
-                            <div class="col-12"><small class="text-secondary">Chưa cấu hình gói giá cụ thể, áp dụng mức giá cơ bản từ 5.000đ.</small></div>
+                            <span class="badge-gaming badge-gaming-paid px-3 py-2 fs-6">Tài Khoản Thuê</span>
                         <?php endif; ?>
                     </div>
                 </div>
-            <?php endif; ?>
 
-            <!-- KHU VỰC NÚT THAO TÁC -->
-            <div class="mt-auto pt-3 border-top border-secondary">
-                <?php if ($game['price_type'] == 'free'): ?>
-                    <h4 class="text-success fw-bold mb-3"><i class="bi bi-gift-fill me-1"></i> Trò Chơi Miễn Phí</h4>
-                    <?php $dlink = !empty($game['download_link']) ? $game['download_link'] : '#'; ?>
-                    <a href="<?php echo $dlink; ?>" target="_blank" class="btn btn-success btn-lg fw-bold px-5 py-3 shadow w-100 d-flex justify-content-center align-items-center">
-                        <i class="bi bi-cloud-arrow-down-fill me-2 fs-4"></i> TẢI XUỐNG BỘ CÀI CHÍNH THỨC
-                    </a>
-                <?php elseif ($is_rented): ?>
-                    <div class="alert alert-success d-flex justify-content-between align-items-center mb-3">
-                        <div>
-                            <strong class="fs-6"><i class="bi bi-check-circle-fill me-1"></i> Bạn đang thuê tài khoản game này!</strong>
-                            <div class="small">Hết hạn vào: <?php echo date('d/m/Y H:i', strtotime($active_order['due_date'])); ?></div>
-                        </div>
-                        <a href="my_library.php" class="btn btn-success fw-bold px-3">Xem Tài Khoản Ngay</a>
-                    </div>
-                <?php else: ?>
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <div>
-                            <span class="text-secondary">Trạng thái kho tài khoản:</span>
-                            <?php if ($available_accounts > 0): ?>
-                                <span class="badge bg-success ms-2 fs-6">Sẵn sàng (Còn <?php echo $available_accounts; ?> tài khoản)</span>
-                            <?php else: ?>
-                                <span class="badge bg-danger ms-2 fs-6">Tạm hết tài khoản</span>
-                            <?php endif; ?>
-                        </div>
-                    </div>
-
+                <!-- Tình trạng kho tài khoản -->
+                <?php if ($game['price_type'] != 'free'): ?>
+                <div class="mt-3 p-3 rounded-3 bg-dark border border-secondary border-opacity-25 d-flex justify-content-between align-items-center">
+                    <span class="text-secondary small fw-bold"><i class="bi bi-box-seam me-1"></i> Trạng thái kho:</span>
                     <?php if ($available_accounts > 0): ?>
-                        <a href="borrow_process.php?game_id=<?php echo $game_id; ?>" class="btn btn-warning fw-bold btn-lg px-5 py-3 text-dark shadow w-100 d-flex justify-content-center align-items-center" style="border-radius: 8px;">
-                            <i class="bi bi-cart-check-fill me-2 fs-4"></i> THUÊ TÀI KHOẢN NGAY
-                        </a>
+                        <span class="badge bg-success bg-opacity-25 text-success border border-success border-opacity-50 px-3 py-2 fw-bold">
+                            🟢 Sẵn sàng cấp (Còn <?php echo $available_accounts; ?> tài khoản)
+                        </span>
                     <?php else: ?>
-                        <button class="btn btn-secondary btn-lg px-5 py-3 fw-bold w-100 d-flex justify-content-center align-items-center" disabled>
-                            <i class="bi bi-x-circle-fill me-2 fs-4"></i> Hiện Đã Hết Tài Khoản Khả Dụng
-                        </button>
+                        <span class="badge bg-danger bg-opacity-25 text-danger border border-danger border-opacity-50 px-3 py-2 fw-bold">
+                            🔴 Tạm hết tài khoản
+                        </span>
                     <?php endif; ?>
+                </div>
                 <?php endif; ?>
+            </div>
+            
+            <!-- Cột 2: Thông tin chi tiết & Gói giá -->
+            <div class="col-lg-7 col-md-6 d-flex flex-column">
+                <h1 class="fw-bold text-white mb-2" style="font-size: 2.2rem; line-height: 1.25;">
+                    <?php echo htmlspecialchars($game['title']); ?>
+                </h1>
+
+                <!-- Meta Pills -->
+                <div class="d-flex flex-wrap align-items-center gap-3 my-3">
+                    <span class="text-secondary small">
+                        <i class="bi bi-tag-fill text-primary me-1"></i> <?php echo !empty($game['cate_name']) ? htmlspecialchars($game['cate_name']) : 'Khác'; ?>
+                    </span>
+                    <span class="text-secondary small">
+                        <i class="bi bi-star-fill text-warning me-1"></i> <strong>4.9 / 5.0</strong> (Đánh giá game thủ)
+                    </span>
+                    <span class="text-secondary small">
+                        <i class="bi bi-eye-fill text-info me-1"></i> <?php echo number_format($game['views'] ?? 0); ?> lượt xem
+                    </span>
+                </div>
+
+                <!-- Mô tả ngắn gọn -->
+                <?php if (!empty($game['description'])): ?>
+                    <p class="text-secondary" style="font-size: 0.98rem; line-height: 1.6;">
+                        <?php echo htmlspecialchars($game['description']); ?>
+                    </p>
+                <?php endif; ?>
+
+                <!-- BẢNG BÁO GIÁ CÁC GÓI THUÊ -->
+                <?php if ($game['price_type'] != 'free'): ?>
+                    <div class="my-3 p-3 rounded-4" style="background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border-subtle);">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <span class="fw-bold text-white small text-uppercase tracking-wider">
+                                <i class="bi bi-clock-history text-warning me-1"></i> Bảng Giá Gói Thuê Theo Thời Gian
+                            </span>
+                            <span class="text-success small fw-bold"><i class="bi bi-check-circle me-1"></i> Bảo hành trọn thời hạn</span>
+                        </div>
+                        <div class="row g-2">
+                            <?php foreach ($packages as $idx => $pkg): ?>
+                                <div class="col-sm-4 col-6">
+                                    <div class="p-3 rounded-3 text-center border border-secondary border-opacity-25 h-100 d-flex flex-column justify-content-center" style="background: #0f121a;">
+                                        <small class="text-secondary d-block fw-bold mb-1" style="font-size: 0.78rem;"><?php echo htmlspecialchars($pkg['package_name']); ?></small>
+                                        <div class="gaming-card-price-val fs-5"><?php echo number_format($pkg['price'], 0, ',', '.'); ?>đ</div>
+                                    </div>
+                                </div>
+                            <?php endforeach; ?>
+                        </div>
+                    </div>
+                <?php endif; ?>
+
+                <!-- KHU VỰC NÚT THUÊ CHÍNH -->
+                <div class="mt-4 pt-3 border-top border-white border-opacity-10">
+                    <?php if ($game['price_type'] == 'free'): ?>
+                        <div class="p-3 rounded-3 mb-3" style="background: rgba(6, 182, 212, 0.1); border: 1px solid rgba(6, 182, 212, 0.3);">
+                            <span class="text-info fw-bold"><i class="bi bi-gift-fill me-1"></i> Trò chơi này được phát hành hoàn toàn miễn phí.</span>
+                        </div>
+                        <?php $dlink = !empty($game['download_link']) ? $game['download_link'] : '#'; ?>
+                        <a href="<?php echo $dlink; ?>" target="_blank" class="btn btn-gaming-cyan w-100 py-3 fs-5 fw-bold">
+                            <i class="bi bi-cloud-arrow-down-fill me-2 fs-4"></i> TẢI XUỐNG BỘ CÀI CHÍNH THỨC
+                        </a>
+                    <?php elseif ($is_rented): ?>
+                        <div class="alert alert-success d-flex flex-column flex-sm-row justify-content-between align-items-center gap-3 p-3 rounded-3 mb-3 border-0 shadow" style="background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.4) !important;">
+                            <div>
+                                <strong class="fs-6 text-white"><i class="bi bi-check-circle-fill text-success me-2 fs-5"></i> Bạn đang thuê tài khoản trò chơi này!</strong>
+                                <div class="text-secondary small mt-1">Hết hạn vào: <strong class="text-warning"><?php echo date('d/m/Y H:i', strtotime($active_order['due_date'])); ?></strong></div>
+                            </div>
+                            <a href="my_library.php" class="btn btn-gaming-primary py-2 px-4 text-nowrap">
+                                <i class="bi bi-controller me-1"></i> Vào Chơi Game
+                            </a>
+                        </div>
+                    <?php else: ?>
+                        <?php if ($available_accounts > 0): ?>
+                            <a href="borrow_process.php?game_id=<?php echo $game_id; ?>" class="btn btn-gaming-primary w-100 py-3 fs-5 fw-bold shadow-lg">
+                                <i class="bi bi-lightning-charge-fill me-2 fs-4 text-warning"></i> THUÊ TÀI KHOẢN NGAY (CẤP TỰ ĐỘNG)
+                            </a>
+                            <small class="text-secondary text-center d-block mt-2" style="font-size: 0.8rem;">
+                                <i class="bi bi-shield-check text-success me-1"></i> Thanh toán VietQR tự động — Nhận thông tin đăng nhập ngay sau 30 giây
+                            </small>
+                        <?php else: ?>
+                            <button class="btn btn-secondary w-100 py-3 fs-5 fw-bold" disabled>
+                                <i class="bi bi-x-circle-fill me-2"></i> Tạm Hết Tài Khoản Khả Dụng Trong Kho
+                            </button>
+                            <small class="text-secondary text-center d-block mt-2">Vui lòng quay lại sau hoặc liên hệ Admin để bổ sung thêm tài khoản.</small>
+                        <?php endif; ?>
+                    <?php endif; ?>
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- KHU VỰC MÔ TẢ VÀ BÌNH LUẬN -->
-    <div class="row mt-5">
-        <div class="col-lg-7 mb-4">
-            <div class="card bg-transparent border-0 text-white">
-                <h3 class="fw-bold mb-3 border-bottom border-info pb-2">📝 Giới Thiệu & Điều Kiện Sử Dụng</h3>
-                <div class="text-white fs-6 mb-4" style="line-height: 1.8; text-align: justify;">
+    <!-- KHU VỰC THÔNG TIN BỔ SUNG & BÌNH LUẬN -->
+    <div class="row g-4">
+        <!-- Cột trái: Giới thiệu & Cấu hình -->
+        <div class="col-lg-7">
+            <!-- Mô tả chi tiết -->
+            <div class="panel-dark p-4 mb-4">
+                <h4 class="fw-bold text-white mb-3 d-flex align-items-center gap-2">
+                    <i class="bi bi-file-text-fill text-primary"></i> Chi Tiết Trò Chơi
+                </h4>
+                <div class="text-light" style="line-height: 1.8; font-size: 0.95rem;">
                     <?php 
                     if (!empty($game['long_description'])) {
                         echo nl2br(htmlspecialchars($game['long_description'])); 
@@ -199,31 +253,50 @@ if (empty($packages) && $game['price_type'] == 'paid') {
                     }
                     ?>
                 </div>
+            </div>
 
-                <div class="p-3 rounded border border-secondary" style="background: rgba(0, 243, 255, 0.05);">
-                    <h6 class="text-info fw-bold"><i class="bi bi-shield-exclamation me-1"></i> Chính sách sử dụng tài khoản:</h6>
-                    <ul class="text-secondary small mb-0 ps-3">
-                        <li>Không tự ý đổi mật khẩu, email hoặc cài đặt bảo mật của tài khoản được cấp.</li>
-                        <li>Sau khi hết hạn thuê, thông tin tài khoản sẽ tự động khóa và thu hồi quyền xem trên website.</li>
-                        <li>Khách hàng có thể chọn <strong>Gia hạn</strong> hoặc <strong>Thuê lại tài khoản cũ</strong> để tiếp tục sử dụng.</li>
-                    </ul>
+            <!-- Cấu hình yêu cầu -->
+            <?php if (!empty($game['system_req'])): ?>
+            <div class="panel-dark p-4 mb-4">
+                <h4 class="fw-bold text-white mb-3 d-flex align-items-center gap-2">
+                    <i class="bi bi-cpu-fill text-info"></i> Yêu Cầu Cấu Hình Thiết Bị
+                </h4>
+                <div class="p-3 rounded-3" style="background: #0b0d13; border: 1px solid var(--border-subtle); font-family: monospace; font-size: 0.9rem; line-height: 1.7; color: #cbd5e1;">
+                    <?php echo nl2br(htmlspecialchars($game['system_req'])); ?>
                 </div>
+            </div>
+            <?php endif; ?>
+
+            <!-- Điều khoản sử dụng tài khoản -->
+            <div class="panel-dark p-4" style="border-left: 4px solid var(--primary);">
+                <h5 class="fw-bold text-white mb-2"><i class="bi bi-shield-exclamation text-warning me-2"></i> Quy Định Khi Thuê Tài Khoản Game</h5>
+                <ul class="text-secondary small mb-0 ps-3" style="line-height: 1.7;">
+                    <li>Không tự ý đổi mật khẩu, email hoặc bất kỳ thông tin bảo mật nào của tài khoản được cấp.</li>
+                    <li>Không sử dụng phần mềm thứ ba gian lận (hack/cheat) làm ảnh hưởng đến độ uy tín của tài khoản.</li>
+                    <li>Hết hạn thuê, quyền truy cập tài khoản sẽ tự động thu hồi. Bạn có thể gia hạn hoặc thuê lại tài khoản cũ bất kỳ lúc nào.</li>
+                </ul>
             </div>
         </div>
 
-        <!-- Cột Bình Luận -->
-        <div class="col-lg-5">
-            <div class="card shadow-sm border-0 p-4" style="background-color: #202d39; border-radius: 12px;">
-                <h4 class="text-white fw-bold mb-4">💬 Đánh Giá Trải Nghiệm</h4>
+        <!-- Cột phải: Đánh giá & Bình luận -->
+        <div class="col-lg-5" id="commentsSection">
+            <div class="panel-dark p-4">
+                <h4 class="fw-bold text-white mb-3 d-flex align-items-center justify-content-between">
+                    <span><i class="bi bi-chat-left-text-fill text-info me-2"></i> Đánh Giá Từ Game Thủ</span>
+                </h4>
                 
+                <!-- Form gửi bình luận -->
                 <form method="POST" action="" class="mb-4">
-                    <div class="form-group mb-3">
-                        <textarea name="comment_content" class="form-control bg-dark text-white border-secondary" rows="3" placeholder="Chia sẻ đánh giá hoặc trải nghiệm thuê game của bạn..." required style="resize: none;"></textarea>
+                    <div class="mb-3">
+                        <textarea name="comment_content" class="form-control" rows="3" placeholder="Chia sẻ cảm nhận hoặc trải nghiệm chơi game của bạn..." required style="resize: none;"></textarea>
                     </div>
-                    <button type="submit" name="btn_comment" class="btn btn-info fw-bold w-100 py-2">Gửi Bình Luận</button>
+                    <button type="submit" name="btn_comment" class="btn btn-gaming-primary w-100 py-2">
+                        <i class="bi bi-send-fill me-1"></i> Gửi Đánh Giá Của Bạn
+                    </button>
                 </form>
 
-                <div class="comments-list pe-2" style="max-height: 500px; overflow-y: auto;">
+                <!-- Danh sách bình luận -->
+                <div class="comments-list pe-1" style="max-height: 480px; overflow-y: auto;">
                     <?php
                     $sql_comments = "SELECT c.*, u.username FROM comments c JOIN users u ON c.user_id = u.user_id WHERE c.game_id = $game_id ORDER BY c.created_at DESC";
                     $result_comments = $conn->query($sql_comments);
@@ -231,26 +304,23 @@ if (empty($packages) && $game['price_type'] == 'paid') {
                     if ($result_comments && $result_comments->num_rows > 0):
                         while ($cmt = $result_comments->fetch_assoc()):
                     ?>
-                        <div class="d-flex mb-3 pb-3 border-bottom border-secondary">
-                            <div class="me-3">
-                                <div class="bg-primary rounded-circle d-flex align-items-center justify-content-center text-white fw-bold fs-5" style="width: 45px; height: 45px;">
-                                    <?php echo strtoupper(substr($cmt['username'], 0, 1)); ?>
-                                </div>
-                            </div>
+                        <div class="d-flex gap-3 mb-3 pb-3 border-bottom border-white border-opacity-10">
+                            <img src="https://ui-avatars.com/api/?name=<?php echo urlencode($cmt['username']); ?>&background=1e293b&color=38bdf8&bold=true&rounded=true" width="40" height="40" class="rounded-circle flex-shrink-0" alt="Avatar">
                             <div class="w-100">
                                 <div class="d-flex justify-content-between align-items-center mb-1">
-                                    <h6 class="text-info fw-bold mb-0">@<?php echo htmlspecialchars($cmt['username']); ?></h6>
-                                    <span class="text-secondary small"><?php echo date('d/m/Y H:i', strtotime($cmt['created_at'])); ?></span>
+                                    <strong class="text-white small">@<?php echo htmlspecialchars($cmt['username']); ?></strong>
+                                    <span class="text-dim" style="font-size: 0.75rem;"><?php echo date('d/m/Y H:i', strtotime($cmt['created_at'])); ?></span>
                                 </div>
-                                <p class="text-white mb-0" style="line-height: 1.5; font-size: 0.95rem;"><?php echo nl2br(htmlspecialchars($cmt['content'])); ?></p>
+                                <p class="text-light mb-0" style="font-size: 0.9rem; line-height: 1.5;"><?php echo nl2br(htmlspecialchars($cmt['content'])); ?></p>
                             </div>
                         </div>
                     <?php 
                         endwhile;
                     else:
                     ?>
-                        <div class="text-center py-4">
-                            <p class="text-secondary mb-0">Chưa có bình luận nào. Hãy là người đầu tiên trải nghiệm tựa game này!</p>
+                        <div class="text-center py-4 text-secondary">
+                            <i class="bi bi-chat-dots fs-2 d-block mb-2 text-dim"></i>
+                            <p class="small mb-0">Chưa có bình luận nào. Hãy là người đầu tiên trải nghiệm tựa game này!</p>
                         </div>
                     <?php endif; ?>
                 </div>

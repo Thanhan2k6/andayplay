@@ -29,7 +29,6 @@ if (isset($_GET['action']) && isset($_GET['id'])) {
             $conn->query("UPDATE users SET role = 0 WHERE user_id = $target_id");
             echo "<script>alert('Đã gỡ quyền Quản trị viên của tài khoản này!'); window.location='admin_users.php';</script>";
         } elseif ($_GET['action'] == 'delete') {
-            // Xóa user (Lưu ý: Thực tế nên dùng khóa ngoại Cascade hoặc ẩn user thay vì xóa hẳn)
             $conn->query("DELETE FROM users WHERE user_id = $target_id");
             echo "<script>alert('Đã xóa tài khoản thành công!'); window.location='admin_users.php';</script>";
         }
@@ -48,101 +47,125 @@ $sql_users = "SELECT * FROM users $search_query ORDER BY role DESC, created_at D
 $result_users = $conn->query($sql_users);
 ?>
 
-<!-- NỘI DUNG TRANG QUẢN LÝ -->
-<div class="container-fluid mt-4 mb-5 text-white">
-    
-    <!-- Tiêu đề và Thanh tìm kiếm -->
-    <div class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom border-secondary">
-        <h2 class="fw-bold m-0" style="background: linear-gradient(90deg, #10b981, #34d399); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
-            <i class="bi bi-people-fill text-success"></i> QUẢN LÝ THÀNH VIÊN
-        </h2>
+<div class="container-fluid px-lg-5 py-4 my-2 text-white">
+    <!-- Header -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 pb-3 border-bottom border-secondary border-opacity-25 gap-3">
+        <div>
+            <div class="d-flex align-items-center gap-2 mb-1">
+                <span class="badge" style="background: rgba(99,102,241,0.2); color: var(--primary); font-size: 0.75rem; border: 1px solid rgba(99,102,241,0.4);">
+                    <i class="bi bi-people-fill me-1"></i> MEMBERSHIP
+                </span>
+            </div>
+            <h2 class="fw-extrabold text-white mb-0">Quản Lý Danh Sách Thành Viên</h2>
+            <p class="text-secondary small mb-0">Quản lý tài khoản game thủ, phân quyền quản trị viên và lịch sử tham gia</p>
+        </div>
         
         <form action="" method="GET" class="d-flex gap-2">
-            <input type="text" name="search_user" class="form-control bg-dark text-white border-secondary" placeholder="Tìm theo tên hoặc Email..." value="<?php echo isset($_GET['search_user']) ? htmlspecialchars($_GET['search_user']) : ''; ?>" style="width: 250px;">
-            <button type="submit" class="btn btn-primary fw-bold px-3">Tìm Kiếm</button>
+            <input type="text" name="search_user" class="form-control form-control-gaming" placeholder="Tìm theo tên hoặc email..." value="<?php echo isset($_GET['search_user']) ? htmlspecialchars($_GET['search_user']) : ''; ?>" style="width: 250px;">
+            <button type="submit" class="btn btn-gaming-primary px-3">
+                <i class="bi bi-search"></i>
+            </button>
             <?php if(!empty($search_query)): ?>
-                <a href="admin_users.php" class="btn btn-outline-secondary">Xóa lọc</a>
+                <a href="admin_users.php" class="btn btn-gaming-secondary" title="Xóa lọc">
+                    <i class="bi bi-x-lg"></i>
+                </a>
             <?php endif; ?>
         </form>
     </div>
 
-    <!-- Bảng Danh Sách User (Style Kính Mờ) -->
-    <div class="card bg-transparent border-0">
-        <div class="card-body p-0">
-            <div class="table-responsive rounded-3" style="border: 1px solid rgba(255, 255, 255, 0.1); background: rgba(30, 41, 59, 0.5); backdrop-filter: blur(10px);">
-                <table class="table table-dark table-hover mb-0 align-middle">
-                    <thead style="background: rgba(15, 23, 42, 0.8);">
-                        <tr>
-                            <th class="py-3 px-4 text-center">ID</th>
-                            <th class="py-3">Tài khoản</th>
-                            <th class="py-3">Địa chỉ Email</th>
-                            <th class="py-3 text-center">Vai trò</th>
-                            <th class="py-3">Ngày tham gia</th>
-                            <th class="py-3 text-center">Hành động</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php if ($result_users && $result_users->num_rows > 0): ?>
-                            <?php while ($u = $result_users->fetch_assoc()): ?>
-                                <tr>
-                                    <td class="py-3 px-4 text-center text-secondary fw-bold">#<?php echo $u['user_id']; ?></td>
-                                    
-                                    <td class="py-3">
-                                        <div class="d-flex align-items-center">
-                                            <img src="https://ui-avatars.com/api/?name=<?php echo urlencode($u['username']); ?>&background=random&color=fff&rounded=true" width="40" height="40" class="me-3 shadow-sm">
-                                            <span class="fw-bold text-info">@<?php echo htmlspecialchars($u['username']); ?></span>
-                                        </div>
-                                    </td>
-                                    
-                                    <td class="py-3 text-light"><?php echo htmlspecialchars($u['email']); ?></td>
-                                    
-                                    <td class="py-3 text-center">
-                                        <?php if ($u['role'] == 1): ?>
-                                            <span class="badge bg-danger px-3 py-2 shadow-sm"><i class="bi bi-shield-lock-fill"></i> Admin</span>
-                                        <?php else: ?>
-                                            <span class="badge bg-secondary px-3 py-2"><i class="bi bi-person-fill"></i> Member</span>
-                                        <?php endif; ?>
-                                    </td>
-                                    
-                                    <td class="py-3 text-muted small">
-                                        <?php echo date('d/m/Y H:i', strtotime($u['created_at'] ?? 'now')); ?>
-                                    </td>
-                                    
-                                    <td class="py-3 text-center">
-                                        <?php if ($u['user_id'] != $_SESSION['user_id']): // Ẩn nút sửa trên chính tài khoản đang login ?>
-                                            <div class="dropdown">
-                                                <button class="btn btn-sm btn-outline-light dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                                    Tùy chỉnh
-                                                </button>
-                                                <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-end shadow">
-                                                    <?php if ($u['role'] == 0): ?>
-                                                        <li><a class="dropdown-item text-success fw-bold" href="admin_users.php?action=make_admin&id=<?php echo $u['user_id']; ?>" onclick="return confirm('Bạn có chắc muốn thăng cấp người này làm Admin?');"><i class="bi bi-arrow-up-circle-fill me-2"></i>Cấp quyền Admin</a></li>
-                                                    <?php else: ?>
-                                                        <li><a class="dropdown-item text-warning fw-bold" href="admin_users.php?action=remove_admin&id=<?php echo $u['user_id']; ?>" onclick="return confirm('Bạn có chắc muốn gỡ quyền Admin của người này?');"><i class="bi bi-arrow-down-circle-fill me-2"></i>Gỡ quyền Admin</a></li>
-                                                    <?php endif; ?>
-                                                    
-                                                    <li><hr class="dropdown-divider border-secondary"></li>
-                                                    
-                                                    <li><a class="dropdown-item text-danger fw-bold" href="admin_users.php?action=delete&id=<?php echo $u['user_id']; ?>" onclick="return confirm('CẢNH BÁO: Hành động này sẽ xóa vĩnh viễn tài khoản. Tiếp tục?');"><i class="bi bi-trash-fill me-2"></i>Xóa tài khoản</a></li>
-                                                </ul>
-                                            </div>
-                                        <?php else: ?>
-                                            <span class="badge bg-success">Tài khoản của bạn</span>
-                                        <?php endif; ?>
-                                    </td>
-                                </tr>
-                            <?php endwhile; ?>
-                        <?php else: ?>
+    <!-- Table Container -->
+    <div class="table-gaming-container">
+        <div class="table-responsive">
+            <table class="table table-gaming align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th style="width: 8%;">ID</th>
+                        <th style="width: 28%;">Tài Khoản & Tên Game Thủ</th>
+                        <th style="width: 26%;">Địa Chỉ Email</th>
+                        <th style="width: 14%;" class="text-center">Vai Trò</th>
+                        <th style="width: 14%;">Ngày Đăng Ký</th>
+                        <th style="width: 10%;" class="text-end pe-3">Hành Động</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php if ($result_users && $result_users->num_rows > 0): ?>
+                        <?php while ($u = $result_users->fetch_assoc()): ?>
                             <tr>
-                                <td colspan="6" class="text-center py-5 text-secondary">
-                                    <i class="bi bi-inbox fs-1 d-block mb-3"></i>
-                                    Không tìm thấy dữ liệu thành viên nào.
+                                <td class="text-secondary fw-bold">#<?php echo $u['user_id']; ?></td>
+                                <td>
+                                    <div class="d-flex align-items-center gap-3">
+                                        <img src="https://ui-avatars.com/api/?name=<?php echo urlencode($u['username']); ?>&background=random&color=fff&rounded=true" width="36" height="36" class="rounded-circle shadow-sm">
+                                        <div>
+                                            <strong class="text-white">@<?php echo htmlspecialchars($u['username']); ?></strong>
+                                            <?php if ($u['user_id'] == $_SESSION['user_id']): ?>
+                                                <span class="badge ms-1" style="background: rgba(16,185,129,0.2); color: #10b981; font-size: 0.65rem;">BẠN</span>
+                                            <?php endif; ?>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="text-light small"><?php echo htmlspecialchars($u['email']); ?></span>
+                                </td>
+                                <td class="text-center">
+                                    <?php if ($u['role'] == 1): ?>
+                                        <span class="badge" style="background: rgba(99,102,241,0.2); color: var(--primary); border: 1px solid rgba(99,102,241,0.4); padding: 6px 12px; font-size: 0.75rem;">
+                                            <i class="bi bi-shield-check me-1"></i> Quản Trị Viên
+                                        </span>
+                                    <?php else: ?>
+                                        <span class="badge" style="background: rgba(255,255,255,0.06); color: #94a3b8; border: 1px solid var(--border-color); padding: 6px 12px; font-size: 0.75rem;">
+                                            <i class="bi bi-person me-1"></i> Game Thủ
+                                        </span>
+                                    <?php endif; ?>
+                                </td>
+                                <td>
+                                    <span class="text-secondary small"><?php echo date('d/m/Y H:i', strtotime($u['created_at'] ?? 'now')); ?></span>
+                                </td>
+                                <td class="text-end pe-3">
+                                    <?php if ($u['user_id'] != $_SESSION['user_id']): ?>
+                                        <div class="dropdown">
+                                            <button class="btn btn-sm btn-gaming-secondary dropdown-toggle py-1 px-3" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                                Tùy chỉnh
+                                            </button>
+                                            <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-end shadow" style="background: var(--bg-card); border: 1px solid var(--border-color);">
+                                                <?php if ($u['role'] == 0): ?>
+                                                    <li>
+                                                        <a class="dropdown-item text-info small" href="admin_users.php?action=make_admin&id=<?php echo $u['user_id']; ?>" onclick="return confirm('Bạn có chắc muốn thăng cấp người này làm Quản trị viên?');">
+                                                            <i class="bi bi-arrow-up-circle me-2"></i> Thăng cấp làm Admin
+                                                        </a>
+                                                    </li>
+                                                <?php else: ?>
+                                                    <li>
+                                                        <a class="dropdown-item text-warning small" href="admin_users.php?action=remove_admin&id=<?php echo $u['user_id']; ?>" onclick="return confirm('Bạn có chắc muốn gỡ quyền Admin của người này?');">
+                                                            <i class="bi bi-arrow-down-circle me-2"></i> Gỡ quyền Admin
+                                                        </a>
+                                                    </li>
+                                                <?php endif; ?>
+                                                
+                                                <li><hr class="dropdown-divider border-secondary border-opacity-25"></li>
+                                                
+                                                <li>
+                                                    <a class="dropdown-item text-danger small" href="admin_users.php?action=delete&id=<?php echo $u['user_id']; ?>" onclick="return confirm('CẢNH BÁO: Hành động này sẽ xóa vĩnh viễn tài khoản. Tiếp tục?');">
+                                                        <i class="bi bi-trash me-2"></i> Xóa tài khoản
+                                                    </a>
+                                                </li>
+                                            </ul>
+                                        </div>
+                                    <?php else: ?>
+                                        <span class="text-secondary small fst-italic">Tài khoản này</span>
+                                    <?php endif; ?>
                                 </td>
                             </tr>
-                        <?php endif; ?>
-                    </tbody>
-                </table>
-            </div>
+                        <?php endwhile; ?>
+                    <?php else: ?>
+                        <tr>
+                            <td colspan="6" class="text-center py-5 text-secondary">
+                                <i class="bi bi-inbox fs-1 d-block mb-3"></i>
+                                Không tìm thấy thành viên nào phù hợp với từ khóa tìm kiếm.
+                            </td>
+                        </tr>
+                    <?php endif; ?>
+                </tbody>
+            </table>
         </div>
     </div>
 </div>

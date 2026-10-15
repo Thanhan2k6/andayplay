@@ -63,117 +63,174 @@ try {
 $chart_rev_js = implode(',', $chart_revenue);
 ?>
 
-<div class="container-fluid mt-4 mb-5 text-white">
-    <div class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom border-secondary">
+<div class="container-fluid px-lg-5 py-4 my-2 text-white">
+    <!-- Top Bar Navigation -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 pb-3 border-bottom border-secondary border-opacity-25 gap-3">
         <div>
-            <h2 class="fw-bold m-0 text-warning"><i class="bi bi-speedometer2 me-2"></i> TRUNG TÂM QUẢN TRỊ & BÁO CÁO THỐNG KÊ</h2>
-            <p class="text-secondary small mb-0">Dữ liệu thực tế về kho tài khoản, đơn thuê, doanh thu và cảnh báo sự cố</p>
+            <div class="d-flex align-items-center gap-2 mb-1">
+                <span class="badge" style="background: rgba(99,102,241,0.2); color: var(--primary); font-size: 0.75rem; border: 1px solid rgba(99,102,241,0.4);">
+                    <i class="bi bi-shield-lock-fill me-1"></i> ADMIN CONSOLE
+                </span>
+                <span class="text-secondary small">Năm hoạt động: <?php echo $current_year; ?></span>
+            </div>
+            <h2 class="fw-extrabold text-white mb-0">Trung Tâm Quản Trị & Báo Cáo Doanh Thu</h2>
         </div>
-        <div>
-            <a href="cron_process_expirations.php?secret_token=ANPLAY_CRON_2026" class="btn btn-outline-info btn-sm me-2">
-                <i class="bi bi-arrow-repeat"></i> Chạy Tác Vụ Quét Hết Hạn
+        <div class="d-flex gap-2">
+            <a href="cron_process_expirations.php?secret_token=ANPLAY_CRON_2026" class="btn btn-gaming-secondary btn-sm d-flex align-items-center">
+                <i class="bi bi-arrow-repeat me-1 text-info"></i> Quét Đơn Hết Hạn
             </a>
-            <button class="btn btn-outline-light btn-sm" onclick="window.print()"><i class="bi bi-printer"></i> In Báo Cáo</button>
+            <button class="btn btn-gaming-secondary btn-sm d-flex align-items-center" onclick="window.print()">
+                <i class="bi bi-printer me-1"></i> In Báo Cáo
+            </button>
         </div>
     </div>
 
-    <!-- HÀNG THẺ CHỈ SỐ DOANH THU & KHO TÀI KHOẢN -->
+    <!-- 4 KPI SaaS Cards -->
     <div class="row g-3 mb-4">
-        <!-- Doanh thu -->
-        <div class="col-md-3">
-            <div class="card p-3 border-0 rounded-4 shadow-sm" style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(5, 150, 105, 0.4)); border: 1px solid rgba(16, 185, 129, 0.3);">
-                <div class="d-flex justify-content-between align-items-center">
+        <!-- Doanh Thu -->
+        <div class="col-sm-6 col-xl-3">
+            <div class="p-4 rounded-4 h-100 position-relative overflow-hidden" style="background: var(--bg-card); border: 1px solid rgba(16, 185, 129, 0.3);">
+                <div class="d-flex justify-content-between align-items-start">
                     <div>
-                        <small class="text-uppercase text-light fw-bold">Tổng Doanh Thu</small>
-                        <h3 class="fw-bold text-white mt-1 mb-0"><?php echo number_format($total_revenue, 0, ',', '.'); ?> đ</h3>
+                        <span class="text-secondary small text-uppercase fw-bold letter-spacing-1">Tổng Doanh Thu</span>
+                        <h3 class="fw-extrabold text-white mt-2 mb-1"><?php echo number_format($total_revenue, 0, ',', '.'); ?> đ</h3>
+                        <span class="badge bg-success bg-opacity-25 text-success small">Thanh toán tự động</span>
                     </div>
-                    <i class="bi bi-currency-dollar fs-1 text-success"></i>
+                    <div class="p-3 rounded-3" style="background: rgba(16, 185, 129, 0.15); color: #10b981;">
+                        <i class="bi bi-cash-stack fs-3"></i>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <!-- Tài khoản khả dụng / Tổng kho -->
-        <div class="col-md-3">
-            <div class="card p-3 border-0 rounded-4 shadow-sm" style="background: linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(37, 99, 235, 0.4)); border: 1px solid rgba(59, 130, 246, 0.3);">
-                <div class="d-flex justify-content-between align-items-center">
+        <!-- Kho Tài Khoản (Sẵn / Tổng) -->
+        <div class="col-sm-6 col-xl-3">
+            <div class="p-4 rounded-4 h-100 position-relative overflow-hidden" style="background: var(--bg-card); border: 1px solid rgba(6, 182, 212, 0.3);">
+                <div class="d-flex justify-content-between align-items-start">
                     <div>
-                        <small class="text-uppercase text-light fw-bold">Kho Tài Khoản (Sẵn/Tổng)</small>
-                        <h3 class="fw-bold text-white mt-1 mb-0"><?php echo $available_accounts; ?> / <?php echo $total_accounts; ?></h3>
+                        <span class="text-secondary small text-uppercase fw-bold letter-spacing-1">Kho Tài Khoản</span>
+                        <h3 class="fw-extrabold text-white mt-2 mb-1"><?php echo $available_accounts; ?> <span class="fs-6 text-secondary fw-normal">/ <?php echo $total_accounts; ?> TK</span></h3>
+                        <span class="badge" style="background: rgba(6, 182, 212, 0.15); color: var(--accent-cyan); font-size: 0.75rem;">
+                            Đang cho thuê: <?php echo $rented_accounts; ?>
+                        </span>
                     </div>
-                    <i class="bi bi-box-seam fs-1 text-primary"></i>
+                    <div class="p-3 rounded-3" style="background: rgba(6, 182, 212, 0.15); color: var(--accent-cyan);">
+                        <i class="bi bi-box-seam fs-3"></i>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <!-- Đơn đang thuê hiệu lực -->
-        <div class="col-md-3">
-            <div class="card p-3 border-0 rounded-4 shadow-sm" style="background: linear-gradient(135deg, rgba(245, 158, 11, 0.2), rgba(217, 119, 6, 0.4)); border: 1px solid rgba(245, 158, 11, 0.3);">
-                <div class="d-flex justify-content-between align-items-center">
+        <!-- Đơn Đang Hoạt Động -->
+        <div class="col-sm-6 col-xl-3">
+            <div class="p-4 rounded-4 h-100 position-relative overflow-hidden" style="background: var(--bg-card); border: 1px solid rgba(245, 158, 11, 0.3);">
+                <div class="d-flex justify-content-between align-items-start">
                     <div>
-                        <small class="text-uppercase text-light fw-bold">Đơn Đang Hoạt Động</small>
-                        <h3 class="fw-bold text-white mt-1 mb-0"><?php echo $active_borrows; ?></h3>
-                        <small class="text-warning">Sắp hết hạn: <strong><?php echo $expiring_soon; ?></strong></small>
+                        <span class="text-secondary small text-uppercase fw-bold letter-spacing-1">Đơn Đang Hoạt Động</span>
+                        <h3 class="fw-extrabold text-warning mt-2 mb-1"><?php echo $active_borrows; ?></h3>
+                        <span class="text-secondary small">Sắp hết hạn trong 24h: <strong class="text-warning"><?php echo $expiring_soon; ?></strong></span>
                     </div>
-                    <i class="bi bi-clock-history fs-1 text-warning"></i>
+                    <div class="p-3 rounded-3" style="background: rgba(245, 158, 11, 0.15); color: #f59e0b;">
+                        <i class="bi bi-clock-history fs-3"></i>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <!-- Đơn hết hạn & Sự cố -->
-        <div class="col-md-3">
-            <div class="card p-3 border-0 rounded-4 shadow-sm" style="background: linear-gradient(135deg, rgba(239, 68, 68, 0.2), rgba(185, 28, 28, 0.4)); border: 1px solid rgba(239, 68, 68, 0.3);">
-                <div class="d-flex justify-content-between align-items-center">
+        <!-- Tài Khoản Bảo Trì & Sự Cố -->
+        <div class="col-sm-6 col-xl-3">
+            <div class="p-4 rounded-4 h-100 position-relative overflow-hidden" style="background: var(--bg-card); border: 1px solid rgba(239, 68, 68, 0.3);">
+                <div class="d-flex justify-content-between align-items-start">
                     <div>
-                        <small class="text-uppercase text-light fw-bold">Bảo Trì / Cần Thu Hồi</small>
-                        <h3 class="fw-bold text-white mt-1 mb-0"><?php echo $maintenance_accounts; ?> TK</h3>
-                        <small class="text-danger">Lỗi cấp phát: <strong><?php echo $failed_allocations; ?></strong></small>
+                        <span class="text-secondary small text-uppercase fw-bold letter-spacing-1">Bảo Trì / Cần Kiểm Tra</span>
+                        <h3 class="fw-extrabold text-danger mt-2 mb-1"><?php echo $maintenance_accounts; ?> <span class="fs-6 text-secondary fw-normal">TK</span></h3>
+                        <span class="text-secondary small">Lỗi cấp phát: <strong class="text-danger"><?php echo $failed_allocations; ?></strong></span>
                     </div>
-                    <i class="bi bi-exclamation-triangle-fill fs-1 text-danger"></i>
+                    <div class="p-3 rounded-3" style="background: rgba(239, 68, 68, 0.15); color: #ef4444;">
+                        <i class="bi bi-exclamation-octagon fs-3"></i>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- KHU VỰC BIỂU ĐỒ DOANH THU & BẢNG CẢNH BÁO -->
+    <!-- Biểu đồ & Tác Vụ Cần Xử Lý -->
     <div class="row g-4">
+        <!-- Revenue Chart (8 cols) -->
         <div class="col-lg-8">
-            <div class="card border-0 p-4 shadow-sm" style="background-color: #1a222c; border-radius: 12px; border: 1px solid #2d3b4e;">
-                <h5 class="fw-bold text-info mb-3">📈 Biểu Đồ Doanh Thu Thuê Tài Khoản Game (Năm <?php echo $current_year; ?>)</h5>
-                <div style="height: 350px;">
+            <div class="p-4 rounded-4 h-100" style="background: var(--bg-card); border: 1px solid var(--border-color);">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div>
+                        <h5 class="fw-bold text-white mb-1"><i class="bi bi-graph-up text-info me-2"></i>Doanh Thu Thuê Tài Khoản Game (Năm <?php echo $current_year; ?>)</h5>
+                        <p class="text-secondary small mb-0">Biểu đồ tổng hợp doanh thu theo từng tháng dựa trên giao dịch thực tế</p>
+                    </div>
+                    <span class="badge" style="background: rgba(99,102,241,0.15); color: var(--primary);">12 THÁNG</span>
+                </div>
+                <div style="height: 330px;">
                     <canvas id="revenueChart"></canvas>
                 </div>
             </div>
         </div>
 
+        <!-- Tasks & Alerts (4 cols) -->
         <div class="col-lg-4">
-            <div class="card border-0 p-4 shadow-sm h-100" style="background-color: #1a222c; border-radius: 12px; border: 1px solid #2d3b4e;">
-                <h5 class="fw-bold text-warning mb-3">⚠️ Tác Vụ Cần Chú Ý</h5>
-                <ul class="list-group list-group-flush bg-transparent">
-                    <li class="list-group-item bg-transparent text-light px-0 d-flex justify-content-between align-items-center border-secondary">
-                        <span>Tài khoản đang bảo trì / Báo lỗi</span>
-                        <a href="admin_accounts.php?filter_status=MAINTENANCE" class="badge bg-warning text-dark px-2 py-1 text-decoration-none">
-                            <?php echo $maintenance_accounts; ?> tài khoản
+            <div class="p-4 rounded-4 h-100 d-flex flex-column" style="background: var(--bg-card); border: 1px solid var(--border-color);">
+                <h5 class="fw-bold text-white mb-3"><i class="bi bi-bell text-warning me-2"></i>Tác Vụ Cần Chú Ý</h5>
+                
+                <div class="d-flex flex-column gap-3 mb-4">
+                    <!-- Item 1 -->
+                    <div class="p-3 rounded-3 d-flex justify-content-between align-items-center" style="background: rgba(255,255,255,0.02); border: 1px solid var(--border-color);">
+                        <div>
+                            <span class="d-block small text-light fw-semibold">Tài khoản báo lỗi / Bảo trì</span>
+                            <small class="text-secondary">Cần kiểm tra lại thông tin đăng nhập</small>
+                        </div>
+                        <a href="admin_accounts.php?filter_status=MAINTENANCE" class="status-pill status-pill-warning text-decoration-none">
+                            <?php echo $maintenance_accounts; ?> TK
                         </a>
-                    </li>
-                    <li class="list-group-item bg-transparent text-light px-0 d-flex justify-content-between align-items-center border-secondary">
-                        <span>Đơn sắp hết hạn (trong 24h)</span>
-                        <span class="badge bg-info px-2 py-1"><?php echo $expiring_soon; ?> đơn</span>
-                    </li>
-                    <li class="list-group-item bg-transparent text-light px-0 d-flex justify-content-between align-items-center border-secondary">
-                        <span>Đơn lỗi chưa cấp tài khoản</span>
-                        <a href="admin_borrow.php?status=pending" class="badge bg-danger px-2 py-1 text-decoration-none">
+                    </div>
+
+                    <!-- Item 2 -->
+                    <div class="p-3 rounded-3 d-flex justify-content-between align-items-center" style="background: rgba(255,255,255,0.02); border: 1px solid var(--border-color);">
+                        <div>
+                            <span class="d-block small text-light fw-semibold">Đơn sắp hết hạn (trong 24h)</span>
+                            <small class="text-secondary">Chuẩn bị tự động thu hồi tài khoản</small>
+                        </div>
+                        <span class="status-pill status-pill-info">
+                            <?php echo $expiring_soon; ?> đơn
+                        </span>
+                    </div>
+
+                    <!-- Item 3 -->
+                    <div class="p-3 rounded-3 d-flex justify-content-between align-items-center" style="background: rgba(255,255,255,0.02); border: 1px solid var(--border-color);">
+                        <div>
+                            <span class="d-block small text-light fw-semibold">Đơn lỗi chờ cấp bù tài khoản</span>
+                            <small class="text-secondary">Khách đã trả tiền nhưng kho hết TK</small>
+                        </div>
+                        <a href="admin_borrow.php?status=pending" class="status-pill status-pill-danger text-decoration-none">
                             <?php echo $failed_allocations; ?> đơn
                         </a>
-                    </li>
-                    <li class="list-group-item bg-transparent text-light px-0 d-flex justify-content-between align-items-center border-secondary">
-                        <span>Tổng thành viên</span>
-                        <span class="badge bg-secondary px-2 py-1"><?php echo $total_users; ?> người dùng</span>
-                    </li>
-                </ul>
+                    </div>
 
-                <div class="mt-4 pt-3 border-top border-secondary">
-                    <a href="admin_accounts.php" class="btn btn-primary w-100 fw-bold mb-2">+ Nhập Tài Khoản Vào Kho</a>
-                    <a href="admin_borrow.php" class="btn btn-outline-secondary w-100">Xem Danh Sách Đơn Thuê</a>
+                    <!-- Item 4 -->
+                    <div class="p-3 rounded-3 d-flex justify-content-between align-items-center" style="background: rgba(255,255,255,0.02); border: 1px solid var(--border-color);">
+                        <div>
+                            <span class="d-block small text-light fw-semibold">Tổng khách hàng đăng ký</span>
+                            <small class="text-secondary">Tài khoản game thủ trên website</small>
+                        </div>
+                        <span class="badge" style="background: rgba(255,255,255,0.08); color: #e2e8f0;">
+                            <?php echo $total_users; ?> người dùng
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Quick Action Buttons -->
+                <div class="mt-auto d-grid gap-2">
+                    <a href="admin_accounts.php" class="btn btn-gaming-primary py-2 text-decoration-none text-center">
+                        <i class="bi bi-plus-circle me-1"></i> Quản Lý & Nhập Kho Tài Khoản
+                    </a>
+                    <a href="admin_borrow.php" class="btn btn-gaming-secondary py-2 text-decoration-none text-center">
+                        <i class="bi bi-card-checklist me-1"></i> Xem Toàn Bộ Đơn Thuê Game
+                    </a>
                 </div>
             </div>
         </div>
@@ -184,32 +241,55 @@ $chart_rev_js = implode(',', $chart_revenue);
 <script>
 document.addEventListener("DOMContentLoaded", function() {
     const ctx = document.getElementById('revenueChart').getContext('2d');
-    let gradient = ctx.createLinearGradient(0, 0, 0, 350);
-    gradient.addColorStop(0, 'rgba(16, 185, 129, 0.7)');
-    gradient.addColorStop(1, 'rgba(16, 185, 129, 0.05)');
+    let gradient = ctx.createLinearGradient(0, 0, 0, 330);
+    gradient.addColorStop(0, 'rgba(99, 102, 241, 0.7)');
+    gradient.addColorStop(1, 'rgba(99, 102, 241, 0.05)');
 
     new Chart(ctx, {
         type: 'bar',
         data: {
-            labels: ['T1', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'T8', 'T9', 'T10', 'T11', 'T12'],
+            labels: ['Tháng 1', 'Tháng 2', 'Tháng 3', 'Tháng 4', 'Tháng 5', 'Tháng 6', 'Tháng 7', 'Tháng 8', 'Tháng 9', 'Tháng 10', 'Tháng 11', 'Tháng 12'],
             datasets: [{
                 label: 'Doanh thu (VNĐ)',
                 data: [<?php echo $chart_rev_js; ?>],
                 backgroundColor: gradient,
-                borderColor: '#10b981',
+                borderColor: '#6366f1',
                 borderWidth: 2,
-                borderRadius: 5
+                borderRadius: 8,
+                hoverBackgroundColor: '#818cf8'
             }]
         },
         options: {
             responsive: true,
             maintainAspectRatio: false,
             plugins: {
-                legend: { labels: { color: '#cbd5e1' } }
+                legend: { labels: { color: '#cbd5e1', font: { family: 'Plus Jakarta Sans', weight: 'bold' } } },
+                tooltip: {
+                    backgroundColor: '#0f1118',
+                    borderColor: 'rgba(255,255,255,0.1)',
+                    borderWidth: 1,
+                    titleColor: '#fff',
+                    bodyColor: '#cbd5e1',
+                    callbacks: {
+                        label: function(context) {
+                            return 'Doanh thu: ' + new Intl.NumberFormat('vi-VN').format(context.raw) + ' VNĐ';
+                        }
+                    }
+                }
             },
             scales: {
-                x: { ticks: { color: '#94a3b8' }, grid: { display: false } },
-                y: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba(255,255,255,0.05)' } }
+                x: { 
+                    ticks: { color: '#94a3b8', font: { family: 'Plus Jakarta Sans' } }, 
+                    grid: { display: false } 
+                },
+                y: { 
+                    ticks: { 
+                        color: '#94a3b8', 
+                        font: { family: 'Plus Jakarta Sans' },
+                        callback: function(value) { return new Intl.NumberFormat('vi-VN').format(value) + 'đ'; }
+                    }, 
+                    grid: { color: 'rgba(255,255,255,0.05)' } 
+                }
             }
         }
     });

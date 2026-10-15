@@ -64,21 +64,44 @@ if(isset($_POST['btn_add'])) {
 $csrf_token = generate_csrf_token();
 ?>
 
-<div class="container mt-4 text-white pb-5">
-    <h2 class="mb-4 fw-bold">➕ Thêm Game Mới Vào Cửa Hàng</h2>
-    <div class="card shadow" style="background-color: #1a222c; border: 1px solid #2d3b4e; border-radius: 10px;">
-        <div class="card-body p-4">
-            <form method="POST" action="" enctype="multipart/form-data">
-                <input type="hidden" name="csrf_token" value="<?php echo $csrf_token; ?>">
-                
-                <div class="row">
-                    <div class="col-md-6 mb-3">
-                        <label class="form-label text-info fw-bold">Tên Game</label>
-                        <input type="text" name="title" class="form-control bg-dark text-white border-secondary" required>
+<div class="container-fluid px-lg-5 py-4 my-2 text-white">
+    <!-- Breadcrumb & Title -->
+    <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb small">
+            <li class="breadcrumb-item"><a href="admin_dashboard.php" class="text-decoration-none text-secondary">Admin Console</a></li>
+            <li class="breadcrumb-item"><a href="admin_games.php" class="text-decoration-none text-secondary">Quản lý Game</a></li>
+            <li class="breadcrumb-item active text-white" aria-current="page">Thêm Game Mới</li>
+        </ol>
+    </nav>
+
+    <div class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom border-secondary border-opacity-25">
+        <div>
+            <h2 class="fw-extrabold text-white mb-1"><i class="bi bi-plus-circle text-primary me-2"></i>Thêm Game Mới Vào Cửa Hàng</h2>
+            <p class="text-secondary small mb-0">Điền đầy đủ thông tin game, gói giá thuê và ảnh bìa để mở bán trên ANPLAY STORE</p>
+        </div>
+        <a href="admin_games.php" class="btn btn-gaming-secondary">
+            <i class="bi bi-arrow-left me-1"></i> Trở Lại
+        </a>
+    </div>
+
+    <!-- Form Container -->
+    <div class="p-4 p-md-5 rounded-4 shadow-sm" style="background: var(--bg-card); border: 1px solid var(--border-color);">
+        <form method="POST" action="" enctype="multipart/form-data">
+            <input type="hidden" name="csrf_token" value="<?php echo $csrf_token; ?>">
+            
+            <!-- Section 1: Thông tin cơ bản -->
+            <div class="mb-5">
+                <h5 class="fw-bold text-info mb-3 pb-2 border-bottom border-secondary border-opacity-25">
+                    <i class="bi bi-info-circle me-1"></i> 1. Thông Tin Cơ Bản
+                </h5>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label text-light small fw-bold">Tên Game <span class="text-danger">*</span></label>
+                        <input type="text" name="title" class="form-control form-control-gaming" placeholder="Ví dụ: Cyberpunk 2077, Black Myth: Wukong..." required>
                     </div>
-                    <div class="col-md-6 mb-3">
-                        <label class="form-label text-info fw-bold">Thể loại</label>
-                        <select name="category_id" class="form-select bg-dark text-white border-secondary" required>
+                    <div class="col-md-3">
+                        <label class="form-label text-light small fw-bold">Thể Loại <span class="text-danger">*</span></label>
+                        <select name="category_id" class="form-select form-control-gaming" required>
                             <option value="">-- Chọn thể loại --</option>
                             <?php
                             $cates = $conn->query("SELECT * FROM categories");
@@ -90,95 +113,128 @@ $csrf_token = generate_csrf_token();
                             ?>
                         </select>
                     </div>
-                </div>
-
-                <div class="row">
-                    <div class="col-md-6 mb-3">
-                        <label class="form-label text-info fw-bold">Nền tảng (Platform)</label>
-                        <select name="platform" class="form-select bg-dark text-white border-secondary" required>
-                            <option value="PC">🖥️ PC</option>
-                            <option value="Mobile">📱 Mobile</option>
+                    <div class="col-md-3">
+                        <label class="form-label text-light small fw-bold">Nền Tảng <span class="text-danger">*</span></label>
+                        <select name="platform" class="form-select form-control-gaming" required>
+                            <option value="PC">🖥️ PC (Steam, Epic, EA)</option>
+                            <option value="PlayStation">🎮 PlayStation (PS4/PS5)</option>
+                            <option value="Xbox">💚 Xbox Series</option>
+                            <option value="Nintendo">🕹️ Nintendo Switch</option>
                         </select>
                     </div>
-                    <div class="col-md-6 mb-3">
-                        <label class="form-label text-info fw-bold">Mô Hình Dịch Vụ</label>
-                        <select name="price_type" id="priceTypeSelect" class="form-select bg-dark text-white border-secondary" required onchange="togglePricingInputs()">
-                            <option value="paid">Cho thuê tài khoản trả phí</option>
-                            <option value="free">Game Miễn phí (Link tải ngoài)</option>
+                    <div class="col-md-6">
+                        <label class="form-label text-light small fw-bold">Mô Hình Kinh Doanh</label>
+                        <select name="price_type" id="price_type_select" class="form-select form-control-gaming" onchange="togglePricingSection()">
+                            <option value="paid" selected>💎 Cho thuê tài khoản có phí (Gói giờ/ngày/tháng)</option>
+                            <option value="free">🎁 Game miễn phí (Cung cấp link tải trực tiếp)</option>
                         </select>
                     </div>
+                    <div class="col-md-6">
+                        <label class="form-label text-light small fw-bold">Ảnh Bìa Game (Cover 16:9)</label>
+                        <input type="file" name="image" class="form-control form-control-gaming" accept="image/*">
+                    </div>
                 </div>
+            </div>
 
-                <!-- CẤU HÌNH BẢNG GIÁ BAN ĐẦU -->
-                <div class="p-3 mb-4 rounded border border-secondary" id="pricingBlock" style="background: rgba(0, 243, 255, 0.03);">
-                    <h5 class="text-warning fw-bold mb-3"><i class="bi bi-tags-fill me-1"></i> Thiết Lập Bảng Giá Các Gói Thuê</h5>
-                    <div class="row g-3">
-                        <div class="col-md-3">
-                            <label class="form-label text-light small">Gói 1 Giờ (đ):</label>
-                            <input type="number" name="price_1h" class="form-control bg-dark text-white border-secondary" value="5000" min="1000" step="1000">
+            <!-- Section 2: Gói Giá Thuê Tài Khoản -->
+            <div class="mb-5" id="pricing_section">
+                <h5 class="fw-bold text-warning mb-3 pb-2 border-bottom border-secondary border-opacity-25">
+                    <i class="bi bi-tag-fill me-1"></i> 2. Thiết Lập Giá Thuê (VNĐ)
+                </h5>
+                <div class="row g-3">
+                    <div class="col-sm-6 col-md-3">
+                        <div class="p-3 rounded-3" style="background: rgba(255,255,255,0.02); border: 1px solid var(--border-color);">
+                            <label class="form-label text-secondary small fw-bold">Gói 1 Giờ (Trải nghiệm)</label>
+                            <div class="input-group">
+                                <input type="number" name="price_1h" class="form-control form-control-gaming text-white" value="5000" step="1000">
+                                <span class="input-group-text bg-dark border-secondary text-secondary">đ</span>
+                            </div>
                         </div>
-                        <div class="col-md-3">
-                            <label class="form-label text-light small">Gói 1 Ngày (đ):</label>
-                            <input type="number" name="price_1d" class="form-control bg-dark text-white border-secondary" value="15000" min="1000" step="1000">
+                    </div>
+                    <div class="col-sm-6 col-md-3">
+                        <div class="p-3 rounded-3" style="background: rgba(255,255,255,0.02); border: 1px solid var(--border-color);">
+                            <label class="form-label text-secondary small fw-bold">Gói 1 Ngày (24h)</label>
+                            <div class="input-group">
+                                <input type="number" name="price_1d" class="form-control form-control-gaming text-white" value="15000" step="1000">
+                                <span class="input-group-text bg-dark border-secondary text-secondary">đ</span>
+                            </div>
                         </div>
-                        <div class="col-md-3">
-                            <label class="form-label text-light small">Gói 7 Ngày (đ):</label>
-                            <input type="number" name="price_7d" class="form-control bg-dark text-white border-secondary" value="30000" min="1000" step="1000">
+                    </div>
+                    <div class="col-sm-6 col-md-3">
+                        <div class="p-3 rounded-3" style="background: rgba(255,255,255,0.02); border: 1px solid var(--border-color);">
+                            <label class="form-label text-secondary small fw-bold">Gói 7 Ngày (1 Tuần)</label>
+                            <div class="input-group">
+                                <input type="number" name="price_7d" class="form-control form-control-gaming text-white" value="30000" step="1000">
+                                <span class="input-group-text bg-dark border-secondary text-secondary">đ</span>
+                            </div>
                         </div>
-                        <div class="col-md-3">
-                            <label class="form-label text-light small">Gói 30 Ngày (đ):</label>
-                            <input type="number" name="price_30d" class="form-control bg-dark text-white border-secondary" value="99000" min="1000" step="1000">
+                    </div>
+                    <div class="col-sm-6 col-md-3">
+                        <div class="p-3 rounded-3" style="background: rgba(255,255,255,0.02); border: 1px solid var(--border-color);">
+                            <label class="form-label text-secondary small fw-bold">Gói 30 Ngày (1 Tháng)</label>
+                            <div class="input-group">
+                                <input type="number" name="price_30d" class="form-control form-control-gaming text-white" value="99000" step="1000">
+                                <span class="input-group-text bg-dark border-secondary text-secondary">đ</span>
+                            </div>
                         </div>
                     </div>
                 </div>
-                
-                <div class="row" id="downloadLinkDiv" style="display: none;">
-                    <div class="col-12 mb-3">
-                        <label class="form-label text-info fw-bold">Link tải chính thức</label>
-                        <input type="url" name="download_link" class="form-control bg-dark text-white border-secondary" placeholder="https://store.steampowered.com/...">
+            </div>
+
+            <!-- Link Tải (nếu game miễn phí) -->
+            <div class="mb-5 d-none" id="download_link_section">
+                <h5 class="fw-bold text-info mb-3 pb-2 border-bottom border-secondary border-opacity-25">
+                    <i class="bi bi-cloud-arrow-down me-1"></i> Link Tải Bộ Cài Miễn Phí
+                </h5>
+                <div>
+                    <label class="form-label text-light small fw-bold">Đường dẫn tải game</label>
+                    <input type="url" name="download_link" class="form-control form-control-gaming" placeholder="https://store.steampowered.com/app/...">
+                </div>
+            </div>
+
+            <!-- Section 3: Mô tả & Cấu hình -->
+            <div class="mb-4">
+                <h5 class="fw-bold text-success mb-3 pb-2 border-bottom border-secondary border-opacity-25">
+                    <i class="bi bi-card-text me-1"></i> 3. Mô Tả Chi Tiết & Yêu Cầu Cấu Hình
+                </h5>
+                <div class="row g-3">
+                    <div class="col-12">
+                        <label class="form-label text-light small fw-bold">Mô Tả Ngắn (Hiển thị ở danh sách)</label>
+                        <textarea name="short_description" class="form-control form-control-gaming" rows="2" placeholder="Tóm tắt ngắn gọn 1-2 câu về nội dung trò chơi..."></textarea>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label text-light small fw-bold">Giới Thiệu Chi Tiết Game</label>
+                        <textarea name="long_description" class="form-control form-control-gaming" rows="5" placeholder="Cốt truyện, gameplay, các tính năng nổi bật..."></textarea>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label text-light small fw-bold">Yêu Cầu Cấu Hình Phần Cứng</label>
+                        <textarea name="system_req" class="form-control form-control-gaming" rows="5" placeholder="HĐH: Windows 10/11 64-bit&#10;CPU: Intel Core i5 / AMD Ryzen 5&#10;RAM: 16 GB&#10;GPU: GTX 1660 / RTX 3060..."></textarea>
                     </div>
                 </div>
-                
-                <div class="mb-3">
-                    <label class="form-label text-info fw-bold">Ảnh bìa Game (Sẽ được tự động lưu theo ID)</label>
-                    <input type="file" name="image" class="form-control bg-dark text-white border-secondary" accept="image/*">
-                </div>
-                
-                <div class="mb-3">
-                    <label class="form-label text-info fw-bold">Mô tả tóm tắt (Hiển thị ngắn)</label>
-                    <textarea name="short_description" class="form-control bg-dark text-white border-secondary" rows="3" required></textarea>
-                </div>
+            </div>
 
-                <div class="mb-4">
-                    <label class="form-label text-warning fw-bold">Mô tả chi tiết & Điều khoản dịch vụ</label>
-                    <textarea name="long_description" class="form-control bg-dark text-white border-secondary" rows="8" placeholder="Viết bài giới thiệu chi tiết về cốt truyện, tính năng nổi bật..."></textarea>
-                </div>
-                
-                <div class="mb-4">
-                    <label class="form-label text-info fw-bold">Cấu hình yêu cầu</label>
-                    <input type="text" name="system_req" class="form-control bg-dark text-white border-secondary" required>
-                </div>
-                
-                <div class="text-end pt-3 border-top border-secondary">
-                    <a href="admin_games.php" class="btn btn-secondary me-2">Hủy bỏ</a>
-                    <button type="submit" name="btn_add" class="btn btn-success px-4 fw-bold">✅ LƯU VÀO KHO</button>
-                </div>
-            </form>
-        </div>
+            <!-- Actions Footer -->
+            <div class="pt-3 border-top border-secondary border-opacity-25 d-flex justify-content-end gap-2">
+                <a href="admin_games.php" class="btn btn-gaming-secondary px-4 py-2">Hủy bỏ</a>
+                <button type="submit" name="btn_add" class="btn btn-gaming-primary px-5 py-2">
+                    <i class="bi bi-check-circle me-1"></i> LƯU GAME VÀ TẠO GÓI THUÊ
+                </button>
+            </div>
+        </form>
     </div>
 </div>
 
 <script>
-function togglePricingInputs() {
-    var select = document.getElementById('priceTypeSelect');
-    var divLink = document.getElementById('downloadLinkDiv');
-    var divPrice = document.getElementById('pricingBlock');
+function togglePricingSection() {
+    var select = document.getElementById('price_type_select');
+    var pricingSec = document.getElementById('pricing_section');
+    var dlSec = document.getElementById('download_link_section');
     if (select.value === 'free') {
-        divLink.style.display = 'block';
-        divPrice.style.display = 'none';
+        pricingSec.classList.add('d-none');
+        dlSec.classList.remove('d-none');
     } else {
-        divLink.style.display = 'none';
-        divPrice.style.display = 'block';
+        pricingSec.classList.remove('d-none');
+        dlSec.classList.add('d-none');
     }
 }
 </script>

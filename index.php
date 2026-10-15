@@ -1,102 +1,8 @@
 <?php
 if (session_status() === PHP_SESSION_NONE) { session_start(); }
 require_once __DIR__ . '/includes/header.php'; 
-?>
 
-<style>
-@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&display=swap');
-
-body {
-    background-color: #050505 !important;
-    background-image: 
-        linear-gradient(rgba(5, 5, 10, 0.85), rgba(5, 5, 10, 0.95)), 
-        url('https://images.unsplash.com/photo-1605806616949-1e87b487cb2a?q=80&w=1920&auto=format&fit=crop') !important; 
-    background-size: cover !important;
-    background-position: center !important;
-    background-attachment: fixed !important;
-    color: #fff;
-}
-
-h3, h5, .sidebar-brand span, .game-badge {
-    font-family: 'Orbitron', sans-serif !important;
-    text-transform: uppercase;
-}
-h5 { text-shadow: 0 0 5px rgba(255,255,255,0.3); }
-
-.game-card {
-    background: rgba(9, 10, 15, 0.6) !important;
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    border: 1px solid #1f2233 !important;
-    border-right: 3px solid #00f3ff !important;
-    border-bottom: 3px solid #ff003c !important;
-    border-radius: 0 !important;
-    position: relative;
-    overflow: hidden;
-    transition: all 0.15s ease-out;
-}
-
-.game-card::after {
-    content: "";
-    position: absolute;
-    top: 0; left: 0; width: 100%; height: 100%;
-    background: linear-gradient(rgba(0, 243, 255, 0.03) 50%, transparent 50%);
-    background-size: 100% 4px;
-    pointer-events: none;
-    z-index: 5;
-}
-
-.game-card:hover {
-    transform: translate(-5px, -5px);
-    border-color: #fce205 !important;
-    box-shadow: 6px 6px 0px rgba(0, 243, 255, 0.8), -6px -6px 15px rgba(255, 0, 60, 0.4) !important;
-}
-
-.cover-wrapper, .game-cover { border-radius: 0 !important; }
-.game-card:hover .game-cover {
-    transform: scale(1.1) rotate(1deg);
-    filter: contrast(1.2) saturate(1.5);
-}
-
-.game-card:hover h5 {
-    color: #00f3ff !important;
-    text-shadow: 2px 2px 0px #ff003c;
-}
-
-.game-badge {
-    border-radius: 0 !important;
-    border: none !important;
-    clip-path: polygon(0 0, 100% 0, 85% 100%, 0 100%);
-    padding: 6px 18px 6px 10px !important;
-    font-weight: 900 !important;
-    letter-spacing: 1px;
-    backdrop-filter: none !important;
-    opacity: 1 !important;
-}
-.badge-free { background: rgba(0, 243, 255, 0.9) !important; color: #000 !important; }
-.badge-paid { background: rgba(255, 0, 60, 0.9) !important; color: #fff !important; }
-
-.badge {
-    border-radius: 0 !important;
-    font-family: 'Orbitron', sans-serif;
-    border: 1px solid currentColor !important;
-    background: transparent !important;
-    box-shadow: inset 0 0 5px currentColor;
-}
-
-.form-select {
-    background-color: rgba(0, 0, 0, 0.7) !important;
-    backdrop-filter: blur(5px);
-    border: 1px solid #00f3ff !important;
-    color: #00f3ff !important;
-    border-radius: 0 !important;
-    font-family: 'Orbitron', sans-serif;
-    box-shadow: inset 0 0 8px rgba(0, 243, 255, 0.2) !important;
-}
-</style>
-
-<?php
-// KIỂM TRA TÀI KHOẢN GAME ĐANG THUÊ
+// KIỂM TRA CÁC GAME NGƯỜI DÙNG ĐANG THUÊ HIỆU LỰC
 $rented_games = [];
 if (isset($_SESSION['user_id'])) {
     $uid = $_SESSION['user_id'];
@@ -107,29 +13,29 @@ if (isset($_SESSION['user_id'])) {
     }
 }
 
-// LỌC VÀ TÌM KIẾM
+// LỌC VÀ TÌM KIẾM DỮ LIỆU
 $filter_conditions = [];
-$category_title = "⚡ DỊCH VỤ CHO THUÊ TÀI KHOẢN GAME"; 
+$category_title = "TẤT CẢ TỰA GAME CHO THUÊ"; 
 
 if (isset($_GET['category']) && !empty($_GET['category'])) {
     $cat_id = intval($_GET['category']);
     $filter_conditions[] = "g.category_id = $cat_id";
     $cat_name_sql = $conn->query("SELECT cate_name FROM categories WHERE category_id = $cat_id");
     if ($cat_name_sql && $cat_name_sql->num_rows > 0) {
-        $category_title = "🎮 Thể loại: " . htmlspecialchars($cat_name_sql->fetch_assoc()['cate_name']);
+        $category_title = "Thể Loại: " . htmlspecialchars($cat_name_sql->fetch_assoc()['cate_name']);
     }
 }
 
 if (isset($_GET['platform']) && !empty($_GET['platform'])) {
     $platform = $conn->real_escape_string($_GET['platform']);
     $filter_conditions[] = "g.platform = '$platform'";
-    $category_title .= " | " . htmlspecialchars($platform);
+    $category_title .= " (" . htmlspecialchars($platform) . ")";
 }
 
 if (isset($_GET['search']) && !empty($_GET['search'])) {
     $search_text = $conn->real_escape_string($_GET['search']);
     $filter_conditions[] = "g.title LIKE '%$search_text%'";
-    $category_title = "🔍 Tìm kiếm: '" . htmlspecialchars($search_text) . "'";
+    $category_title = "Kết quả tìm kiếm cho: \"" . htmlspecialchars($search_text) . "\"";
 }
 
 $where_clause = "";
@@ -173,114 +79,306 @@ if (!$result) {
 ?>
 
 <?php if ($schema_warning && isset($_SESSION['role']) && $_SESSION['role'] == 1): ?>
-    <div class="alert alert-warning py-2 mb-3">
-        <i class="bi bi-info-circle-fill me-2"></i>
-        <strong>Lưu ý Admin:</strong> CSDL đang hiển thị ở chế độ tương thích dự phòng. Hãy import file <code>database_migration_v2.sql</code> trên phpMyAdmin để kích hoạt kho tài khoản và bảng giá mới.
+    <div class="alert alert-warning py-3 mb-4 rounded-3 shadow border-0" style="background: rgba(245, 158, 11, 0.15); border: 1px solid rgba(245, 158, 11, 0.4) !important; color: #fde68a;">
+        <i class="bi bi-info-circle-fill me-2 fs-5"></i>
+        <strong>Lưu ý Quản trị:</strong> CSDL đang hiển thị ở chế độ tương thích dự phòng. Hãy import file <code>database_migration_v2.sql</code> trên phpMyAdmin để kích hoạt tính năng kho tài khoản và bảng giá mới.
     </div>
 <?php endif; ?>
 
-<!-- THANH CÔNG CỤ LỌC -->
-<div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-4 pb-3 border-bottom border-info gap-3">
-    <h3 class="fw-bold m-0 text-white fs-5 fs-md-3" style="color: #00f3ff !important; text-shadow: 0 0 10px #00f3ff;"><?php echo $category_title; ?></h3>
-    
-    <div class="d-flex align-items-center flex-wrap gap-2 gap-md-3 w-100 w-md-auto justify-content-end">
-        <form method="GET" action="index.php" class="d-flex align-items-center gap-2">
+<!-- HERO BANNER GAMING STORE CAO CẤP -->
+<?php if (!isset($_GET['search']) && !isset($_GET['category']) && !isset($_GET['platform'])): ?>
+<section class="gaming-hero">
+    <div class="hero-tag">
+        <i class="bi bi-fire text-danger"></i> NỀN TẢNG CHO THUÊ TÀI KHOẢN GAME SỐ 1
+    </div>
+    <h1 class="hero-title">
+        THUÊ TÀI KHOẢN GAME CHÍNH HÃNG<br>
+        <span>TRẢI NGHIỆM ĐỈNH CAO CHỈ TỪ 5.000Đ</span>
+    </h1>
+    <p class="hero-desc">
+        Thưởng thức hàng trăm tựa game bom tấn AAA trên Steam, EA, Epic Games mà không cần tốn tiền triệu mua đứt. Cấp phát tài khoản tự động trong 30 giây, bảo hành trọn vẹn suốt thời gian thuê.
+    </p>
+    <div class="d-flex flex-wrap align-items-center gap-3">
+        <a href="#gameCatalog" class="btn btn-gaming-primary px-4 py-3 fs-6">
+            <i class="bi bi-controller fs-5"></i> KHÁM PHÁ KHO GAME
+        </a>
+        <a href="#rentalGuide" class="btn btn-gaming-secondary px-4 py-3 fs-6">
+            <i class="bi bi-play-circle fs-5"></i> HƯỚNG DẪN THUÊ
+        </a>
+    </div>
+
+    <!-- 3 Điểm Cam Kết Nổi Bật -->
+    <div class="row g-3 mt-4 pt-3 border-top border-white border-opacity-10">
+        <div class="col-md-4 col-sm-6">
+            <div class="d-flex align-items-center gap-2">
+                <i class="bi bi-lightning-charge-fill text-warning fs-5"></i>
+                <span class="small fw-bold text-light">Cấp tài khoản tự động 24/7</span>
+            </div>
+        </div>
+        <div class="col-md-4 col-sm-6">
+            <div class="d-flex align-items-center gap-2">
+                <i class="bi bi-shield-check text-success fs-5"></i>
+                <span class="small fw-bold text-light">Bảo hành 1 đổi 1 nếu sự cố</span>
+            </div>
+        </div>
+        <div class="col-md-4 col-sm-6">
+            <div class="d-flex align-items-center gap-2">
+                <i class="bi bi-qr-code-scan text-info fs-5"></i>
+                <span class="small fw-bold text-light">Thanh toán VietQR tiện lợi</span>
+            </div>
+        </div>
+    </div>
+</section>
+<?php endif; ?>
+
+<!-- BỘ LỌC VÀ DANH MỤC TRÒ CHƠI -->
+<div id="gameCatalog" class="d-flex flex-column flex-lg-row justify-content-between align-items-start align-items-lg-center mb-4 pb-3 border-bottom border-secondary border-opacity-25 gap-3">
+    <div>
+        <h3 class="fw-bold m-0 text-white fs-4 d-flex align-items-center gap-2">
+            <i class="bi bi-joystick text-primary"></i> <?php echo $category_title; ?>
+        </h3>
+        <span class="text-secondary small">Lựa chọn tựa game yêu thích và trải nghiệm theo gói thời gian linh hoạt</span>
+    </div>
+
+    <!-- Thanh công cụ lọc & sắp xếp -->
+    <div class="d-flex align-items-center flex-wrap gap-2 w-100 w-lg-auto justify-content-start justify-content-lg-end">
+        <!-- Lọc Nền tảng -->
+        <form method="GET" action="index.php" class="d-flex align-items-center gap-1">
             <?php if(isset($_GET['category'])): ?><input type="hidden" name="category" value="<?php echo intval($_GET['category']); ?>"><?php endif; ?>
-            <span class="text-secondary small text-nowrap d-none d-sm-inline">Nền tảng:</span>
-            <select name="platform" class="form-select form-select-sm border-secondary" onchange="this.form.submit()" style="min-width: 100px;">
-                <option value="">Tất cả</option>
-                <option value="PC" <?php echo (isset($_GET['platform']) && $_GET['platform']=='PC')?'selected':''; ?>>PC</option>
-                <option value="Mobile" <?php echo (isset($_GET['platform']) && $_GET['platform']=='Mobile')?'selected':''; ?>>Mobile</option>
+            <?php if(isset($_GET['sort'])): ?><input type="hidden" name="sort" value="<?php echo htmlspecialchars($_GET['sort']); ?>"><?php endif; ?>
+            <select name="platform" class="form-select form-select-sm py-2 px-3 border-secondary" onchange="this.form.submit()" style="min-width: 120px;">
+                <option value="">Tất cả thiết bị</option>
+                <option value="PC" <?php echo (isset($_GET['platform']) && $_GET['platform']=='PC')?'selected':''; ?>>🖥️ Game PC</option>
+                <option value="Mobile" <?php echo (isset($_GET['platform']) && $_GET['platform']=='Mobile')?'selected':''; ?>>📱 Mobile</option>
             </select>
         </form>
 
-        <form method="GET" action="index.php" class="d-flex align-items-center gap-2">
+        <!-- Sắp xếp -->
+        <form method="GET" action="index.php" class="d-flex align-items-center gap-1">
+            <?php if(isset($_GET['category'])): ?><input type="hidden" name="category" value="<?php echo intval($_GET['category']); ?>"><?php endif; ?>
             <?php if(isset($_GET['platform'])): ?><input type="hidden" name="platform" value="<?php echo htmlspecialchars($_GET['platform']); ?>"><?php endif; ?>
-            <span class="text-secondary small text-nowrap d-none d-sm-inline">Sắp xếp:</span>
-            <select name="sort" class="form-select form-select-sm border-secondary" onchange="this.form.submit()" style="min-width: 110px;">
-                <option value="newest" <?php echo (isset($_GET['sort']) && $_GET['sort']=='newest')?'selected':''; ?>>Mới nhất</option>
+            <select name="sort" class="form-select form-select-sm py-2 px-3 border-secondary" onchange="this.form.submit()" style="min-width: 130px;">
+                <option value="newest" <?php echo (isset($_GET['sort']) && $_GET['sort']=='newest')?'selected':''; ?>>Mới cập nhật</option>
                 <option value="oldest" <?php echo (isset($_GET['sort']) && $_GET['sort']=='oldest')?'selected':''; ?>>Cũ nhất</option>
-                <option value="name_asc" <?php echo (isset($_GET['sort']) && $_GET['sort']=='name_asc')?'selected':''; ?>>A - Z</option>
+                <option value="name_asc" <?php echo (isset($_GET['sort']) && $_GET['sort']=='name_asc')?'selected':''; ?>>Tên: A - Z</option>
             </select>
         </form>
 
         <?php if(!empty($_GET['category']) || !empty($_GET['platform']) || !empty($_GET['sort']) || !empty($_GET['search'])): ?>
-            <a href="index.php" class="btn btn-outline-danger btn-sm rounded-0 px-3" style="font-family: 'Orbitron';">Xóa lọc X</a>
+            <a href="index.php" class="btn btn-sm btn-outline-danger px-3 py-2">
+                <i class="bi bi-x-circle me-1"></i> Xóa Lọc
+            </a>
         <?php endif; ?>
     </div>
 </div>
 
-<!-- LƯỚI GAME -->
+<!-- LƯỚI CARD GAME (GAMING MARKETPLACE GRID) -->
 <div class="game-grid mb-5">
     <?php 
     if ($result && $result->num_rows > 0): 
         while ($game = $result->fetch_assoc()): 
             $target_url = "game_detail.php?id=" . $game['game_id'];
-            $target_attr = "";
             $avail_acc = intval($game['real_available_acc'] ?? 0);
             $min_price = floatval($game['min_rent_price'] ?? 5000);
+            $is_user_renting = in_array($game['game_id'], $rented_games);
     ?>
         
-        <div class="game-card text-decoration-none d-flex flex-column">
-            <?php if ($game['price_type'] == 'free'): ?>
-                <span class="game-badge badge-free position-absolute top-0 start-0 m-2 px-2 py-1 small" style="z-index:10;">Miễn phí</span>
-            <?php else: ?>
-                <span class="game-badge badge-paid position-absolute top-0 start-0 m-2 px-2 py-1 small" style="z-index:10;">Cho thuê</span>
-            <?php endif; ?>
-
-            <a href="<?php echo $target_url; ?>" class="cover-wrapper w-100 text-decoration-none" style="height: 180px; display: block;">
+        <div class="gaming-card">
+            <!-- Cover Ảnh & Badge nổi trên ảnh -->
+            <a href="<?php echo $target_url; ?>" class="gaming-card-cover-wrapper text-decoration-none">
                 <?php if (!empty($game['image_url']) && file_exists($game['image_url'])): ?>
-                    <img src="<?php echo $game['image_url']; ?>" class="game-cover w-100 h-100 object-fit-cover" alt="<?php echo htmlspecialchars($game['title']); ?>">
+                    <img src="<?php echo $game['image_url']; ?>" class="gaming-card-cover" alt="<?php echo htmlspecialchars($game['title']); ?>" loading="lazy">
                 <?php else: ?>
-                    <div class="game-cover d-flex align-items-center justify-content-center text-muted w-100 h-100" style="background: #111;">NO COVER</div>
-                <?php endif; ?>
-            </a>
-
-            <div class="p-3 d-flex flex-column" style="flex-grow: 1;">
-                <h5 class="fw-bold text-white mb-1 fs-6 text-truncate" title="<?php echo htmlspecialchars($game['title']); ?>">
-                    <a href="<?php echo $target_url; ?>" class="text-white text-decoration-none"><?php echo htmlspecialchars($game['title']); ?></a>
-                </h5>
-                
-                <small class="text-secondary mb-2 d-flex align-items-center">
-                    <i class="bi bi-tag-fill me-1"></i> <?php echo !empty($game['cate_name']) ? $game['cate_name'] : 'Khác'; ?> 
-                    <span class="badge ms-auto" style="color: #00f3ff;"><?php echo htmlspecialchars($game['platform']); ?></span>
-                </small>
-
-                <?php if ($game['price_type'] != 'free'): ?>
-                    <div class="mb-2">
-                        <small class="text-secondary">Giá thuê từ:</small>
-                        <strong class="text-warning fs-6 ms-1"><?php echo number_format($min_price, 0, ',', '.'); ?>đ</strong>
+                    <div class="gaming-card-cover d-flex align-items-center justify-content-center text-muted" style="background: #11141e;">
+                        <i class="bi bi-controller fs-1 text-secondary"></i>
                     </div>
                 <?php endif; ?>
                 
-                <div class="d-flex justify-content-between align-items-center mt-auto pt-2 border-top border-secondary border-opacity-50">
+                <div class="gaming-card-overlay"></div>
+
+                <!-- Tag Platform góc trên bên trái -->
+                <div class="position-absolute top-0 start-0 m-3 d-flex gap-1" style="z-index: 5;">
+                    <span class="badge-platform">
+                        <?php echo ($game['platform'] == 'PC') ? '<i class="bi bi-display me-1"></i>PC' : '<i class="bi bi-phone me-1"></i>Mobile'; ?>
+                    </span>
                     <?php if ($game['price_type'] == 'free'): ?>
-                        <span class="badge" style="color: #00f3ff; background: rgba(0,243,255,0.1) !important;">Miễn phí</span>
-                        <a href="<?php echo $target_url; ?>" class="btn btn-outline-info btn-sm">Chi tiết</a>
+                        <span class="badge-gaming badge-gaming-free">Miễn Phí</span>
                     <?php else: ?>
-                        <?php if (in_array($game['game_id'], $rented_games)): ?>
-                            <span class="badge" style="color: #00f3ff; background: rgba(0,243,255,0.1) !important;">Đang thuê <i class="bi bi-check"></i></span>
-                            <a href="my_library.php" class="btn btn-success btn-sm fw-bold">Vào Chơi</a>
+                        <span class="badge-gaming badge-gaming-paid">Cho Thuê</span>
+                    <?php endif; ?>
+                </div>
+
+                <!-- Tình trạng kho góc trên bên phải -->
+                <div class="position-absolute top-0 end-0 m-3" style="z-index: 5;">
+                    <?php if ($game['price_type'] != 'free'): ?>
+                        <?php if ($is_user_renting): ?>
+                            <span class="badge-gaming badge-gaming-avail"><i class="bi bi-check-circle-fill"></i> Đang Thuê</span>
+                        <?php elseif ($avail_acc > 0): ?>
+                            <span class="badge-gaming badge-gaming-avail"><i class="bi bi-dot fs-5"></i>Còn <?php echo $avail_acc; ?> TK</span>
                         <?php else: ?>
-                            <?php if ($avail_acc > 0): ?>
-                                <span class="badge" style="color: #fce205; background: rgba(252,226,5,0.1) !important;">Kho: <?php echo $avail_acc; ?> TK</span>
-                                <a href="borrow_process.php?game_id=<?php echo $game['game_id']; ?>" class="btn btn-warning btn-sm fw-bold text-dark">Thuê Ngay</a>
-                            <?php else: ?>
-                                <span class="badge" style="color: #ff003c; border-color: #ff003c !important; background: rgba(255,0,60,0.1) !important;">Hết TK</span>
-                                <a href="<?php echo $target_url; ?>" class="btn btn-secondary btn-sm">Xem</a>
-                            <?php endif; ?>
+                            <span class="badge-gaming badge-gaming-out"><i class="bi bi-x-circle-fill"></i>Hết TK</span>
                         <?php endif; ?>
                     <?php endif; ?>
+                </div>
+            </a>
+
+            <!-- Nội dung Card -->
+            <div class="gaming-card-body">
+                <a href="<?php echo $target_url; ?>" class="text-decoration-none">
+                    <h5 class="gaming-card-title" title="<?php echo htmlspecialchars($game['title']); ?>">
+                        <?php echo htmlspecialchars($game['title']); ?>
+                    </h5>
+                </a>
+
+                <div class="gaming-card-meta">
+                    <span><i class="bi bi-tag-fill me-1 text-primary"></i> <?php echo !empty($game['cate_name']) ? htmlspecialchars($game['cate_name']) : 'Khác'; ?></span>
+                    <?php if (isset($game['views']) && $game['views'] > 0): ?>
+                        <span class="ms-auto"><i class="bi bi-eye me-1"></i> <?php echo number_format($game['views']); ?></span>
+                    <?php endif; ?>
+                </div>
+
+                <!-- Phần Giá & Nút hành động đáy card -->
+                <div class="gaming-card-footer">
+                    <div>
+                        <?php if ($game['price_type'] == 'free'): ?>
+                            <span class="gaming-card-price-label">Hình thức</span>
+                            <span class="gaming-card-price-val text-info">FREE</span>
+                        <?php else: ?>
+                            <span class="gaming-card-price-label">Giá thuê chỉ từ</span>
+                            <span class="gaming-card-price-val"><?php echo number_format($min_price, 0, ',', '.'); ?>đ<small style="font-size: 0.72rem; -webkit-text-fill-color: #94a3b8;">/giờ</small></span>
+                        <?php endif; ?>
+                    </div>
+
+                    <div>
+                        <?php if ($game['price_type'] == 'free'): ?>
+                            <a href="<?php echo $target_url; ?>" class="btn btn-sm btn-gaming-secondary py-1 px-3">Chi tiết</a>
+                        <?php else: ?>
+                            <?php if ($is_user_renting): ?>
+                                <a href="my_library.php" class="btn btn-sm btn-success fw-bold py-1 px-3">
+                                    <i class="bi bi-play-fill me-1"></i> Vào Chơi
+                                </a>
+                            <?php elseif ($avail_acc > 0): ?>
+                                <a href="borrow_process.php?game_id=<?php echo $game['game_id']; ?>" class="btn btn-sm btn-gaming-primary py-1 px-3">
+                                    <i class="bi bi-lightning-charge-fill me-1"></i> Thuê Ngay
+                                </a>
+                            <?php else: ?>
+                                <a href="<?php echo $target_url; ?>" class="btn btn-sm btn-gaming-secondary py-1 px-3 text-muted">Xem Chi Tiết</a>
+                            <?php endif; ?>
+                        <?php endif; ?>
+                    </div>
                 </div>
             </div>
         </div>
 
     <?php endwhile; else: ?>
-        <div class="col-12 w-100 text-center py-5">
-            <i class="bi bi-cpu fs-1 mb-3 d-block" style="color: #ff003c;"></i>
-            <h4 style="font-family: 'Orbitron'; color: #00f3ff;">SYSTEM: Không tìm thấy tựa game nào phù hợp.</h4>
+        <div class="col-12 text-center py-5">
+            <div class="panel-dark p-5">
+                <i class="bi bi-search fs-1 mb-3 text-secondary d-block"></i>
+                <h4 class="text-white fw-bold mb-2">Không tìm thấy tựa game nào phù hợp!</h4>
+                <p class="text-secondary mb-4">Vui lòng thử lại với từ khóa khác hoặc xóa bộ lọc để hiển thị toàn bộ game.</p>
+                <a href="index.php" class="btn btn-gaming-primary px-4 py-2">Xem Tất Cả Trò Chơi</a>
+            </div>
         </div>
     <?php endif; ?>
 </div>
+
+<!-- SECTION: 3 BƯỚC THUÊ GAME NHANH CHÓNG -->
+<section id="rentalGuide" class="mb-5 pt-4">
+    <div class="text-center mb-4 pb-2">
+        <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 px-3 py-2 text-uppercase fw-bold" style="font-size: 0.75rem;">Quy trình đơn giản</span>
+        <h3 class="fw-bold text-white mt-2 mb-1">Thuê Tài Khoản Chỉ Với 3 Bước</h3>
+        <p class="text-secondary small">Hệ thống cấp phát hoàn toàn tự động, nhận tài khoản game ngay sau khi quét mã QR</p>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-md-4">
+            <div class="panel-dark h-100 text-center p-4">
+                <div class="brand-icon-box mx-auto mb-3" style="width: 52px; height: 52px; font-size: 1.5rem;">
+                    1
+                </div>
+                <h5 class="fw-bold text-white mb-2">Chọn Game & Gói Giờ</h5>
+                <p class="text-secondary small mb-0">Tìm tựa game bạn muốn chiến và chọn thời hạn phù hợp: 1 Giờ, 1 Ngày, 7 Ngày hoặc 1 Tháng.</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="panel-dark h-100 text-center p-4">
+                <div class="brand-icon-box mx-auto mb-3" style="width: 52px; height: 52px; font-size: 1.5rem; background: linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%);">
+                    2
+                </div>
+                <h5 class="fw-bold text-white mb-2">Quét Mã VietQR</h5>
+                <p class="text-secondary small mb-0">Mở app ngân hàng quét mã QR thanh toán với số tiền và nội dung chính xác. Máy chủ xác nhận tức thì.</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="panel-dark h-100 text-center p-4">
+                <div class="brand-icon-box mx-auto mb-3" style="width: 52px; height: 52px; font-size: 1.5rem; background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
+                    3
+                </div>
+                <h5 class="fw-bold text-white mb-2">Nhận Tài Khoản & Chiến</h5>
+                <p class="text-secondary small mb-0">Thông tin đăng nhập hiển thị ngay trong <strong>Thư viện của tôi</strong>. Đăng nhập Steam/Epic và thưởng thức game!</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- SECTION: CÂU HỎI THƯỜNG GẶP (FAQ) -->
+<section class="mb-5">
+    <div class="panel-dark p-4 p-md-5">
+        <div class="row align-items-center g-4">
+            <div class="col-lg-5">
+                <span class="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25 px-3 py-2 text-uppercase fw-bold" style="font-size: 0.75rem;">Hỗ trợ khách hàng</span>
+                <h3 class="fw-bold text-white mt-2 mb-3">Câu Hỏi Thường Gặp</h3>
+                <p class="text-secondary">Những thắc mắc phổ biến nhất khi khách hàng trải nghiệm dịch vụ thuê tài khoản game tại ANPLAY STORE.</p>
+                <div class="d-flex align-items-center gap-2 text-info mt-3">
+                    <i class="bi bi-headset fs-4"></i>
+                    <span class="fw-bold">Cần hỗ trợ riêng? Liên hệ kỹ thuật viên 24/7</span>
+                </div>
+            </div>
+
+            <div class="col-lg-7">
+                <div class="accordion accordion-flush" id="faqAccordion">
+                    <div class="accordion-item bg-transparent border-secondary border-opacity-25 mb-2">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed bg-transparent text-white fw-bold shadow-none" type="button" data-bs-toggle="collapse" data-bs-target="#faq1">
+                                🎮 Tôi có thể lưu game (Save Game) và chơi tiếp không?
+                            </button>
+                        </h2>
+                        <div id="faq1" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                            <div class="accordion-body text-secondary small pt-0">
+                                Hoàn toàn được! Các game trên Steam/EA/Epic đều tự động lưu file save trên đám mây (Cloud Save) hoặc trên máy tính của bạn. Khi bạn gia hạn hoặc thuê lại tài khoản đó, bạn vẫn có thể chơi tiếp tục mà không lo mất dữ liệu.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="accordion-item bg-transparent border-secondary border-opacity-25 mb-2">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed bg-transparent text-white fw-bold shadow-none" type="button" data-bs-toggle="collapse" data-bs-target="#faq2">
+                                🔒 Tôi có được phép đổi mật khẩu tài khoản game không?
+                            </button>
+                        </h2>
+                        <div id="faq2" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                            <div class="accordion-body text-secondary small pt-0">
+                                <strong>Tuyệt đối không!</strong> Tài khoản game thuộc quyền sở hữu của ANPLAY STORE. Việc cố tình đổi mật khẩu, đổi email hoặc dùng phần mềm gian lận (cheat/hack) sẽ khiến tài khoản bị khóa vĩnh viễn và không được hoàn tiền.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="accordion-item bg-transparent border-secondary border-opacity-25">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed bg-transparent text-white fw-bold shadow-none" type="button" data-bs-toggle="collapse" data-bs-target="#faq3">
+                                ⏱️ Khi hết giờ thuê, chuyện gì sẽ xảy ra?
+                            </button>
+                        </h2>
+                        <div id="faq3" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                            <div class="accordion-body text-secondary small pt-0">
+                                Khi hết thời hạn, hệ thống sẽ tự động thu hồi quyền sử dụng tài khoản. Bạn có thể bấm nút <strong>Gia hạn</strong> trước khi hết giờ hoặc chọn <strong>Thuê lại tài khoản cũ</strong> trong Thư viện bất cứ lúc nào.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
 
 <?php include 'includes/footer.php'; ?>

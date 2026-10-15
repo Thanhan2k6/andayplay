@@ -96,148 +96,161 @@ if (!$result) {
 }
 ?>
 
-<div class="container-fluid mt-4 mb-5 text-white">
-    <div class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom border-secondary">
+<div class="container-fluid px-lg-5 py-4 my-2 text-white">
+    <!-- Top Header -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 pb-3 border-bottom border-secondary border-opacity-25 gap-3">
         <div>
-            <h2 class="fw-bold m-0 text-warning"><i class="bi bi-card-checklist me-2"></i> QUẢN LÝ ĐƠN THUÊ TÀI KHOẢN</h2>
-            <p class="text-secondary small mb-0">Theo dõi toàn bộ lịch sử thuê, thanh toán, hạn trả, gia hạn và xử lý sự cố cấp phát</p>
+            <div class="d-flex align-items-center gap-2 mb-1">
+                <span class="badge" style="background: rgba(99,102,241,0.2); color: var(--primary); font-size: 0.75rem; border: 1px solid rgba(99,102,241,0.4);">
+                    <i class="bi bi-card-checklist me-1"></i> RENTAL ORDERS
+                </span>
+            </div>
+            <h2 class="fw-extrabold text-white mb-0">Quản Lý Đơn Thuê Tài Khoản Game</h2>
+            <p class="text-secondary small mb-0">Theo dõi lịch sử đơn, tiến độ hạn thuê, doanh thu, thanh toán VietQR và xử lý thu hồi sớm</p>
         </div>
-        <div>
-            <a href="cron_process_expirations.php?secret_token=ANPLAY_CRON_2026" class="btn btn-outline-info fw-bold btn-sm me-2">
-                <i class="bi bi-arrow-clockwise me-1"></i> Quét Đơn Hết Hạn Ngay
+        <div class="d-flex gap-2">
+            <a href="cron_process_expirations.php?secret_token=ANPLAY_CRON_2026" class="btn btn-gaming-secondary d-flex align-items-center">
+                <i class="bi bi-arrow-clockwise me-1 text-info"></i> Quét Hết Hạn Ngay
             </a>
-            <a href="admin_accounts.php" class="btn btn-success fw-bold btn-sm">
-                <i class="bi bi-box-seam me-1"></i> Quản Lý Kho Tài Khoản
+            <a href="admin_accounts.php" class="btn btn-gaming-primary d-flex align-items-center">
+                <i class="bi bi-box-seam me-1"></i> Quản Lý Kho TK
             </a>
         </div>
     </div>
 
     <?php if ($message): ?>
-        <div class="alert alert-success alert-dismissible fade show" role="alert">
-            <i class="bi bi-check-circle-fill me-2"></i><?php echo htmlspecialchars($message); ?>
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        <div class="alert alert-dismissible fade show mb-4 text-white" style="background: rgba(16,185,129,0.15); border: 1px solid #10b981;" role="alert">
+            <i class="bi bi-check-circle-fill text-success me-2"></i><?php echo htmlspecialchars($message); ?>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert"></button>
         </div>
     <?php endif; ?>
     <?php if ($error): ?>
-        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <div class="alert alert-danger alert-dismissible fade show mb-4" role="alert">
             <i class="bi bi-exclamation-triangle-fill me-2"></i><?php echo htmlspecialchars($error); ?>
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert"></button>
         </div>
     <?php endif; ?>
 
     <!-- THANH TÌM KIẾM VÀ LỌC -->
-    <div class="card p-3 mb-4 border-0 shadow-sm" style="background-color: #1a222c;">
-        <form method="GET" action="" class="row g-3 align-items-center">
+    <div class="p-3 mb-4 rounded-4" style="background: var(--bg-card); border: 1px solid var(--border-color);">
+        <form method="GET" action="" class="row g-3 align-items-end">
             <div class="col-md-5">
-                <input type="text" name="search" class="form-control bg-dark text-white border-secondary" placeholder="Tìm theo Mã đơn, Khách hàng, Tựa game, Tên tài khoản..." value="<?php echo htmlspecialchars($search); ?>">
-            </div>
-            <div class="col-md-3">
-                <select name="status" class="form-select bg-dark text-white border-secondary">
-                    <option value="">-- Tất cả trạng thái đơn --</option>
-                    <option value="active" <?php echo ($filter_status == 'active') ? 'selected' : ''; ?>>Active (Đang thuê)</option>
-                    <option value="expired" <?php echo ($filter_status == 'expired') ? 'selected' : ''; ?>>Expired (Đã hết hạn)</option>
-                    <option value="returned" <?php echo ($filter_status == 'returned') ? 'selected' : ''; ?>>Returned (Đã thu hồi)</option>
-                    <option value="pending" <?php echo ($filter_status == 'pending') ? 'selected' : ''; ?>>Pending (Chờ xử lý / Lỗi cấp phát)</option>
-                </select>
+                <label class="form-label text-secondary small fw-bold mb-1">Tìm kiếm từ khóa:</label>
+                <input type="text" name="search" class="form-control form-control-gaming" placeholder="Mã đơn, Tên người dùng, Tựa game, Username TK..." value="<?php echo htmlspecialchars($search); ?>">
             </div>
             <div class="col-md-4">
-                <button type="submit" class="btn btn-primary fw-bold px-3">Tìm Kiếm</button>
-                <a href="admin_borrow.php" class="btn btn-outline-secondary ms-2">Đặt lại</a>
+                <label class="form-label text-secondary small fw-bold mb-1">Trạng thái đơn thuê:</label>
+                <select name="status" class="form-select form-control-gaming">
+                    <option value="">-- Tất cả trạng thái --</option>
+                    <option value="active" <?php echo ($filter_status == 'active') ? 'selected' : ''; ?>>Active (Đang hiệu lực)</option>
+                    <option value="expired" <?php echo ($filter_status == 'expired') ? 'selected' : ''; ?>>Expired (Đã hết hạn)</option>
+                    <option value="returned" <?php echo ($filter_status == 'returned') ? 'selected' : ''; ?>>Returned (Đã thu hồi về kho)</option>
+                    <option value="pending" <?php echo ($filter_status == 'pending') ? 'selected' : ''; ?>>Pending (Chờ xử lý / Chưa cấp TK)</option>
+                </select>
+            </div>
+            <div class="col-md-3 d-flex gap-2">
+                <button type="submit" class="btn btn-gaming-primary px-4 flex-grow-1">
+                    <i class="bi bi-search me-1"></i> Tìm Kiếm
+                </button>
+                <a href="admin_borrow.php" class="btn btn-gaming-secondary">
+                    <i class="bi bi-arrow-clockwise"></i>
+                </a>
             </div>
         </form>
     </div>
 
-    <div class="card shadow border-0" style="background-color: #1a222c; border-radius: 10px;">
-        <div class="card-body p-0">
-            <div class="table-responsive">
-                <table class="table table-dark table-hover align-middle mb-0">
-                    <thead style="background-color: #151d26;">
-                        <tr>
-                            <th class="py-3 ps-3 text-info">Mã Đơn</th>
-                            <th class="py-3">Khách Hàng</th>
-                            <th class="py-3">Tựa Game</th>
-                            <th class="py-3">Tài Khoản Được Cấp</th>
-                            <th class="py-3">Hạn Thuê</th>
-                            <th class="py-3">Thanh Toán</th>
-                            <th class="py-3">Trạng Thái Đơn</th>
-                            <th class="py-3 text-center">Hành Động</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php if ($result && $result->num_rows > 0): while ($row = $result->fetch_assoc()): 
-                            $is_overdue = false;
-                            if ($row['status'] == 'active' && strtotime($row['due_date']) < time()) {
-                                $is_overdue = true;
-                            }
-                        ?>
-                        <tr>
-                            <td class="ps-3 text-info fw-bold">
-                                #<?php echo $row['borrow_id']; ?>
-                                <br><small class="text-secondary"><?php echo htmlspecialchars($row['order_code'] ?? ''); ?></small>
-                            </td>
-                            <td>
-                                <strong class="text-warning">@<?php echo htmlspecialchars($row['username']); ?></strong>
-                                <br><small class="text-muted"><?php echo htmlspecialchars($row['email']); ?></small>
-                            </td>
-                            <td class="fw-bold text-white"><?php echo htmlspecialchars($row['title']); ?></td>
-                            <td>
-                                <?php if (!empty($row['account_username'])): ?>
-                                    <span class="badge bg-dark border border-info text-info px-2 py-1 user-select-all"><?php echo htmlspecialchars($row['account_username']); ?></span>
-                                <?php else: ?>
-                                    <span class="text-danger small fst-italic">Chưa cấp tài khoản</span>
-                                <?php endif; ?>
-                            </td>
-                            <td class="small">
-                                <?php echo date('d/m/Y H:i', strtotime($row['due_date'])); ?>
-                                <?php if ($is_overdue): ?>
-                                    <span class="badge bg-danger ms-1">Quá hạn</span>
-                                <?php endif; ?>
-                            </td>
-                            <td>
-                                <?php if ($row['payment_status'] === 'paid'): ?>
-                                    <span class="badge bg-success">Đã thanh toán</span>
-                                    <br><small class="text-warning fw-bold"><?php echo number_format($row['rental_price'] ?? 0, 0, ',', '.'); ?>đ</small>
-                                <?php else: ?>
-                                    <span class="badge bg-secondary"><?php echo htmlspecialchars($row['payment_status'] ?? 'pending'); ?></span>
-                                <?php endif; ?>
-                            </td>
-                            <td>
-                                <?php if ($row['status'] == 'active'): ?>
-                                    <span class="badge bg-info text-dark fw-bold px-2 py-1">Đang thuê</span>
-                                <?php elseif ($row['status'] == 'expired'): ?>
-                                    <span class="badge bg-danger fw-bold px-2 py-1">Đã hết hạn</span>
-                                <?php elseif ($row['status'] == 'returned'): ?>
-                                    <span class="badge bg-success fw-bold px-2 py-1">Đã thu hồi</span>
-                                <?php else: ?>
-                                    <span class="badge bg-warning text-dark fw-bold px-2 py-1"><?php echo htmlspecialchars($row['status']); ?></span>
-                                <?php endif; ?>
-                            </td>
-                            <td class="text-center">
-                                <?php if ($row['status'] == 'active'): ?>
-                                    <a href="admin_borrow.php?revoke_id=<?php echo $row['borrow_id']; ?>" 
-                                       class="btn btn-sm btn-danger fw-bold px-3 shadow-sm"
-                                       onclick="return confirm('Bạn có chắc chắn muốn thu hồi tài khoản này về kho sớm?');">
-                                       Thu hồi
-                                    </a>
-                                <?php elseif ($row['payment_status'] == 'paid' && empty($row['account_id'])): ?>
-                                    <a href="admin_borrow.php?retry_allocate_id=<?php echo $row['borrow_id']; ?>" class="btn btn-sm btn-warning fw-bold px-2">
-                                        Cấp bù TK
-                                    </a>
-                                <?php else: ?>
-                                    <button class="btn btn-sm btn-outline-secondary px-2" disabled>Hoàn tất</button>
-                                <?php endif; ?>
-                            </td>
-                        </tr>
-                        <?php endwhile; else: ?>
-                        <tr>
-                            <td colspan="8" class="text-center py-5 text-secondary">
-                                <i class="bi bi-inbox fs-2 d-block mb-2"></i> Không có đơn thuê nào phù hợp tiêu chí tìm kiếm.
-                            </td>
-                        </tr>
-                        <?php endif; ?>
-                    </tbody>
-                </table>
-            </div>
+    <!-- Table Container -->
+    <div class="table-gaming-container">
+        <div class="table-responsive">
+            <table class="table table-gaming align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th style="width: 10%;">Mã Đơn</th>
+                        <th style="width: 18%;">Khách Hàng</th>
+                        <th style="width: 18%;">Tựa Game & Gói</th>
+                        <th style="width: 16%;">Tài Khoản Được Cấp</th>
+                        <th style="width: 14%;">Thời Hạn Thuê</th>
+                        <th style="width: 12%;">Thanh Toán</th>
+                        <th style="width: 12%;" class="text-end pe-3">Hành Động</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php if ($result && $result->num_rows > 0): while ($row = $result->fetch_assoc()): 
+                        $is_overdue = false;
+                        if ($row['status'] == 'active' && strtotime($row['due_date']) < time()) {
+                            $is_overdue = true;
+                        }
+                    ?>
+                    <tr>
+                        <td>
+                            <strong class="text-info">#<?php echo $row['borrow_id']; ?></strong>
+                            <?php if(!empty($row['order_code'])): ?>
+                                <div class="text-secondary small font-monospace" style="font-size: 0.72rem;"><?php echo htmlspecialchars($row['order_code']); ?></div>
+                            <?php endif; ?>
+                        </td>
+                        <td>
+                            <div class="d-flex align-items-center gap-2">
+                                <img src="https://ui-avatars.com/api/?name=<?php echo urlencode($row['username']); ?>&background=random&color=fff&rounded=true" width="28" height="28" class="rounded-circle">
+                                <div>
+                                    <strong class="text-white small">@<?php echo htmlspecialchars($row['username']); ?></strong>
+                                    <div class="text-secondary small" style="font-size: 0.72rem;"><?php echo htmlspecialchars($row['email']); ?></div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <strong class="text-light"><?php echo htmlspecialchars($row['title']); ?></strong>
+                            <div class="small text-secondary" style="font-size: 0.72rem;">
+                                <?php echo htmlspecialchars($row['package_name'] ?? 'Chuẩn'); ?> (<?php echo intval($row['duration_hours'] ?? 24); ?>h)
+                            </div>
+                        </td>
+                        <td>
+                            <?php if (!empty($row['account_username'])): ?>
+                                <span class="badge" style="background: rgba(99,102,241,0.15); color: #c7d2fe; border: 1px solid rgba(99,102,241,0.3); font-size: 0.78rem;">
+                                    <i class="bi bi-person-fill me-1"></i><?php echo htmlspecialchars($row['account_username']); ?>
+                                </span>
+                            <?php else: ?>
+                                <span class="status-pill status-pill-danger"><span class="status-dot"></span> Chưa cấp TK</span>
+                            <?php endif; ?>
+                        </td>
+                        <td>
+                            <span class="small text-light d-block"><?php echo date('d/m/Y H:i', strtotime($row['due_date'])); ?></span>
+                            <?php if ($is_overdue): ?>
+                                <span class="badge bg-danger bg-opacity-75 text-white" style="font-size: 0.68rem;">ĐÃ QUÁ HẠN</span>
+                            <?php endif; ?>
+                        </td>
+                        <td>
+                            <?php if ($row['payment_status'] === 'paid'): ?>
+                                <span class="status-pill status-pill-success"><span class="status-dot"></span> Đã trả</span>
+                                <div class="text-warning small fw-bold mt-1"><?php echo number_format($row['rental_price'] ?? 0, 0, ',', '.'); ?>đ</div>
+                            <?php else: ?>
+                                <span class="status-pill status-pill-warning"><span class="status-dot"></span> <?php echo htmlspecialchars($row['payment_status'] ?? 'pending'); ?></span>
+                            <?php endif; ?>
+                        </td>
+                        <td class="text-end pe-3">
+                            <?php if ($row['status'] == 'active'): ?>
+                                <a href="admin_borrow.php?revoke_id=<?php echo $row['borrow_id']; ?>" 
+                                   class="btn btn-sm btn-outline-danger py-1 px-3"
+                                   onclick="return confirm('Bạn có chắc chắn muốn thu hồi tài khoản này về kho sớm?');">
+                                   Thu hồi
+                                </a>
+                            <?php elseif ($row['payment_status'] == 'paid' && empty($row['account_id'])): ?>
+                                <a href="admin_borrow.php?retry_allocate_id=<?php echo $row['borrow_id']; ?>" class="btn btn-sm btn-warning fw-bold text-dark py-1 px-2">
+                                    Cấp bù TK
+                                </a>
+                            <?php else: ?>
+                                <span class="badge" style="background: rgba(255,255,255,0.05); color: #64748b; font-size: 0.72rem;">Đã xong</span>
+                            <?php endif; ?>
+                        </td>
+                    </tr>
+                    <?php endwhile; else: ?>
+                    <tr>
+                        <td colspan="7" class="text-center py-5 text-secondary">
+                            <i class="bi bi-inbox fs-1 d-block mb-2"></i> Không có đơn thuê nào phù hợp tiêu chí tìm kiếm.
+                        </td>
+                    </tr>
+                    <?php endif; ?>
+                </tbody>
+            </table>
         </div>
     </div>
 </div>

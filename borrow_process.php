@@ -1,7 +1,5 @@
 <?php 
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
+if (session_status() === PHP_SESSION_NONE) { session_start(); }
 require_once __DIR__ . '/includes/header.php'; 
 
 if (!isset($_SESSION['user_id'])) {
@@ -37,7 +35,7 @@ if ($check_res && $check_res->num_rows > 0) {
 
 $result = $conn->query("SELECT * FROM games WHERE game_id = $game_id AND price_type = 'paid'");
 if (!$result || $result->num_rows == 0) {
-    echo "<div class='container mt-5'><div class='alert alert-danger text-center shadow-sm'>Tựa game không tồn tại hoặc không hỗ trợ cho thuê tài khoản.</div></div>";
+    echo "<div class='container mt-5 text-center'><div class='panel-dark p-5'><h3 class='text-danger'>Tựa game không tồn tại hoặc không hỗ trợ cho thuê tài khoản.</h3><a href='index.php' class='btn btn-gaming-primary mt-3'>Về Cửa Hàng</a></div></div>";
     include 'includes/footer.php';
     exit();
 }
@@ -51,7 +49,6 @@ $available_accounts = intval($acc_check['available_count'] ?? 0);
 // Nếu là thuê lại tài khoản cũ: Kiểm tra tính hợp lệ và quyền sở hữu trước đó của khách hàng (chống IDOR)
 $old_acc_info = null;
 if ($preferred_account_id) {
-    // Xác minh khách hàng này thực sự từng thuê tài khoản này trước đây
     $own_check = $conn->prepare("SELECT borrow_id FROM borrow_records WHERE user_id = ? AND game_id = ? AND account_id = ? LIMIT 1");
     $own_check->bind_param("iii", $user_id, $game_id, $preferred_account_id);
     $own_check->execute();
@@ -66,7 +63,6 @@ if ($preferred_account_id) {
         $old_acc_info = $old_acc_stmt->get_result()->fetch_assoc();
         $old_acc_stmt->close();
     } else {
-        // Nếu không thuộc lịch sử thuê của khách, từ chối cấp ưu tiên tài khoản này và chuyển sang thuê mới
         $preferred_account_id = null;
         $rent_type = 'new';
     }
@@ -80,7 +76,6 @@ if ($packages_res && $packages_res->num_rows > 0) {
         $packages[] = $p;
     }
 } else {
-    // Gói mặc định nếu chưa cấu hình gói
     $packages = [
         ['package_id' => 1, 'package_name' => '1 Giờ (Trải nghiệm nhanh)', 'duration_type' => 'hours', 'duration_value' => 1, 'price' => 5000],
         ['package_id' => 2, 'package_name' => '1 Ngày (24 Giờ)', 'duration_type' => 'days', 'duration_value' => 1, 'price' => 15000],
@@ -95,7 +90,7 @@ if (isset($_POST['btn_borrow'])) {
         echo "<script>alert('Yêu cầu không hợp lệ (CSRF check failed)! Vui lòng thử lại.');</script>";
     } else {
         $selected_pkg_id = intval($_POST['package_id']);
-        $payment_method = $conn->real_escape_string($_POST['payment_method'] ?? 'Ví MoMo');
+        $payment_method = $conn->real_escape_string($_POST['payment_method'] ?? 'Chuyển khoản Ngân hàng (VietQR)');
         
         $selected_pkg = null;
         foreach ($packages as $pkg) {
@@ -129,10 +124,8 @@ if (isset($_POST['btn_borrow'])) {
         }
 
         if ($can_proceed) {
-            // Tạo mã đơn ngẫu nhiên duy nhất
             $order_code = "RENT" . date('YmdHis') . rand(100, 999);
             
-            // Xác thực đơn thuê cũ thuộc quyền sở hữu của chính user
             $prev_b_id = null;
             if (isset($_GET['old_borrow_id']) && $preferred_account_id) {
                 $chk_prev = $conn->prepare("SELECT borrow_id FROM borrow_records WHERE borrow_id = ? AND user_id = ?");
@@ -145,7 +138,7 @@ if (isset($_POST['btn_borrow'])) {
                 $chk_prev->close();
             }
 
-            // Tạo bản ghi đơn thuê ở trạng thái 'pending' trong Database
+            // Tạo bản ghi đơn thuê ở trạng thái 'pending'
             $insert_order = $conn->prepare("INSERT INTO borrow_records 
                 (order_code, user_id, game_id, package_id, duration_hours, rental_price, payment_status, payment_method, rent_type, previous_borrow_id, account_id, status) 
                 VALUES (?, ?, ?, ?, ?, ?, 'pending', ?, ?, ?, ?, 'pending')");
@@ -155,7 +148,6 @@ if (isset($_POST['btn_borrow'])) {
             $new_borrow_id = $conn->insert_id;
             $insert_order->close();
 
-            // Chuyển hướng sang trang quét mã thanh toán xác minh
             echo "<script>window.location.href = 'checkout_qr.php?order_id=" . $new_borrow_id . "';</script>";
             exit();
         }
@@ -164,82 +156,130 @@ if (isset($_POST['btn_borrow'])) {
 $csrf_token = generate_csrf_token();
 ?>
 
-<div class="container mt-5 mb-5" style="max-width: 650px;">
-    <h2 class="mb-4 text-center text-white fw-bold">Thuê Tài Khoản Game Trả Phí</h2>
-    
-    <div class="card shadow-lg p-4 border-secondary border-opacity-25" style="background-color: #1a222c; border-radius: 12px;">
-        <div class="text-center mb-4">
-            <?php if(!empty($game['image_url']) && file_exists($game['image_url'])) { ?>
-                <img src="<?php echo $game['image_url']; ?>" alt="<?php echo htmlspecialchars($game['title']); ?>" style="height: 150px; border-radius: 8px; object-fit: cover; box-shadow: 0 4px 10px rgba(0,0,0,0.5);">
-            <?php } ?>
-            <h4 class="text-info fw-bold mt-3"><?php echo htmlspecialchars($game['title']); ?></h4>
-            
-            <?php if ($preferred_account_id && $old_acc_info): ?>
-                <div class="badge bg-warning text-dark px-3 py-2 fs-6 mt-1">
-                    <i class="bi bi-arrow-repeat me-1"></i> Thuê lại tài khoản cũ: <strong><?php echo htmlspecialchars($old_acc_info['account_username']); ?></strong>
+<div class="container my-4" style="max-width: 960px;">
+    <!-- Step Indicator Progress Bar -->
+    <div class="d-flex align-items-center justify-content-center gap-3 mb-4">
+        <span class="badge bg-primary px-3 py-2 fs-6 rounded-pill">1. Chọn Gói Thuê</span>
+        <i class="bi bi-chevron-right text-secondary"></i>
+        <span class="badge bg-secondary bg-opacity-25 text-secondary px-3 py-2 fs-6 rounded-pill">2. Quét Mã VietQR</span>
+        <i class="bi bi-chevron-right text-secondary"></i>
+        <span class="badge bg-secondary bg-opacity-25 text-secondary px-3 py-2 fs-6 rounded-pill">3. Nhận Tài Khoản</span>
+    </div>
+
+    <div class="row g-4">
+        <!-- Cột trái: Tóm tắt Game -->
+        <div class="col-lg-5">
+            <div class="panel-dark p-4 h-100 d-flex flex-column">
+                <div class="rounded-3 overflow-hidden mb-3 border border-secondary border-opacity-25">
+                    <?php if(!empty($game['image_url']) && file_exists($game['image_url'])) { ?>
+                        <img src="<?php echo $game['image_url']; ?>" alt="<?php echo htmlspecialchars($game['title']); ?>" class="w-100 object-fit-cover" style="height: 200px;">
+                    <?php } else { ?>
+                        <div class="d-flex align-items-center justify-content-center bg-dark text-muted" style="height: 200px;">
+                            <i class="bi bi-controller fs-1"></i>
+                        </div>
+                    <?php } ?>
                 </div>
-            <?php else: ?>
-                <span class="badge <?php echo ($available_accounts > 0) ? 'bg-success' : 'bg-danger'; ?> px-3 py-2 fs-6 mt-1">
-                    <i class="bi bi-person-badge me-1"></i> Kho tài khoản khả dụng: <?php echo $available_accounts; ?> tài khoản
-                </span>
-            <?php endif; ?>
+
+                <h4 class="fw-bold text-white mb-2"><?php echo htmlspecialchars($game['title']); ?></h4>
+                <div class="d-flex gap-2 mb-3">
+                    <span class="badge-platform"><?php echo htmlspecialchars($game['platform']); ?></span>
+                    <?php if ($preferred_account_id && $old_acc_info): ?>
+                        <span class="badge bg-warning text-dark fw-bold">🔁 Thuê lại TK cũ</span>
+                    <?php else: ?>
+                        <span class="badge bg-success bg-opacity-25 text-success border border-success border-opacity-25">
+                            ⚡ Kho: <?php echo $available_accounts; ?> tài khoản
+                        </span>
+                    <?php endif; ?>
+                </div>
+
+                <div class="p-3 rounded-3 mt-auto" style="background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border-subtle);">
+                    <div class="text-secondary small fw-bold mb-2">QUYỀN LỢI CỦA BẠN:</div>
+                    <ul class="text-secondary small mb-0 ps-3" style="line-height: 1.7;">
+                        <li>Nhận tài khoản & mật khẩu tức thì</li>
+                        <li>Bảo hành 100% thời gian thuê</li>
+                        <li>Được hỗ trợ kỹ thuật 24/7</li>
+                    </ul>
+                </div>
+            </div>
         </div>
 
-        <form method="POST" action="">
-            <input type="hidden" name="csrf_token" value="<?php echo $csrf_token; ?>">
-            
-            <div class="mb-4">
-                <label class="form-label text-light fw-bold mb-2">⏳ Chọn gói thời gian thuê tài khoản:</label>
-                <select name="package_id" id="packageSelect" class="form-select bg-dark text-white border-secondary shadow-sm py-2" required onchange="updatePrice()">
-                    <?php foreach ($packages as $pkg): ?>
-                        <option value="<?php echo $pkg['package_id']; ?>" data-price="<?php echo $pkg['price']; ?>">
-                            <?php echo htmlspecialchars($pkg['package_name']); ?> - <?php echo number_format($pkg['price'], 0, ',', '.'); ?>đ
-                        </option>
-                    <?php endforeach; ?>
-                </select>
-                <div class="form-text text-secondary mt-1">
-                    *Thời gian thuê bắt đầu được tính sau khi hệ thống xác nhận thanh toán và cấp phát tài khoản thành công.
-                </div>
-            </div>
-            
-            <div class="mb-4">
-                <label class="form-label text-light fw-bold mb-2">💳 Phương thức thanh toán:</label>
-                <div class="p-3 rounded shadow-sm" style="background-color: #151d26; border: 1px solid #2d3b4e;">
-                    <div class="form-check mb-3">
-                        <input class="form-check-input" type="radio" name="payment_method" id="pay_bank" value="Chuyển khoản Ngân hàng (VietQR)" checked>
-                        <label class="form-check-label text-white ms-1" for="pay_bank">🏦 Chuyển khoản VietQR (Tự động nhận diện)</label>
-                    </div>
-                    <div class="form-check mb-3">
-                        <input class="form-check-input" type="radio" name="payment_method" id="pay_momo" value="Ví MoMo">
-                        <label class="form-check-label text-white ms-1" for="pay_momo">🟣 Thanh toán qua Ví MoMo</label>
-                    </div>
-                    <div class="form-check">
-                        <input class="form-check-input" type="radio" name="payment_method" id="pay_vnpay" value="VNPAY">
-                        <label class="form-check-label text-white ms-1" for="pay_vnpay">🔵 Cổng thanh toán VNPAY (QR Code)</label>
-                    </div>
-                </div>
-            </div>
+        <!-- Cột phải: Form chọn gói & Thanh toán -->
+        <div class="col-lg-7">
+            <div class="panel-dark p-4 p-md-5">
+                <h4 class="fw-bold text-white mb-3 d-flex align-items-center gap-2">
+                    <i class="bi bi-receipt text-primary"></i> Thiết Lập Đơn Thuê
+                </h4>
 
-            <div class="alert alert-info border-info mb-4 shadow-sm" style="background-color: rgba(71, 191, 255, 0.1);">
-                <div class="d-flex justify-content-between align-items-center">
-                    <span class="fw-bold text-info fs-5">Tổng thanh toán:</span>
-                    <h3 class="mb-0 fw-bold text-warning" id="totalPriceDisplay"><?php echo number_format($packages[0]['price'], 0, ',', '.'); ?> VNĐ</h3>
-                </div>
+                <form method="POST" action="">
+                    <input type="hidden" name="csrf_token" value="<?php echo $csrf_token; ?>">
+                    
+                    <!-- Chọn Gói Thời Gian -->
+                    <div class="mb-4">
+                        <label class="form-label text-white fw-bold mb-2">
+                            <i class="bi bi-clock-history text-warning me-1"></i> Chọn thời hạn thuê mong muốn:
+                        </label>
+                        <select name="package_id" id="packageSelect" class="form-select py-2 fs-6" required onchange="updatePrice()">
+                            <?php foreach ($packages as $pkg): ?>
+                                <option value="<?php echo $pkg['package_id']; ?>" data-price="<?php echo $pkg['price']; ?>">
+                                    <?php echo htmlspecialchars($pkg['package_name']); ?> — <?php echo number_format($pkg['price'], 0, ',', '.'); ?>đ
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                        <small class="text-dim d-block mt-1">Thời gian thuê được tính chính xác từng phút ngay sau khi hệ thống cấp tài khoản.</small>
+                    </div>
+
+                    <!-- Phương thức thanh toán -->
+                    <div class="mb-4">
+                        <label class="form-label text-white fw-bold mb-2">
+                            <i class="bi bi-credit-card-2-front-fill text-info me-1"></i> Phương thức thanh toán:
+                        </label>
+                        <div class="p-3 rounded-3 border border-secondary border-opacity-25" style="background: #0b0d13;">
+                            <div class="form-check d-flex align-items-center gap-2 mb-2">
+                                <input class="form-check-input" type="radio" name="payment_method" id="pay_vietqr" value="Chuyển khoản Ngân hàng (VietQR)" checked>
+                                <label class="form-check-label text-white fw-bold" for="pay_vietqr">
+                                    <span class="text-success me-1">⚡</span> Chuyển khoản VietQR (Tự động nhận diện 24/7)
+                                </label>
+                            </div>
+                            <div class="form-check d-flex align-items-center gap-2">
+                                <input class="form-check-input" type="radio" name="payment_method" id="pay_momo" value="Ví MoMo">
+                                <label class="form-check-label text-white" for="pay_momo">
+                                    🟣 Ví điện tử MoMo
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Khung Tổng Thanh Toán -->
+                    <div class="p-3 rounded-3 mb-4 d-flex justify-content-between align-items-center" style="background: rgba(99, 102, 241, 0.12); border: 1px solid rgba(99, 102, 241, 0.35);">
+                        <div>
+                            <span class="text-secondary small d-block">TỔNG TIỀN THANH TOÁN</span>
+                            <span class="text-white fw-bold">Không phát sinh phụ phí</span>
+                        </div>
+                        <div class="text-end">
+                            <span class="gaming-card-price-val fs-3" id="totalPriceDisplay">
+                                <?php echo number_format($packages[0]['price'], 0, ',', '.'); ?>đ
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Nút Tiến Hành -->
+                    <div class="d-grid gap-2">
+                        <?php if ($available_accounts > 0 || ($preferred_account_id && $old_acc_info && in_array($old_acc_info['status'], ['AVAILABLE', 'EXPIRED']))): ?>
+                            <button type="submit" name="btn_borrow" class="btn btn-gaming-primary py-3 fs-5 fw-bold">
+                                <i class="bi bi-shield-lock-fill me-2"></i> XÁC NHẬN & QUÉT MÃ THANH TOÁN
+                            </button>
+                        <?php else: ?>
+                            <button type="button" class="btn btn-secondary py-3 fs-5 fw-bold" disabled>
+                                ❌ HIỆN ĐÃ HẾT TÀI KHOẢN KHẢ DỤNG
+                            </button>
+                        <?php endif; ?>
+                        <a href="game_detail.php?id=<?php echo $game_id; ?>" class="btn btn-gaming-secondary py-2 mt-1 text-center">
+                            <i class="bi bi-arrow-left me-1"></i> Quay Lại Trang Chi Tiết
+                        </a>
+                    </div>
+                </form>
             </div>
-            
-            <div class="d-grid gap-2">
-                <?php if ($available_accounts > 0 || ($preferred_account_id && $old_acc_info && in_array($old_acc_info['status'], ['AVAILABLE', 'EXPIRED']))): ?>
-                    <button type="submit" name="btn_borrow" class="btn btn-primary fw-bold py-3 fs-5 shadow" style="background: linear-gradient(to right, #00c6ff, #0072ff); border: none; border-radius: 8px;">
-                        🔒 TIẾN HÀNH THANH TOÁN & NHẬN TÀI KHOẢN
-                    </button>
-                <?php else: ?>
-                    <button type="button" class="btn btn-secondary fw-bold py-3 fs-5" disabled>
-                        ❌ HẾT TÀI KHOẢN KHẢ DỤNG
-                    </button>
-                <?php endif; ?>
-                <a href="game_detail.php?id=<?php echo $game_id; ?>" class="btn btn-outline-secondary py-2 mt-2 fw-bold" style="border-radius: 8px;">Hủy bỏ - Trở về</a>
-            </div>
-        </form>
+        </div>
     </div>
 </div>
 
@@ -247,7 +287,7 @@ $csrf_token = generate_csrf_token();
 function updatePrice() {
     var select = document.getElementById("packageSelect");
     var price = select.options[select.selectedIndex].getAttribute("data-price");
-    document.getElementById("totalPriceDisplay").innerText = new Intl.NumberFormat('vi-VN').format(price) + " VNĐ";
+    document.getElementById("totalPriceDisplay").innerText = new Intl.NumberFormat('vi-VN').format(price) + "đ";
 }
 </script>
 

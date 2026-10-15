@@ -89,122 +89,183 @@ $packages = $conn->query("SELECT * FROM rental_packages WHERE game_id = $game_id
 $csrf_token = generate_csrf_token();
 ?>
 
-<div class="container mt-4 text-white pb-5">
-    <h2 class="mb-4">Chỉnh Sửa Game: <span class="text-info"><?php echo htmlspecialchars($game['title']); ?></span></h2>
-    
-    <div class="card shadow" style="background-color: #1a222c; border: 1px solid #2d3b4e;">
-        <div class="card-body p-4">
-            <form method="POST" action="" enctype="multipart/form-data">
-                <input type="hidden" name="csrf_token" value="<?php echo $csrf_token; ?>">
-                
-                <div class="row">
-                    <div class="col-md-6 mb-3">
-                        <label class="form-label text-info fw-bold">Tên Game</label>
-                        <input type="text" name="title" class="form-control bg-dark text-white border-secondary" value="<?php echo htmlspecialchars($game['title']); ?>" required>
+<div class="container-fluid px-lg-5 py-4 my-2 text-white">
+    <!-- Breadcrumb & Title -->
+    <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb small">
+            <li class="breadcrumb-item"><a href="admin_dashboard.php" class="text-decoration-none text-secondary">Admin Console</a></li>
+            <li class="breadcrumb-item"><a href="admin_games.php" class="text-decoration-none text-secondary">Quản lý Game</a></li>
+            <li class="breadcrumb-item active text-white" aria-current="page">Chỉnh Sửa</li>
+        </ol>
+    </nav>
+
+    <div class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom border-secondary border-opacity-25">
+        <div>
+            <div class="d-flex align-items-center gap-2 mb-1">
+                <span class="badge" style="background: rgba(99,102,241,0.2); color: var(--primary); font-size: 0.75rem; border: 1px solid rgba(99,102,241,0.4);">
+                    GAME ID: #<?php echo $game_id; ?>
+                </span>
+            </div>
+            <h2 class="fw-extrabold text-white mb-0">Chỉnh Sửa Game: <span class="text-info"><?php echo htmlspecialchars($game['title']); ?></span></h2>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="admin_accounts.php?filter_game=<?php echo $game_id; ?>" class="btn btn-gaming-secondary">
+                <i class="bi bi-box-seam me-1 text-warning"></i> Quản Lý Kho TK
+            </a>
+            <a href="admin_games.php" class="btn btn-gaming-secondary">
+                <i class="bi bi-arrow-left me-1"></i> Trở Lại
+            </a>
+        </div>
+    </div>
+
+    <!-- Form Container -->
+    <div class="p-4 p-md-5 rounded-4 shadow-sm" style="background: var(--bg-card); border: 1px solid var(--border-color);">
+        <form method="POST" action="" enctype="multipart/form-data">
+            <input type="hidden" name="csrf_token" value="<?php echo $csrf_token; ?>">
+            
+            <!-- Section 1: Thông tin cơ bản -->
+            <div class="mb-5">
+                <h5 class="fw-bold text-info mb-3 pb-2 border-bottom border-secondary border-opacity-25">
+                    <i class="bi bi-info-circle me-1"></i> 1. Thông Tin Cơ Bản
+                </h5>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label text-light small fw-bold">Tên Game <span class="text-danger">*</span></label>
+                        <input type="text" name="title" class="form-control form-control-gaming" value="<?php echo htmlspecialchars($game['title']); ?>" required>
                     </div>
-                    <div class="col-md-6 mb-3">
-                        <label class="form-label text-info fw-bold">Thể loại</label>
-                        <select name="category_id" class="form-select bg-dark text-white border-secondary" required>
+                    <div class="col-md-3">
+                        <label class="form-label text-light small fw-bold">Thể Loại</label>
+                        <select name="category_id" class="form-select form-control-gaming" required>
                             <?php
                             $cates = $conn->query("SELECT * FROM categories");
-                            while($c = $cates->fetch_assoc()) {
-                                $selected = ($c['category_id'] == $game['category_id']) ? "selected" : "";
-                                echo "<option value='".$c['category_id']."' $selected>".$c['cate_name']."</option>";
+                            if($cates) {
+                                while($c = $cates->fetch_assoc()) {
+                                    $selected = ($c['category_id'] == $game['category_id']) ? 'selected' : '';
+                                    echo "<option value='".$c['category_id']."' $selected>".$c['cate_name']."</option>";
+                                }
                             }
                             ?>
                         </select>
                     </div>
-                </div>
-
-                <div class="row">
-                    <div class="col-md-6 mb-3">
-                        <label class="form-label text-info fw-bold">Nền tảng (Platform)</label>
-                        <select name="platform" class="form-select bg-dark text-white border-secondary" required>
-                            <option value="PC" <?php echo (isset($game['platform']) && $game['platform'] == 'PC') ? 'selected' : ''; ?>>🖥️ PC</option>
-                            <option value="Mobile" <?php echo (isset($game['platform']) && $game['platform'] == 'Mobile') ? 'selected' : ''; ?>>📱 Mobile</option>
+                    <div class="col-md-3">
+                        <label class="form-label text-light small fw-bold">Nền Tảng</label>
+                        <select name="platform" class="form-select form-control-gaming" required>
+                            <option value="PC" <?php echo ($game['platform'] == 'PC') ? 'selected' : ''; ?>>🖥️ PC</option>
+                            <option value="PlayStation" <?php echo ($game['platform'] == 'PlayStation') ? 'selected' : ''; ?>>🎮 PlayStation</option>
+                            <option value="Xbox" <?php echo ($game['platform'] == 'Xbox') ? 'selected' : ''; ?>>💚 Xbox</option>
+                            <option value="Nintendo" <?php echo ($game['platform'] == 'Nintendo') ? 'selected' : ''; ?>>🕹️ Nintendo</option>
                         </select>
                     </div>
-                    <div class="col-md-6 mb-3">
-                        <label class="form-label text-info fw-bold">Mô Hình Dịch Vụ</label>
-                        <select name="price_type" id="priceTypeSelect" class="form-select bg-dark text-white border-secondary" required onchange="toggleDownloadLink()">
-                            <option value="paid" <?php if($current_price_type == 'paid') echo 'selected'; ?>>Cho thuê tài khoản trả phí</option>
-                            <option value="free" <?php if($current_price_type == 'free') echo 'selected'; ?>>Game Miễn phí (Link tải ngoài)</option>
+
+                    <div class="col-md-6">
+                        <label class="form-label text-light small fw-bold">Mô Hình Kinh Doanh</label>
+                        <select name="price_type" id="edit_price_type" class="form-select form-control-gaming" onchange="toggleEditPricing()">
+                            <option value="paid" <?php echo ($current_price_type == 'paid') ? 'selected' : ''; ?>>💎 Cho thuê tài khoản có phí</option>
+                            <option value="free" <?php echo ($current_price_type == 'free') ? 'selected' : ''; ?>>🎁 Game miễn phí</option>
                         </select>
                     </div>
-                </div>
 
-                <!-- CẤU HÌNH BẢNG GIÁ CÁC GÓI THỜI HẠN THUÊ -->
-                <div class="p-3 mb-4 rounded border border-secondary" id="packagesDiv" style="<?php echo ($current_price_type == 'paid') ? 'display: block; background: rgba(0, 243, 255, 0.03);' : 'display: none;'; ?>">
-                    <h5 class="text-warning fw-bold mb-3"><i class="bi bi-clock-history me-1"></i> Quản Lý Bảng Giá Các Gói Thời Hạn Thuê</h5>
-                    <div class="row g-3">
-                        <?php if ($packages && $packages->num_rows > 0): ?>
-                            <?php while ($pkg = $packages->fetch_assoc()): ?>
-                                <div class="col-md-3">
-                                    <label class="form-label text-light small"><?php echo htmlspecialchars($pkg['package_name']); ?> (VNĐ):</label>
-                                    <input type="number" name="pkg_price[<?php echo $pkg['package_id']; ?>]" class="form-control bg-dark text-white border-secondary" value="<?php echo floatval($pkg['price']); ?>" min="1000" step="1000">
-                                </div>
-                            <?php endwhile; ?>
-                        <?php else: ?>
-                            <div class="col-12"><small class="text-secondary">Chưa có gói thuê, hệ thống sẽ tự sinh các gói chuẩn.</small></div>
+                    <div class="col-md-6">
+                        <label class="form-label text-light small fw-bold">Ảnh Bìa Game (Chọn để thay mới)</label>
+                        <input type="file" name="image" class="form-control form-control-gaming" accept="image/*">
+                        <?php if(!empty($game['image_url'])): ?>
+                            <div class="mt-2 d-flex align-items-center gap-2">
+                                <img src="<?php echo htmlspecialchars($game['image_url']); ?>" alt="" style="width: 80px; height: 45px; object-fit: cover; border-radius: 6px; border: 1px solid var(--border-color);">
+                                <span class="small text-secondary">Ảnh hiện tại: <?php echo htmlspecialchars($game['image_url']); ?></span>
+                            </div>
                         <?php endif; ?>
                     </div>
                 </div>
-                
-                <div class="row" id="downloadLinkDiv" style="<?php echo ($current_price_type == 'free') ? 'display: block;' : 'display: none;'; ?>">
-                    <div class="col-12 mb-3">
-                        <label class="form-label text-info fw-bold">Link tải chính thức (Dành cho Miễn phí)</label>
-                        <input type="url" name="download_link" class="form-control bg-dark text-white border-secondary" value="<?php echo htmlspecialchars($current_download_link); ?>" placeholder="https://store.steampowered.com/...">
-                    </div>
-                </div>
-                
-                <div class="mb-3">
-                    <label class="form-label text-info fw-bold">Ảnh bìa hiện tại:</label>
-                    <div class="mb-2">
-                        <?php if(!empty($game['image_url']) && file_exists($game['image_url'])) { ?>
-                            <img src="<?php echo $game['image_url']; ?>" alt="Cover" style="height: 100px; border-radius: 4px; object-fit: cover;">
-                        <?php } else { ?>
-                            <span class="text-muted">Chưa có ảnh bìa</span>
-                        <?php } ?>
-                    </div>
-                    <label class="form-label text-info">Đổi ảnh bìa mới (Bỏ trống nếu giữ nguyên)</label>
-                    <input type="file" name="image" class="form-control bg-dark text-white border-secondary" accept="image/*">
-                </div>
-                
-                <div class="mb-3">
-                    <label class="form-label text-info fw-bold">Mô tả tóm tắt</label>
-                    <textarea name="description" class="form-control bg-dark text-white border-secondary" rows="3" required><?php echo htmlspecialchars($game['description']); ?></textarea>
-                </div>
+            </div>
 
-                <div class="mb-4">
-                    <label class="form-label text-warning fw-bold">Mô tả chi tiết & Điều khoản dịch vụ</label>
-                    <textarea name="long_description" class="form-control bg-dark text-white border-secondary" rows="10"><?php echo htmlspecialchars($game['long_description'] ?? ''); ?></textarea>
+            <!-- Section 2: Gói Giá Thuê -->
+            <div class="mb-5 <?php echo ($current_price_type == 'free') ? 'd-none' : ''; ?>" id="edit_pricing_section">
+                <h5 class="fw-bold text-warning mb-3 pb-2 border-bottom border-secondary border-opacity-25">
+                    <i class="bi bi-tag-fill me-1"></i> 2. Giá Các Gói Cho Thuê Tài Khoản
+                </h5>
+                <div class="row g-3">
+                    <?php 
+                    if ($packages && $packages->num_rows > 0):
+                        while ($pkg = $packages->fetch_assoc()):
+                    ?>
+                        <div class="col-sm-6 col-md-3">
+                            <div class="p-3 rounded-3" style="background: rgba(255,255,255,0.02); border: 1px solid var(--border-color);">
+                                <label class="form-label text-secondary small fw-bold mb-1">
+                                    <?php echo htmlspecialchars($pkg['package_name']); ?>
+                                </label>
+                                <div class="input-group">
+                                    <input type="number" name="pkg_price[<?php echo $pkg['package_id']; ?>]" class="form-control form-control-gaming text-white" value="<?php echo floatval($pkg['price']); ?>" step="1000">
+                                    <span class="input-group-text bg-dark border-secondary text-secondary">đ</span>
+                                </div>
+                            </div>
+                        </div>
+                    <?php 
+                        endwhile;
+                    else: 
+                    ?>
+                        <div class="col-12">
+                            <div class="alert text-white" style="background: rgba(245, 158, 11, 0.15); border: 1px solid #f59e0b;">
+                                <i class="bi bi-info-circle me-1"></i> Tựa game này chưa có bảng giá thuê cụ thể. Hãy thêm các gói thuê vào database hoặc lưu lại để tạo mặc định.
+                            </div>
+                        </div>
+                    <?php endif; ?>
                 </div>
-                
-                <div class="mb-4">
-                    <label class="form-label text-info fw-bold">Cấu hình yêu cầu</label>
-                    <input type="text" name="system_req" class="form-control bg-dark text-white border-secondary" value="<?php echo htmlspecialchars($game['system_req']); ?>" required>
+            </div>
+
+            <!-- Link Tải (nếu game miễn phí) -->
+            <div class="mb-5 <?php echo ($current_price_type != 'free') ? 'd-none' : ''; ?>" id="edit_dl_section">
+                <h5 class="fw-bold text-info mb-3 pb-2 border-bottom border-secondary border-opacity-25">
+                    <i class="bi bi-cloud-arrow-down me-1"></i> Link Tải Bộ Cài Miễn Phí
+                </h5>
+                <div>
+                    <label class="form-label text-light small fw-bold">Đường dẫn tải game</label>
+                    <input type="url" name="download_link" class="form-control form-control-gaming" value="<?php echo htmlspecialchars($current_download_link); ?>">
                 </div>
-                
-                <div class="text-end">
-                    <a href="admin_games.php" class="btn btn-secondary me-2">Quay lại</a>
-                    <button type="submit" name="btn_update" class="btn btn-warning px-4 fw-bold">LƯU THAY ĐỔI</button>
+            </div>
+
+            <!-- Section 3: Mô tả & Cấu hình -->
+            <div class="mb-4">
+                <h5 class="fw-bold text-success mb-3 pb-2 border-bottom border-secondary border-opacity-25">
+                    <i class="bi bi-card-text me-1"></i> 3. Mô Tả Chi Tiết & Yêu Cầu Cấu Hình
+                </h5>
+                <div class="row g-3">
+                    <div class="col-12">
+                        <label class="form-label text-light small fw-bold">Mô Tả Ngắn</label>
+                        <textarea name="description" class="form-control form-control-gaming" rows="2"><?php echo htmlspecialchars($game['description'] ?? ''); ?></textarea>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label text-light small fw-bold">Giới Thiệu Chi Tiết Game</label>
+                        <textarea name="long_description" class="form-control form-control-gaming" rows="6"><?php echo htmlspecialchars($game['long_description'] ?? ''); ?></textarea>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label text-light small fw-bold">Yêu Cầu Cấu Hình Phần Cứng</label>
+                        <textarea name="system_req" class="form-control form-control-gaming" rows="6"><?php echo htmlspecialchars($game['system_req'] ?? ''); ?></textarea>
+                    </div>
                 </div>
-            </form>
-        </div>
+            </div>
+
+            <!-- Actions Footer -->
+            <div class="pt-3 border-top border-secondary border-opacity-25 d-flex justify-content-end gap-2">
+                <a href="admin_games.php" class="btn btn-gaming-secondary px-4 py-2">Hủy bỏ</a>
+                <button type="submit" name="btn_update" class="btn btn-gaming-primary px-5 py-2">
+                    <i class="bi bi-check-circle me-1"></i> LƯU THAY ĐỔI
+                </button>
+            </div>
+        </form>
     </div>
 </div>
 
 <script>
-function toggleDownloadLink() {
-    var select = document.getElementById('priceTypeSelect');
-    var div = document.getElementById('downloadLinkDiv');
-    var pkgDiv = document.getElementById('packagesDiv');
+function toggleEditPricing() {
+    var select = document.getElementById('edit_price_type');
+    var pricingSec = document.getElementById('edit_pricing_section');
+    var dlSec = document.getElementById('edit_dl_section');
     if (select.value === 'free') {
-        div.style.display = 'block';
-        pkgDiv.style.display = 'none';
+        pricingSec.classList.add('d-none');
+        dlSec.classList.remove('d-none');
     } else {
-        div.style.display = 'none';
-        pkgDiv.style.display = 'block';
+        pricingSec.classList.remove('d-none');
+        dlSec.classList.add('d-none');
     }
 }
 </script>
