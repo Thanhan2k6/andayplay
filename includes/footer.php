@@ -244,6 +244,7 @@ window.ANPLAY_CHAT_CSRF = "<?php echo htmlspecialchars($_SESSION['chat_csrf_toke
         let safe = escapeHtml(text);
         safe = safe.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
         safe = safe.replace(/\*(.*?)\*/g, '<em>$1</em>');
+        safe = safe.replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" class="btn btn-sm btn-gaming-primary py-1 px-2 text-white text-decoration-none mt-1 d-inline-block" style="font-size:0.75rem;">$1</a>');
         safe = safe.replace(/\n/g, '<br>');
         return safe;
     }
@@ -465,5 +466,35 @@ window.ANPLAY_CHAT_CSRF = "<?php echo htmlspecialchars($_SESSION['chat_csrf_toke
 </script>
 
 <script src="assets/js/chatbot.js?v=<?php echo time(); ?>"></script>
+
+<!-- MOBILE BOTTOM NAVIGATION (Hiển thị trên mobile, ẩn trên desktop qua CSS) -->
+<nav class="mobile-bottom-nav" aria-label="Điều hướng mobile">
+    <div class="mobile-bottom-nav-inner">
+        <a href="index.php" class="mobile-nav-item" data-page="index.php">
+            <i class="bi bi-grid-1x2-fill"></i>
+            <span>Cửa Hàng</span>
+        </a>
+        <a href="my_library.php" class="mobile-nav-item" data-page="my_library.php">
+            <i class="bi bi-collection-play-fill"></i>
+            <span>Thư Viện</span>
+        </a>
+        <a href="notifications.php" class="mobile-nav-item position-relative" data-page="notifications.php">
+            <i class="bi bi-bell-fill"></i>
+            <span>Thông Báo</span>
+            <?php if (isset($header_unread_notifs) && $header_unread_notifs > 0): ?>
+                <span class="badge bg-danger rounded-pill position-absolute" style="top: 4px; right: 20%; font-size: 0.6rem; padding: 2px 5px;"><?php echo $header_unread_notifs; ?></span>
+            <?php endif; ?>
+        </a>
+        <a href="support.php" class="mobile-nav-item" data-page="support.php,support_detail.php">
+            <i class="bi bi-headset"></i>
+            <span>Hỗ Trợ</span>
+        </a>
+        <a href="<?php echo isset($_SESSION['user_id']) ? 'profile.php' : 'login.php'; ?>" class="mobile-nav-item" data-page="profile.php,login.php,register.php">
+            <i class="bi bi-person-circle"></i>
+            <span>Tài Khoản</span>
+        </a>
+    </div>
+</nav>
+
 </body>
 </html>

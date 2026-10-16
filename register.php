@@ -29,6 +29,10 @@ if (isset($_POST['btn_register'])) {
             $stmt_insert->bind_param("sss", $username, $email, $hashed_password);
 
             if ($stmt_insert->execute()) {
+                $new_user_id = $conn->insert_id;
+                if (function_exists('create_notification')) {
+                    create_notification($conn, $new_user_id, 'account', 'Chào mừng bạn đến với ANPLAY STORE! 🎮', 'Tài khoản của bạn đã được khởi tạo thành công. Bắt đầu khám phá và thuê game bản quyền ngay hôm nay!', 'index.php', 'WELCOME-' . $new_user_id);
+                }
                 $script_hieu_ung = "
                     var end = Date.now() + (2.5 * 1000);
                     var colors = ['#6366f1', '#06b6d4', '#10b981'];

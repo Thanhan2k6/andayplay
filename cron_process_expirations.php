@@ -84,6 +84,11 @@ if ($res && $res->num_rows > 0) {
                 sync_game_inventory($conn, $game_id);
             }
 
+            // Gửi thông báo hết hạn tới khách hàng
+            if (function_exists('create_notification')) {
+                create_notification($conn, $user_id, 'rental', 'Thời gian thuê game đã kết thúc ⌛', "Đơn thuê #$borrow_id ($game_title) đã hết hạn. Bạn có thể gia hạn hoặc thuê lại tài khoản bất kỳ lúc nào!", 'my_library.php', 'EXP-' . $borrow_id);
+            }
+
             // 3. Thêm tác vụ vào hàng đợi hệ thống nếu cần thông báo hoặc xử lý API ngoài
             $task_payload = json_encode([
                 'borrow_id' => $borrow_id,

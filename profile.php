@@ -70,6 +70,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['btn_update_profile'])
                         $_SESSION['email'] = $new_email;
                         $success_msg = "Cập nhật thông tin tài khoản thành công!";
                         $tab = 'info';
+                        if (function_exists('create_notification')) {
+                            create_notification($conn, $user_id, 'account', 'Cập nhật email thành công 👤', 'Địa chỉ email mới của bạn đã được cập nhật thành: ' . $new_email, 'profile.php?tab=info');
+                        }
                     } else {
                         $error_msg = "Lỗi khi lưu dữ liệu vào hệ thống. Vui lòng thử lại!";
                         $tab = 'info';
@@ -119,6 +122,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['btn_change_password']
                         if ($up_pass->execute()) {
                             $success_msg = "Đổi mật khẩu thành công! Tài khoản của bạn đã được bảo vệ với mật khẩu mới.";
                             $tab = 'security';
+                            if (function_exists('create_notification')) {
+                                create_notification($conn, $user_id, 'account', 'Mật khẩu tài khoản đã được thay đổi 🔐', 'Mật khẩu của bạn vừa được cập nhật thành công lúc ' . date('H:i d/m/Y') . '. Nếu không phải bạn thực hiện, vui lòng liên hệ ngay với hỗ trợ.', 'profile.php?tab=security');
+                            }
                         } else {
                             $error_msg = "Không thể cập nhật mật khẩu. Vui lòng thử lại.";
                             $tab = 'security';
@@ -356,6 +362,21 @@ require_once __DIR__ . '/includes/header.php';
                             <small class="text-muted d-block" style="font-size: 0.72rem;">Bảo vệ tài khoản và phiên đăng nhập</small>
                         </div>
                     </a>
+                    <a href="notifications.php" class="nav-link py-3 px-3 rounded-3 d-flex align-items-center gap-3 text-secondary" style="border: 1px solid transparent;">
+                        <i class="bi bi-bell-fill fs-5 text-warning"></i>
+                        <div>
+                            <div class="text-white fw-bold">Thông Báo Hệ Thống</div>
+                            <small class="text-muted d-block" style="font-size: 0.72rem;">Hộp thư, cập nhật và khuyến mãi</small>
+                        </div>
+                    </a>
+
+                    <a href="support.php" class="nav-link py-3 px-3 rounded-3 d-flex align-items-center gap-3 text-secondary" style="border: 1px solid transparent;">
+                        <i class="bi bi-headset fs-5 text-info"></i>
+                        <div>
+                            <div class="text-white fw-bold">Hỗ Trợ & Khiếu Nại</div>
+                            <small class="text-muted d-block" style="font-size: 0.72rem;">Tạo ticket và trò chuyện với kỹ thuật</small>
+                        </div>
+                    </a>
                 </div>
 
                 <hr class="border-secondary border-opacity-25 my-3">
@@ -366,7 +387,10 @@ require_once __DIR__ . '/includes/header.php';
                         <i class="bi bi-headset text-info fs-5"></i>
                         <span class="fw-bold small text-white">Hỗ Trợ Kỹ Thuật 24/7</span>
                     </div>
-                    <p class="text-secondary small mb-2" style="font-size: 0.75rem;">Gặp sự cố với tài khoản thuê hoặc cần hỗ trợ nạp tiền?</p>
+                    <p class="text-secondary small mb-2" style="font-size: 0.75rem;">Gặp sự cố với tài khoản thuê hoặc lỗi thanh toán?</p>
+                    <a href="support.php" class="btn btn-sm btn-gaming-primary w-100 py-1 mb-2" style="font-size: 0.78rem;">
+                        <i class="bi bi-plus-circle me-1"></i> Gửi Yêu Cầu Hỗ Trợ
+                    </a>
                     <a href="https://t.me" target="_blank" class="btn btn-sm btn-gaming-secondary w-100 py-1" style="font-size: 0.75rem;">
                         <i class="bi bi-telegram me-1"></i> Chat Telegram CSKH
                     </a>

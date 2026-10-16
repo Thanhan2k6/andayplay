@@ -46,8 +46,10 @@ if ($conn->connect_error) {
     $conn->set_charset("utf8mb4");
 }
 
-// Nạp thư viện dịch vụ tài khoản và bảo mật
+// Nạp thư viện dịch vụ tài khoản, thông báo và hỗ trợ
 require_once __DIR__ . '/account_service.php';
+require_once __DIR__ . '/notification_service.php';
+require_once __DIR__ . '/support_service.php';
 
 // =========================================================
 // AUTO-CHECK TRÊN WEB (DỰ PHÒNG KHI CHƯA CHẠY CRON)

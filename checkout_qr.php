@@ -209,6 +209,11 @@ if (isset($_POST['confirm_payment_webhook'])) {
                     log_account_allocation($conn, $acc_id, $order_id, $user_id, 'EXTENDED', "Gia hạn thêm $add_hours giờ (đến $new_due_date)", 'SYSTEM');
                 }
 
+                if (function_exists('create_notification')) {
+                    create_notification($conn, $user_id, 'rental', 'Gia hạn thời gian thuê thành công! ⏱️', "Đơn thuê #$borrow_id_to_extend ({$order['title']}) đã được kéo dài thêm $add_hours giờ.", 'my_library.php', 'EXT-' . $order_id);
+                    create_notification($conn, $user_id, 'payment', 'Thanh toán gia hạn thành công 💳', "Thanh toán cho đơn gia hạn #$order_code đã hoàn tất (" . number_format($amount) . "đ).", 'profile.php?tab=orders', 'PAY-EXT-' . $order_id);
+                }
+
                 echo "<script>alert('🎉 GIA HẠN THÀNH CÔNG! Thời gian sử dụng đã được kéo dài đến: " . date('d/m/Y H:i', strtotime($new_due_date)) . "'); window.location='my_library.php';</script>";
                 exit();
             } catch (Throwable $e) {
@@ -221,10 +226,17 @@ if (isset($_POST['confirm_payment_webhook'])) {
             $alloc_result = allocate_game_account($conn, $game_id, $user_id, $order_id, $duration_hours, $pref_acc);
 
             if ($alloc_result['success']) {
+                if (function_exists('create_notification')) {
+                    create_notification($conn, $user_id, 'rental', 'Thuê game thành công! 🎉', "Tài khoản game '{$order['title']}' đã được cấp phát. Hãy vào Thư Viện để lấy thông tin đăng nhập và chơi ngay!", 'my_library.php', 'RENT-' . $order_id);
+                    create_notification($conn, $user_id, 'payment', 'Thanh toán thành công 💳', "Đơn hàng #$order_code đã thanh toán thành công số tiền " . number_format($amount) . "đ.", 'profile.php?tab=orders', 'PAY-' . $order_id);
+                }
                 echo "<script>alert('🎉 THANH TOÁN THÀNH CÔNG! Hệ thống đã cấp thông tin tài khoản game cho bạn.'); window.location='my_library.php';</script>";
                 exit();
             } else {
                 $allocation_error = $alloc_result['error'];
+                if (function_exists('create_notification')) {
+                    create_notification($conn, $user_id, 'support', 'Sự cố phân bổ tài khoản đơn #' . $order_code . ' ⚠️', "Kho game tạm thời hết tài khoản sẵn sàng hoặc đang bảo trì. Bạn có thể tạo yêu cầu hỗ trợ để được đổi tài khoản ngay.", 'support.php', 'ERR-ALLOC-' . $order_id);
+                }
                 try {
                     $conn->query("UPDATE borrow_records SET payment_status = 'paid', status = 'pending', error_message = '" . $conn->real_escape_string($allocation_error) . "' WHERE borrow_id = $order_id");
                 } catch (Throwable $e) {}
