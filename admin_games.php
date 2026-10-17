@@ -2,9 +2,8 @@
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
-require_once __DIR__ . '/includes/connect.php';
-require_admin();
-require_once __DIR__ . '/includes/header.php';
+$page_title = "Quản Lý Kho Game & Giá Thuê";
+require_once __DIR__ . '/includes/admin_header.php';
 
 // XỬ LÝ: Xóa game
 if(isset($_GET['delete_id'])) {
@@ -161,4 +160,4 @@ if(isset($_GET['delete_id'])) {
     </div>
 </div>
 
-<?php include 'includes/footer.php'; ?>
+<?php require_once __DIR__ . '/includes/admin_footer.php'; ?>

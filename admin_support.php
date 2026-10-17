@@ -120,7 +120,8 @@ try {
 
 $categories = get_support_categories();
 
-require_once __DIR__ . '/includes/header.php';
+$page_title = "Trung Tâm Hỗ Trợ Khách Hàng";
+require_once __DIR__ . '/includes/admin_header.php';
 ?>
 
 <div class="container-fluid px-lg-5 py-4 text-white">
@@ -353,5 +354,5 @@ require_once __DIR__ . '/includes/header.php';
     </div>
 </div>
 
-<?php require_once __DIR__ . '/includes/footer.php'; ?>
+<?php require_once __DIR__ . '/includes/admin_footer.php'; ?>
 

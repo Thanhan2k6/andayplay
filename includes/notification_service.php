@@ -161,7 +161,7 @@ function notify_all_admins($conn, $type, $title, $message, $link = null, $relate
     $count = 0;
     $exclude_user_id = intval($exclude_user_id);
     try {
-        $where = "WHERE role IN (1, 2)";
+        $where = "WHERE role IN (1, 2) AND status = 'active'";
         if ($exclude_user_id > 0) {
             $where .= " AND user_id != $exclude_user_id";
         }
@@ -187,7 +187,7 @@ function notify_super_admins($conn, $type, $title, $message, $link = null, $rela
     $count = 0;
     $exclude_user_id = intval($exclude_user_id);
     try {
-        $where = "WHERE role = 2";
+        $where = "WHERE role = 2 AND status = 'active'";
         if ($exclude_user_id > 0) {
             $where .= " AND user_id != $exclude_user_id";
         }

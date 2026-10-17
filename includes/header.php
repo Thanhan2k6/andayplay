@@ -89,41 +89,14 @@ if (isset($_SESSION['user_id'])) {
         </a>
         
         <?php if(isset($_SESSION['role']) && in_array(intval($_SESSION['role']), [1, 2])): ?>
-            <!-- Khu vực Quản trị Admin -->
-            <div class="sidebar-title mt-4" style="color: #f43f5e;">Quản Trị Hệ Thống</div>
-            <a href="admin_dashboard.php" class="sidebar-item <?php echo ($current_page == 'admin_dashboard.php') ? 'active' : ''; ?>">
-                <i class="bi bi-graph-up-arrow text-danger"></i> Thống kê doanh thu
-            </a>
-            <a href="admin_support.php" class="sidebar-item <?php echo ($current_page == 'admin_support.php' || $current_page == 'admin_support_detail.php') ? 'active' : ''; ?>">
-                <i class="bi bi-headset text-danger"></i> Quản lý Hỗ Trợ
+            <!-- Lối tắt vào Admin Console độc lập -->
+            <div class="sidebar-title mt-4" style="color: #f43f5e;">Khu Vực Quản Trị</div>
+            <a href="admin_dashboard.php" class="sidebar-item" style="background: rgba(244,63,94,0.12); border: 1px solid rgba(244,63,94,0.25); color: #f43f5e; font-weight: 700;">
+                <i class="bi bi-shield-shaded text-danger"></i> Đến Bảng Quản Trị
                 <?php if ($header_admin_open_tickets > 0): ?>
-                    <span class="badge bg-danger rounded-pill ms-auto"><?php echo $header_admin_open_tickets; ?></span>
+                    <span class="badge bg-danger rounded-pill ms-auto" title="Yêu cầu hỗ trợ mới"><?php echo $header_admin_open_tickets; ?></span>
                 <?php endif; ?>
             </a>
-            <a href="admin_notifications.php" class="sidebar-item <?php echo ($current_page == 'admin_notifications.php') ? 'active' : ''; ?>">
-                <i class="bi bi-broadcast text-danger"></i> Gửi Thông Báo Toàn Sàn
-            </a>
-            <a href="admin_games.php" class="sidebar-item <?php echo ($current_page == 'admin_games.php' || $current_page == 'admin_add_game.php' || $current_page == 'admin_edit_game.php') ? 'active' : ''; ?>">
-                <i class="bi bi-joystick text-danger"></i> Quản lý Cửa Hàng
-            </a>
-            <a href="admin_accounts.php" class="sidebar-item <?php echo ($current_page == 'admin_accounts.php') ? 'active' : ''; ?>">
-                <i class="bi bi-box-seam-fill text-danger"></i> Kho Tài Khoản Game
-            </a>
-            <a href="admin_borrow.php" class="sidebar-item <?php echo ($current_page == 'admin_borrow.php') ? 'active' : ''; ?>">
-                <i class="bi bi-receipt-cutoff text-danger"></i> Quản lý Đơn Thuê
-            </a>
-            <a href="admin_users.php" class="sidebar-item <?php echo ($current_page == 'admin_users.php') ? 'active' : ''; ?>">
-                <i class="bi bi-people-fill text-danger"></i> Quản lý Khách Hàng
-            </a>
-            <?php if (function_exists('is_super_admin') && is_super_admin()): ?>
-                <div class="sidebar-title mt-3" style="color: #c084fc;"><i class="bi bi-shield-shaded me-1"></i> Super Admin</div>
-                <a href="admin_management.php" class="sidebar-item <?php echo ($current_page == 'admin_management.php' || $current_page == 'admin_roles.php') ? 'active' : ''; ?>">
-                    <i class="bi bi-person-gear" style="color: #c084fc;"></i> Quản Trị Admin & Phân Quyền
-                </a>
-                <a href="admin_system.php" class="sidebar-item <?php echo ($current_page == 'admin_system.php') ? 'active' : ''; ?>">
-                    <i class="bi bi-sliders" style="color: #c084fc;"></i> Cấu Hình Sàn & Audit Logs
-                </a>
-            <?php endif; ?>
         <?php endif; ?>
     <?php endif; ?>
 
@@ -319,41 +292,14 @@ if (isset($_SESSION['user_id'])) {
                         </li>
 
                         <!-- SECTION: QUẢN TRỊ VIÊN NẾU CÓ -->
+                        <!-- SECTION: LỐI TẮT QUẢN TRỊ NẾU LÀ ADMIN / SUPER ADMIN -->
                         <?php if($hdr_is_admin): ?>
                             <li><hr class="dropdown-divider border-secondary border-opacity-25 my-2"></li>
-                            <li><h6 class="dropdown-header text-uppercase text-danger fw-bold px-3 py-1" style="font-size: 0.68rem; letter-spacing: 0.5px;">Khu Vực Quản Trị</h6></li>
+                            <li><h6 class="dropdown-header text-uppercase text-danger fw-bold px-3 py-1" style="font-size: 0.68rem; letter-spacing: 0.5px;">Bảng Điều Hành</h6></li>
                             <li>
-                                <a class="dropdown-item py-2 px-3 rounded-2 d-flex align-items-center text-danger" href="admin_dashboard.php">
-                                    <i class="bi bi-speedometer2 me-2"></i> Bảng điều khiển Admin
-                                </a>
-                            </li>
-                            <li>
-                                <a class="dropdown-item py-2 px-3 rounded-2 d-flex align-items-center text-danger justify-content-between" href="admin_support.php">
-                                    <span><i class="bi bi-headset me-2"></i> Quản lý Hỗ Trợ</span>
-                                    <?php if ($header_admin_open_tickets > 0): ?>
-                                        <span class="badge bg-danger rounded-pill"><?php echo $header_admin_open_tickets; ?></span>
-                                    <?php endif; ?>
-                                </a>
-                            </li>
-                            <li>
-                                <a class="dropdown-item py-2 px-3 rounded-2 d-flex align-items-center text-danger" href="admin_notifications.php">
-                                    <i class="bi bi-broadcast me-2"></i> Gửi Thông Báo Toàn Sàn
-                                </a>
-                            </li>
-                        <?php endif; ?>
-
-                        <!-- SECTION: SUPER ADMIN NẾU CÓ -->
-                        <?php if($hdr_is_super): ?>
-                            <li><hr class="dropdown-divider border-secondary border-opacity-25 my-2"></li>
-                            <li><h6 class="dropdown-header text-uppercase fw-bold px-3 py-1" style="color: #c084fc; font-size: 0.68rem; letter-spacing: 0.5px;"><i class="bi bi-shield-shaded me-1"></i> Super Admin Cấp Cao</h6></li>
-                            <li>
-                                <a class="dropdown-item py-2 px-3 rounded-2 d-flex align-items-center" style="color: #f3e8ff;" href="admin_management.php">
-                                    <i class="bi bi-person-gear me-2" style="color: #c084fc;"></i> Quản Trị Admin & Phân Quyền
-                                </a>
-                            </li>
-                            <li>
-                                <a class="dropdown-item py-2 px-3 rounded-2 d-flex align-items-center" style="color: #f3e8ff;" href="admin_system.php">
-                                    <i class="bi bi-sliders me-2" style="color: #c084fc;"></i> Cấu Hình Sàn & Audit Logs
+                                <a class="dropdown-item py-2 px-3 rounded-2 d-flex align-items-center justify-content-between text-danger fw-bold" href="admin_dashboard.php">
+                                    <span><i class="bi bi-shield-shaded me-2"></i> Mở Admin Console</span>
+                                    <i class="bi bi-arrow-right" style="font-size: 0.75rem;"></i>
                                 </a>
                             </li>
                         <?php endif; ?>

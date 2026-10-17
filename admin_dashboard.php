@@ -1,8 +1,8 @@
 <?php
 if (session_status() === PHP_SESSION_NONE) { session_start(); }
 require_once __DIR__ . '/includes/connect.php';
-require_admin();
-require_once __DIR__ . '/includes/header.php';
+$page_title = "Bảng Điều Khiển Tổng Quan";
+require_once __DIR__ . '/includes/admin_header.php';
 
 function safe_count_query($conn, $sql) {
     try {
@@ -292,4 +292,4 @@ document.addEventListener("DOMContentLoaded", function() {
 });
 </script>
 
-<?php include 'includes/footer.php'; ?>
+<?php require_once __DIR__ . '/includes/admin_footer.php'; ?>

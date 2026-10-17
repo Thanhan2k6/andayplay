@@ -90,8 +90,8 @@ if (!empty($action) && $target_id > 0) {
     }
 }
 
-// Nạp layout Header sau khi đã xác thực xong quyền hạn
-require_once __DIR__ . '/includes/header.php';
+$page_title = "Quản Lý Danh Sách Khách Hàng";
+require_once __DIR__ . '/includes/admin_header.php';
 
 // 2. TÌM KIẾM THÀNH VIÊN
 $search_query = "";
@@ -253,4 +253,4 @@ $result_users = $conn->query($sql_users);
     </div>
 </div>
 
-<?php include 'includes/footer.php'; ?>
+<?php require_once __DIR__ . '/includes/admin_footer.php'; ?>

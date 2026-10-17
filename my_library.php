@@ -12,20 +12,84 @@ require_once __DIR__ . '/includes/connect.php';
 $user_id = intval($_SESSION['user_id']);
 $current_page = 'my_library.php';
 
-// Xử lý báo lỗi tài khoản
+// Xử lý báo lỗi tài khoản & Tạo Ticket hỗ trợ
 $report_message = "";
+$report_error = "";
+$report_ticket_id = 0;
+
 if (isset($_POST['btn_report_error'])) {
-    if (verify_csrf_token($_POST['csrf_token'] ?? '')) {
-        $rep_borrow_id = intval($_POST['report_borrow_id']);
-        $rep_issue = $conn->real_escape_string($_POST['issue_description'] ?? 'Khách báo lỗi đăng nhập');
-        
-        $chk_acc = $conn->query("SELECT account_id FROM borrow_records WHERE borrow_id = $rep_borrow_id AND user_id = $user_id")->fetch_assoc();
-        if ($chk_acc && $chk_acc['account_id']) {
-            $rep_acc_id = intval($chk_acc['account_id']);
-            // Chuyển tài khoản sang trạng thái MAINTENANCE để admin kiểm tra
-            $conn->query("UPDATE game_accounts SET status = 'MAINTENANCE', notes = CONCAT(COALESCE(notes, ''), ' | Khách báo lỗi: $rep_issue') WHERE account_id = $rep_acc_id");
-            log_account_allocation($conn, $rep_acc_id, $rep_borrow_id, $user_id, 'MAINTENANCE_TRIGGERED', "Báo lỗi từ khách: $rep_issue", 'USER');
-            $report_message = "Đã gửi báo lỗi thành công! Đội ngũ hỗ trợ kỹ thuật 24/7 sẽ kiểm tra và cấp đổi tài khoản mới cho bạn sớm nhất.";
+    if (!verify_csrf_token($_POST['csrf_token'] ?? '')) {
+        $report_error = "Mã xác thực bảo mật không hợp lệ hoặc phiên làm việc đã hết hạn. Vui lòng thử lại.";
+    } else {
+        $rep_borrow_id = intval($_POST['report_borrow_id'] ?? 0);
+        $rep_issue = trim($_POST['issue_description'] ?? '');
+        if (empty($rep_issue)) {
+            $rep_issue = 'Khách hàng báo lỗi đăng nhập / sự cố tài khoản game.';
+        }
+
+        // Lấy thông tin đơn thuê và game của khách
+        $stmt_chk = $conn->prepare("SELECT br.borrow_id, br.account_id, br.game_id, br.status as borrow_status, 
+                                            g.title as game_title, ga.account_username 
+                                     FROM borrow_records br 
+                                     JOIN games g ON br.game_id = g.game_id 
+                                     LEFT JOIN game_accounts ga ON br.account_id = ga.account_id 
+                                     WHERE br.borrow_id = ? AND br.user_id = ? LIMIT 1");
+        if ($stmt_chk) {
+            $stmt_chk->bind_param("ii", $rep_borrow_id, $user_id);
+            $stmt_chk->execute();
+            $borrow_info = $stmt_chk->get_result()->fetch_assoc();
+            $stmt_chk->close();
+        } else {
+            $borrow_info = null;
+        }
+
+        if (!$borrow_info) {
+            $report_error = "Không tìm thấy đơn thuê hợp lệ để gửi yêu cầu hỗ trợ.";
+        } else {
+            $game_title = $borrow_info['game_title'];
+            $game_id = intval($borrow_info['game_id']);
+            $rep_acc_id = !empty($borrow_info['account_id']) ? intval($borrow_info['account_id']) : null;
+            $acc_user = !empty($borrow_info['account_username']) ? $borrow_info['account_username'] : 'Chưa cấp';
+
+            // Lấy username người gửi
+            $customer_name = $_SESSION['username'] ?? '';
+            if (empty($customer_name)) {
+                $u_row = $conn->query("SELECT username FROM users WHERE user_id = $user_id LIMIT 1")->fetch_assoc();
+                $customer_name = $u_row['username'] ?? 'User#' . $user_id;
+            }
+
+            // 1. Chuyển tài khoản sang trạng thái MAINTENANCE nếu có tài khoản
+            if ($rep_acc_id) {
+                $esc_issue = $conn->real_escape_string($rep_issue);
+                $conn->query("UPDATE game_accounts SET status = 'MAINTENANCE', notes = CONCAT(COALESCE(notes, ''), ' | Khách @$customer_name báo lỗi: $esc_issue') WHERE account_id = $rep_acc_id");
+                if (function_exists('log_account_allocation')) {
+                    log_account_allocation($conn, $rep_acc_id, $rep_borrow_id, $user_id, 'MAINTENANCE_TRIGGERED', "Báo lỗi từ khách: $rep_issue", 'USER');
+                }
+            }
+
+            // 2. Tạo Support Ticket chính thức và gửi Notification cho Admin + Super Admin
+            $ticket_title = "Báo lỗi tài khoản: {$game_title} (Đơn #{$rep_borrow_id})";
+            $ticket_body = "Khách hàng @{$customer_name} báo sự cố tài khoản đơn thuê #{$rep_borrow_id} (Game: {$game_title}, Tài khoản: {$acc_user}):\n" . $rep_issue;
+            
+            $ticket_res = create_support_ticket(
+                $conn,
+                $user_id,
+                'account',
+                $ticket_title,
+                $ticket_body,
+                'high',
+                $rep_borrow_id,
+                $game_id
+            );
+
+            if ($ticket_res['success']) {
+                $report_ticket_id = intval($ticket_res['ticket_id']);
+                $ticket_code = $ticket_res['ticket_code'];
+
+                $report_message = "Đã gửi báo lỗi thành công! Đội ngũ hỗ trợ kỹ thuật 24/7 sẽ kiểm tra và cấp đổi tài khoản mới cho bạn sớm nhất.";
+            } else {
+                $report_error = "Lỗi tạo yêu cầu hỗ trợ: " . ($ticket_res['error'] ?? 'Không rõ nguyên nhân');
+            }
         }
     }
 }
@@ -157,7 +221,26 @@ require_once __DIR__ . '/includes/header.php';
         <div class="alert alert-dismissible fade show mb-4 text-white" style="background: rgba(16,185,129,0.15); border: 1px solid #10b981;" role="alert">
             <div class="d-flex align-items-center">
                 <i class="bi bi-check-circle-fill text-success fs-5 me-2"></i>
-                <div><?php echo htmlspecialchars($report_message); ?></div>
+                <div>
+                    <div><?php echo $report_message; ?></div>
+                    <?php if (!empty($report_ticket_id)): ?>
+                        <div class="mt-2 small">
+                            <a href="support_detail.php?id=<?php echo $report_ticket_id; ?>" class="btn btn-sm btn-outline-info text-white fw-bold py-1 px-3">
+                                <i class="bi bi-headset me-1"></i> Theo dõi xử lý tại Yêu cầu #<?php echo $report_ticket_id; ?> &rarr;
+                            </a>
+                        </div>
+                    <?php endif; ?>
+                </div>
+            </div>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    <?php endif; ?>
+
+    <?php if ($report_error): ?>
+        <div class="alert alert-dismissible fade show mb-4 text-white" style="background: rgba(239,68,68,0.15); border: 1px solid #ef4444;" role="alert">
+            <div class="d-flex align-items-center">
+                <i class="bi bi-exclamation-triangle-fill text-danger fs-5 me-2"></i>
+                <div><?php echo htmlspecialchars($report_error); ?></div>
             </div>
             <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>

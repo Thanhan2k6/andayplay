@@ -2,9 +2,8 @@
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
-require_once __DIR__ . '/includes/connect.php';
-require_admin();
-require_once __DIR__ . '/includes/header.php';
+$page_title = "Thêm Tựa Game Mới";
+require_once __DIR__ . '/includes/admin_header.php';
 
 // Xử lý lưu game và upload ảnh
 if(isset($_POST['btn_add'])) {
@@ -235,4 +234,4 @@ function togglePricingSection() {
 }
 </script>
 
-<?php include 'includes/footer.php'; ?>
+<?php require_once __DIR__ . '/includes/admin_footer.php'; ?>

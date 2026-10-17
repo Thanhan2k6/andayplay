@@ -141,7 +141,8 @@ if ($res_users && $res_users->num_rows > 0) {
     }
 }
 
-require_once __DIR__ . '/includes/header.php';
+$page_title = "Quản Trị Phân Quyền & Vai Trò";
+require_once __DIR__ . '/includes/admin_header.php';
 ?>
 
 <div class="container-fluid px-lg-5 py-4 text-white">
@@ -379,5 +380,5 @@ require_once __DIR__ . '/includes/header.php';
     </div>
 </div>
 
-<?php require_once __DIR__ . '/includes/footer.php'; ?>
+<?php require_once __DIR__ . '/includes/admin_footer.php'; ?>
 

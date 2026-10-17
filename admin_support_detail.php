@@ -165,7 +165,8 @@ if (!empty($ticket['account_password_encrypted'])) {
     }
 }
 
-require_once __DIR__ . '/includes/header.php';
+$page_title = "Chi Tiết Yêu Cầu Hỗ Trợ " . ($ticket['ticket_code'] ?? '');
+require_once __DIR__ . '/includes/admin_header.php';
 ?>
 
 <div class="container-fluid px-lg-5 py-4 text-white">
@@ -496,5 +497,5 @@ require_once __DIR__ . '/includes/header.php';
     });
 </script>
 
-<?php require_once __DIR__ . '/includes/footer.php'; ?>
+<?php require_once __DIR__ . '/includes/admin_footer.php'; ?>
 

@@ -2,9 +2,8 @@
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
-require_once __DIR__ . '/includes/connect.php';
-require_admin();
-require_once __DIR__ . '/includes/header.php';
+$page_title = "Chỉnh Sửa Thông Tin Game";
+require_once __DIR__ . '/includes/admin_header.php';
 
 if(!isset($_GET['id'])) {
     echo "<script>window.location='admin_games.php';</script>";
@@ -266,4 +265,4 @@ function toggleEditPricing() {
 }
 </script>
 
-<?php include 'includes/footer.php'; ?>
+<?php require_once __DIR__ . '/includes/admin_footer.php'; ?>
