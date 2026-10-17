@@ -79,8 +79,12 @@ $page_file_name = basename($_SERVER['PHP_SELF']);
             font-family: 'Plus Jakarta Sans', sans-serif;
             margin: 0;
             padding: 0;
+            display: block !important;
             min-height: 100vh;
-            overflow-x: hidden;
+            min-height: 100dvh;
+            height: auto !important;
+            overflow-x: hidden !important;
+            overflow-y: auto !important;
         }
 
         .admin-layout-wrapper {
@@ -234,10 +238,12 @@ $page_file_name = basename($_SERVER['PHP_SELF']);
         .admin-main-container {
             flex-grow: 1;
             margin-left: var(--admin-sidebar-width);
+            width: calc(100% - var(--admin-sidebar-width));
             min-width: 0;
             display: flex;
             flex-direction: column;
             min-height: 100vh;
+            min-height: 100dvh;
             background-color: var(--admin-bg-base);
         }
 

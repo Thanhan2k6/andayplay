@@ -348,18 +348,24 @@ if (isset($_SESSION['user_id'])) {
                 openBtn.addEventListener('click', function() {
                     sidebar.classList.add('active');
                     overlay.classList.add('active');
-                    document.body.style.overflow = 'hidden';
+                    document.body.classList.add('lock-scroll');
                 });
             }
 
             function closeMenu() {
                 if (sidebar) sidebar.classList.remove('active');
                 if (overlay) overlay.classList.remove('active');
-                document.body.style.overflow = '';
+                document.body.classList.remove('lock-scroll');
             }
 
             if (closeBtn) closeBtn.addEventListener('click', closeMenu);
             if (overlay) overlay.addEventListener('click', closeMenu);
+
+            window.addEventListener('resize', function() {
+                if (window.innerWidth >= 992) {
+                    closeMenu();
+                }
+            });
 
             // ESC key closes sidebar
             document.addEventListener('keydown', function(e) {

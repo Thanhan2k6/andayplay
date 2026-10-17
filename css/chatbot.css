@@ -10,7 +10,18 @@
     right: 28px !important;
     z-index: 2147483647 !important;
     font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+    pointer-events: none !important;
+}
+
+.anplay-chat-toggle,
+.anplay-chat-box.active {
     pointer-events: auto !important;
+}
+
+.anplay-chat-box:not(.active) {
+    display: none !important;
+    pointer-events: none !important;
+    visibility: hidden !important;
 }
 
 /* 2. FLOATING TRIGGER BUTTON */
@@ -568,7 +579,7 @@
         display: none !important;
     }
 
-    .anplay-chat-box {
+    .anplay-chat-box.active {
         position: fixed !important;
         top: 0 !important;
         bottom: 0 !important;

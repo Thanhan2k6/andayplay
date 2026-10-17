@@ -33,17 +33,24 @@
         if (open) {
             sidebar.classList.add('show');
             backdrop.classList.add('show');
-            document.body.style.overflow = 'hidden';
+            document.body.classList.add('lock-scroll');
         } else {
             sidebar.classList.remove('show');
             backdrop.classList.remove('show');
-            document.body.style.overflow = '';
+            document.body.classList.remove('lock-scroll');
         }
     }
 
     // Đóng drawer khi nhấn phím Escape
     document.addEventListener('keydown', function(e) {
         if (e.key === 'Escape') {
+            toggleAdminSidebar(false);
+        }
+    });
+
+    // Tự động đóng drawer và mở khóa scroll khi resize lên màn hình lớn
+    window.addEventListener('resize', function() {
+        if (window.innerWidth >= 992) {
             toggleAdminSidebar(false);
         }
     });

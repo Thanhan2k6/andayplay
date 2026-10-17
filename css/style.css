@@ -68,6 +68,8 @@
 
 html {
     -webkit-text-size-adjust: 100%;
+    overflow-x: hidden;
+    scroll-behavior: smooth;
 }
 
 body {
@@ -79,13 +81,20 @@ body {
     background-color: var(--bg-base) !important;
     color: var(--text-main) !important;
     display: flex;
+    min-height: 100vh;
     min-height: 100dvh;
-    height: 100dvh;
-    overflow: hidden;
+    overflow-x: hidden;
+    overflow-y: auto;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     font-size: 16px;
     line-height: 1.5;
+}
+
+/* Scroll lock utility for mobile modals and drawers */
+body.lock-scroll {
+    overflow: hidden !important;
+    touch-action: none;
 }
 
 h1, h2, h3, h4, h5, h6 {
@@ -121,7 +130,12 @@ p, span, div {
 .sidebar {
     width: 265px;
     background-color: #0c0e14;
+    height: 100vh;
     height: 100dvh;
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
     flex-shrink: 0;
     overflow-y: auto;
     overflow-x: hidden;
@@ -234,10 +248,12 @@ p, span, div {
    ========================================================= */
 .main-wrapper {
     flex: 1;
+    margin-left: 265px;
+    width: calc(100% - 265px);
     display: flex;
     flex-direction: column;
-    height: 100dvh;
-    overflow-x: hidden;
+    min-height: 100vh;
+    min-height: 100dvh;
     background-color: var(--bg-base);
     min-width: 0;
 }
@@ -408,11 +424,9 @@ p, span, div {
    ========================================================= */
 .content-scroll {
     flex: 1;
-    overflow-y: auto;
-    overflow-x: hidden;
     padding: 24px 28px;
-    /* Add padding for mobile bottom nav */
     padding-bottom: 24px;
+    min-width: 0;
 }
 
 .content-scroll::-webkit-scrollbar {
@@ -1329,6 +1343,21 @@ p, span, div {
    RESPONSIVE DESIGN — TABLET (768–991px)
    ========================================================= */
 @media (max-width: 991.98px) {
+    body {
+        display: block;
+        min-height: 100vh;
+        min-height: 100dvh;
+        height: auto;
+    }
+
+    .main-wrapper {
+        margin-left: 0 !important;
+        width: 100% !important;
+        min-height: 100vh;
+        min-height: 100dvh;
+        height: auto;
+    }
+
     .sidebar {
         position: fixed !important;
         top: 0;
@@ -1386,14 +1415,18 @@ p, span, div {
     body {
         display: block;
         height: auto;
+        min-height: 100vh;
         min-height: 100dvh;
-        overflow: auto;
         overflow-x: hidden;
+        overflow-y: auto;
     }
 
     /* Main wrapper becomes block */
     .main-wrapper {
+        margin-left: 0 !important;
+        width: 100% !important;
         height: auto;
+        min-height: 100vh;
         min-height: 100dvh;
         display: flex;
         flex-direction: column;
@@ -1733,6 +1766,18 @@ p, span, div {
     z-index: 100050;
     font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     user-select: none;
+    pointer-events: none !important;
+}
+
+.anplay-chat-toggle,
+.anplay-chat-box.active {
+    pointer-events: auto !important;
+}
+
+.anplay-chat-box:not(.active) {
+    display: none !important;
+    pointer-events: none !important;
+    visibility: hidden !important;
 }
 
 .anplay-chat-toggle {
@@ -2291,7 +2336,7 @@ p, span, div {
         display: none !important;
     }
 
-    .anplay-chat-box {
+    .anplay-chat-box.active {
         position: fixed;
         top: 0;
         bottom: 0;
