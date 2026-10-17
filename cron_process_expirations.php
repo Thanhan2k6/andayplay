@@ -9,7 +9,7 @@
 if (php_sapi_name() !== 'cli' && (!isset($_GET['secret_token']) || $_GET['secret_token'] !== 'ANPLAY_CRON_2026')) {
     // Nếu gọi từ web mà không có secret_token thì kiểm tra xem có phải Admin login không
     if (session_status() === PHP_SESSION_NONE) { session_start(); }
-    if (!isset($_SESSION['role']) || $_SESSION['role'] != 1) {
+    if (!isset($_SESSION['role']) || !in_array(intval($_SESSION['role']), [1, 2])) {
         http_response_code(403);
         die("Truy cập từ chối! Chỉ chạy bằng CLI hoặc quyền Quản trị.");
     }
@@ -111,8 +111,14 @@ if ($res && $res->num_rows > 0) {
             $conn->query("UPDATE borrow_records SET revoke_status = 'failed', error_message = '" . $conn->real_escape_string($e->getMessage()) . "' WHERE borrow_id = $borrow_id");
         }
     }
-} else {
-    echo "  -> Không có đơn thuê nào quá hạn cần xử lý.\n";
+}
+
+// 2. Kiểm tra và gửi cảnh báo các đơn thuê sắp hết hạn trong 24h tới
+if (function_exists('check_and_notify_expiring_rentals')) {
+    $warn_count = check_and_notify_expiring_rentals($conn);
+    if ($warn_count > 0) {
+        echo "  -> Đã gửi $warn_count thông báo cảnh báo đơn sắp hết hạn trong 24h tới.\n";
+    }
 }
 
 echo "[$log_time] Hoàn thành: Đã xử lý $count đơn thuê.\n";

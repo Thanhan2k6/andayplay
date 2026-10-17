@@ -83,6 +83,18 @@ function ensure_notification_and_support_schema($conn) {
               INDEX `idx_att_message` (`message_id`)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;");
         }
+
+        // Đảm bảo cột assigned_to trong bảng support_tickets
+        $col_assigned = $conn->query("SHOW COLUMNS FROM support_tickets LIKE 'assigned_to'");
+        if ($col_assigned && $col_assigned->num_rows === 0) {
+            $conn->query("ALTER TABLE support_tickets ADD COLUMN assigned_to INT DEFAULT NULL AFTER game_id, ADD INDEX idx_st_assigned (assigned_to)");
+        }
+
+        // Đảm bảo cột status trong bảng users
+        $col_u_status = $conn->query("SHOW COLUMNS FROM users LIKE 'status'");
+        if ($col_u_status && $col_u_status->num_rows === 0) {
+            $conn->query("ALTER TABLE users ADD COLUMN status ENUM('active','suspended','banned') NOT NULL DEFAULT 'active' AFTER role");
+        }
     } catch (Throwable $e) {}
 }
 
@@ -141,17 +153,50 @@ function create_notification($conn, $user_id, $type, $title, $message, $link = n
 }
 
 /**
- * Gửi thông báo tới TẤT CẢ Quản Trị Viên (role = 1)
+ * Gửi thông báo tới Quản Trị Viên hỗ trợ (role = 1) và Quản Trị Cấp Cao (role = 2)
+ * Có hỗ trợ loại trừ người gửi và gán per-user related_id để tránh chặn chéo
  */
-function notify_all_admins($conn, $type, $title, $message, $link = null, $related_id = null, $dedup_window_minutes = 15) {
+function notify_all_admins($conn, $type, $title, $message, $link = null, $related_id = null, $dedup_window_minutes = 15, $exclude_user_id = 0) {
     if (!$conn) return 0;
     $count = 0;
+    $exclude_user_id = intval($exclude_user_id);
     try {
-        $admins = $conn->query("SELECT user_id FROM users WHERE role = 1");
+        $where = "WHERE role IN (1, 2)";
+        if ($exclude_user_id > 0) {
+            $where .= " AND user_id != $exclude_user_id";
+        }
+        $admins = $conn->query("SELECT user_id, role FROM users $where");
         if ($admins && $admins->num_rows > 0) {
             while ($adm = $admins->fetch_assoc()) {
                 $adm_id = intval($adm['user_id']);
-                if (create_notification($conn, $adm_id, $type, $title, $message, $link, $related_id, $dedup_window_minutes)) {
+                $user_related_id = ($related_id !== null) ? "{$related_id}-U{$adm_id}" : null;
+                if (create_notification($conn, $adm_id, $type, $title, $message, $link, $user_related_id, $dedup_window_minutes)) {
+                    $count++;
+                }
+            }
+        }
+    } catch (Throwable $e) {}
+    return $count;
+}
+
+/**
+ * Gửi thông báo chỉ cho SUPER_ADMIN (role = 2)
+ */
+function notify_super_admins($conn, $type, $title, $message, $link = null, $related_id = null, $dedup_window_minutes = 15, $exclude_user_id = 0) {
+    if (!$conn) return 0;
+    $count = 0;
+    $exclude_user_id = intval($exclude_user_id);
+    try {
+        $where = "WHERE role = 2";
+        if ($exclude_user_id > 0) {
+            $where .= " AND user_id != $exclude_user_id";
+        }
+        $admins = $conn->query("SELECT user_id FROM users $where");
+        if ($admins && $admins->num_rows > 0) {
+            while ($adm = $admins->fetch_assoc()) {
+                $adm_id = intval($adm['user_id']);
+                $user_related_id = ($related_id !== null) ? "{$related_id}-U{$adm_id}" : null;
+                if (create_notification($conn, $adm_id, $type, $title, $message, $link, $user_related_id, $dedup_window_minutes)) {
                     $count++;
                 }
             }
@@ -162,7 +207,7 @@ function notify_all_admins($conn, $type, $title, $message, $link = null, $relate
 
 /**
  * Gửi thông báo broadcast cho nhóm đối tượng
- * $target_group: 'all' (tất cả user), 'customers' (role=0), 'vip' (role=0), 'admins' (role=1)
+ * $target_group: 'all' (tất cả user), 'customers' (role=0), 'vip' (role=0), 'admins' (role IN (1, 2))
  */
 function broadcast_notification($conn, $title, $message, $type = 'promotion', $link = null, $target_group = 'all') {
     if (!$conn) return 0;
@@ -170,7 +215,7 @@ function broadcast_notification($conn, $title, $message, $type = 'promotion', $l
     if ($target_group === 'customers' || $target_group === 'vip') {
         $where = "WHERE role = 0";
     } elseif ($target_group === 'admins') {
-        $where = "WHERE role = 1";
+        $where = "WHERE role IN (1, 2)";
     }
 
     $count = 0;
@@ -231,9 +276,17 @@ function get_user_notifications($conn, $user_id, $filter_type = 'all', $unread_o
     }
 
     if ($filter_type !== 'all' && !empty($filter_type)) {
-        $conditions[] = "type = ?";
-        $types .= "s";
-        $params[] = $filter_type;
+        if ($filter_type === 'rental') {
+            $conditions[] = "type IN ('rental', 'order')";
+        } elseif ($filter_type === 'support') {
+            $conditions[] = "type IN ('support', 'complaint')";
+        } elseif ($filter_type === 'system') {
+            $conditions[] = "type IN ('system', 'security', 'account')";
+        } else {
+            $conditions[] = "type = ?";
+            $types .= "s";
+            $params[] = $filter_type;
+        }
     }
 
     $where_sql = implode(" AND ", $conditions);
@@ -268,6 +321,18 @@ function mark_notification_read($conn, $notification_id, $user_id) {
     $notification_id = intval($notification_id);
     $user_id = intval($user_id);
     try {
+        // Kiểm tra quyền sở hữu IDOR
+        $chk = $conn->prepare("SELECT id FROM notifications WHERE id = ? AND user_id = ? LIMIT 1");
+        if ($chk) {
+            $chk->bind_param("ii", $notification_id, $user_id);
+            $chk->execute();
+            $res = $chk->get_result();
+            $exists = ($res && $res->num_rows > 0);
+            $chk->close();
+            if (!$exists) {
+                return false;
+            }
+        }
         $stmt = $conn->prepare("UPDATE notifications SET is_read = 1 WHERE id = ? AND user_id = ?");
         if ($stmt) {
             $stmt->bind_param("ii", $notification_id, $user_id);
@@ -319,6 +384,140 @@ function format_time_ago($datetime) {
 }
 
 /**
+ * Xóa một thông báo (có bảo vệ chống IDOR)
+ */
+function delete_notification($conn, $notification_id, $user_id) {
+    if (!$conn) return false;
+    $notification_id = intval($notification_id);
+    $user_id = intval($user_id);
+    try {
+        // Kiểm tra quyền sở hữu IDOR
+        $chk = $conn->prepare("SELECT id FROM notifications WHERE id = ? AND user_id = ? LIMIT 1");
+        if ($chk) {
+            $chk->bind_param("ii", $notification_id, $user_id);
+            $chk->execute();
+            $res = $chk->get_result();
+            $exists = ($res && $res->num_rows > 0);
+            $chk->close();
+            if (!$exists) {
+                return false;
+            }
+        }
+        $stmt = $conn->prepare("DELETE FROM notifications WHERE id = ? AND user_id = ?");
+        if ($stmt) {
+            $stmt->bind_param("ii", $notification_id, $user_id);
+            $success = $stmt->execute();
+            $stmt->close();
+            return $success;
+        }
+    } catch (Throwable $e) {}
+    return false;
+}
+
+/**
+ * Xóa danh sách thông báo của người dùng (tùy chọn chỉ xóa những thông báo đã đọc)
+ */
+function delete_user_notifications($conn, $user_id, $only_read = false) {
+    if (!$conn) return false;
+    $user_id = intval($user_id);
+    $where = "WHERE user_id = ?";
+    if ($only_read) {
+        $where .= " AND is_read = 1";
+    }
+    try {
+        $stmt = $conn->prepare("DELETE FROM notifications $where");
+        if ($stmt) {
+            $stmt->bind_param("i", $user_id);
+            $success = $stmt->execute();
+            $stmt->close();
+            return $success;
+        }
+    } catch (Throwable $e) {}
+    return false;
+}
+
+/**
+ * Gửi thông báo tới các Quản Trị Viên sở hữu quyền hạn cụ thể (và luôn gửi tới Super Admin)
+ */
+function notify_admins_with_permission($conn, $permission_key, $type, $title, $message, $link = null, $related_id = null, $dedup_window_minutes = 15, $exclude_user_id = 0) {
+    if (!$conn) return 0;
+    $count = 0;
+    $exclude_user_id = intval($exclude_user_id);
+    try {
+        $where = "WHERE role IN (1, 2) AND status = 'active'";
+        if ($exclude_user_id > 0) {
+            $where .= " AND user_id != $exclude_user_id";
+        }
+        $admins = $conn->query("SELECT user_id, role FROM users $where");
+        if ($admins && $admins->num_rows > 0) {
+            while ($adm = $admins->fetch_assoc()) {
+                $adm_id = intval($adm['user_id']);
+                $adm_role = intval($adm['role']);
+                
+                // Super Admin luôn nhận mọi thông báo quản trị
+                // Admin thường chỉ nhận nếu có quyền cụ thể hoặc quyền mặc định
+                $can_receive = ($adm_role === ROLE_SUPER_ADMIN);
+                if (!$can_receive && function_exists('has_user_permission')) {
+                    $can_receive = has_user_permission($conn, $adm_id, $permission_key);
+                }
+
+                if ($can_receive) {
+                    $user_related_id = ($related_id !== null) ? "{$related_id}-U{$adm_id}" : null;
+                    if (create_notification($conn, $adm_id, $type, $title, $message, $link, $user_related_id, $dedup_window_minutes)) {
+                        $count++;
+                    }
+                }
+            }
+        }
+    } catch (Throwable $e) {}
+    return $count;
+}
+
+/**
+ * Tự động kiểm tra và cảnh báo các đơn thuê sắp hết hạn trong vòng 24 giờ tới
+ */
+function check_and_notify_expiring_rentals($conn, $user_id = null) {
+    if (!$conn) return 0;
+    $count = 0;
+    $where = "WHERE br.status = 'active' AND br.due_date > NOW() AND br.due_date <= DATE_ADD(NOW(), INTERVAL 24 HOUR)";
+    if ($user_id !== null) {
+        $uid = intval($user_id);
+        $where .= " AND br.user_id = $uid";
+    }
+
+    try {
+        $sql = "SELECT br.borrow_id, br.user_id, br.due_date, g.title 
+                FROM borrow_records br 
+                JOIN games g ON br.game_id = g.game_id 
+                $where";
+        $res = $conn->query($sql);
+        if ($res && $res->num_rows > 0) {
+            while ($row = $res->fetch_assoc()) {
+                $b_id = intval($row['borrow_id']);
+                $u_id = intval($row['user_id']);
+                $due_fmt = date('d/m/Y H:i', strtotime($row['due_date']));
+                $g_title = $row['title'];
+
+                // Deduplication window 1440 phút (24h) để chỉ thông báo 1 lần
+                if (create_notification(
+                    $conn,
+                    $u_id,
+                    'rental',
+                    "Gói thuê game sắp hết hạn ⚠️",
+                    "Đơn thuê #{$b_id} ({$g_title}) sẽ hết hạn vào lúc {$due_fmt}. Bạn hãy gia hạn sớm để tránh gián đoạn tiến trình chơi game nhé!",
+                    "my_library.php",
+                    "EXP-SOON-{$b_id}",
+                    1440
+                )) {
+                    $count++;
+                }
+            }
+        }
+    } catch (Throwable $e) {}
+    return $count;
+}
+
+/**
  * Lấy Icon và màu sắc tương ứng với từng loại thông báo
  */
 function get_notification_icon_info($type) {
@@ -332,7 +531,13 @@ function get_notification_icon_info($type) {
         case 'promotion':
             return ['icon' => 'bi-gift-fill', 'color' => '#f59e0b', 'bg' => 'rgba(245,158,11,0.15)', 'label' => 'Khuyến mãi'];
         case 'account':
-            return ['icon' => 'bi-shield-lock-fill', 'color' => '#3b82f6', 'bg' => 'rgba(59,130,246,0.15)', 'label' => 'Tài khoản'];
+            return ['icon' => 'bi-person-badge-fill', 'color' => '#3b82f6', 'bg' => 'rgba(59,130,246,0.15)', 'label' => 'Tài khoản'];
+        case 'security':
+            return ['icon' => 'bi-shield-exclamation', 'color' => '#f43f5e', 'bg' => 'rgba(244,63,94,0.15)', 'label' => 'Bảo mật'];
+        case 'complaint':
+            return ['icon' => 'bi-exclamation-octagon-fill', 'color' => '#ef4444', 'bg' => 'rgba(239,68,68,0.15)', 'label' => 'Khiếu nại'];
+        case 'order':
+            return ['icon' => 'bi-receipt-cutoff', 'color' => '#10b981', 'bg' => 'rgba(16,185,129,0.15)', 'label' => 'Đơn hàng'];
         case 'game':
             return ['icon' => 'bi-joystick', 'color' => '#ec4899', 'bg' => 'rgba(236,72,153,0.15)', 'label' => 'Game Store'];
         case 'system':

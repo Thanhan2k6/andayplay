@@ -16,7 +16,7 @@ if (!isset($_SESSION['user_id'])) {
 require_once __DIR__ . '/includes/connect.php';
 
 $user_id = intval($_SESSION['user_id']);
-$is_admin = (isset($_SESSION['role']) && $_SESSION['role'] == 1);
+$is_admin = (isset($_SESSION['role']) && in_array(intval($_SESSION['role']), [1, 2]));
 $ticket_id = isset($_GET['id']) ? intval($_GET['id']) : 0;
 
 if ($ticket_id <= 0) {

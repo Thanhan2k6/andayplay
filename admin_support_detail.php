@@ -10,11 +10,8 @@ if (session_status() === PHP_SESSION_NONE) {
 
 require_once __DIR__ . '/includes/connect.php';
 
-// Kiểm tra quyền Quản trị viên
-if (!isset($_SESSION['user_id']) || $_SESSION['role'] != 1) {
-    header("Location: index.php");
-    exit();
-}
+// Kiểm tra quyền Quản trị viên (ADMIN hoặc SUPER_ADMIN)
+require_admin();
 
 $admin_id = intval($_SESSION['user_id']);
 $ticket_id = isset($_GET['id']) ? intval($_GET['id']) : 0;
@@ -33,7 +30,7 @@ $csrf_token = $_SESSION['csrf_token'];
 $success_msg = "";
 $error_msg = "";
 
-// 1. XỬ LÝ CẬP NHẬT TRẠNG THÁI / MỨC ĐỘ ƯU TIÊN
+// 1. XỬ LÝ CẬP NHẬT TRẠNG THÁI / MỨC ĐỘ ƯU TIÊN / PHÂN CÔNG ADMIN
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['btn_update_ticket_meta'])) {
     if (!verify_csrf_token($_POST['csrf_token'] ?? '')) {
         $error_msg = "Mã xác thực bảo mật không hợp lệ.";
@@ -41,12 +38,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['btn_update_ticket_met
         $new_status = trim($_POST['status'] ?? '');
         $new_priority = trim($_POST['priority'] ?? '');
         $res_note = trim($_POST['resolution_note'] ?? '');
+        $new_assigned_to = isset($_POST['assigned_to']) ? intval($_POST['assigned_to']) : 0;
 
         if (!empty($new_status)) {
             update_ticket_status($conn, $ticket_id, $new_status, $admin_id, true, $res_note);
         }
         if (!empty($new_priority) && in_array($new_priority, ['low', 'normal', 'high', 'urgent'])) {
             $conn->query("UPDATE support_tickets SET priority = '$new_priority', updated_at = NOW() WHERE ticket_id = $ticket_id");
+        }
+        if ($new_assigned_to > 0) {
+            assign_support_ticket($conn, $ticket_id, $new_assigned_to, $admin_id);
         }
         $success_msg = "Cập nhật thông tin yêu cầu thành công!";
     }
@@ -360,6 +361,23 @@ require_once __DIR__ . '/includes/header.php';
                             <option value="normal" <?php echo ($ticket['priority'] === 'normal') ? 'selected' : ''; ?>>🔵 Bình thường</option>
                             <option value="high" <?php echo ($ticket['priority'] === 'high') ? 'selected' : ''; ?>>🟠 Ưu tiên cao</option>
                             <option value="urgent" <?php echo ($ticket['priority'] === 'urgent') ? 'selected' : ''; ?>>🔴 Khẩn cấp</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label text-secondary small fw-bold">Admin Phụ Trách</label>
+                        <select name="assigned_to" class="form-select form-control-gaming">
+                            <option value="0">-- Chưa phân công --</option>
+                            <?php
+                            $q_adms = $conn->query("SELECT user_id, username, role FROM users WHERE role IN (1, 2) ORDER BY role DESC, username ASC");
+                            if ($q_adms) {
+                                while ($adm = $q_adms->fetch_assoc()) {
+                                    $rb = ($adm['role'] == 2) ? '[Super Admin]' : '[Admin]';
+                                    $sel = (isset($ticket['assigned_to']) && $ticket['assigned_to'] == $adm['user_id']) ? 'selected' : '';
+                                    echo "<option value='{$adm['user_id']}' $sel>@{$adm['username']} $rb</option>";
+                                }
+                            }
+                            ?>
                         </select>
                     </div>
 

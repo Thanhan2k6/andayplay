@@ -2,14 +2,15 @@
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
-require_once __DIR__ . '/includes/header.php';
 
 if (!isset($_SESSION['user_id'])) {
-    echo "<script>alert('Vui lòng đăng nhập để xem Game của bạn!'); window.location='login.php';</script>";
+    header("Location: login.php");
     exit();
 }
 
-$user_id = $_SESSION['user_id'];
+require_once __DIR__ . '/includes/connect.php';
+$user_id = intval($_SESSION['user_id']);
+$current_page = 'my_library.php';
 
 // Xử lý báo lỗi tài khoản
 $report_message = "";
@@ -81,6 +82,7 @@ if ($result && $result->num_rows > 0) {
         $rows_data[] = $r;
     }
 }
+require_once __DIR__ . '/includes/header.php';
 ?>
 
 <div class="container py-4 my-2">

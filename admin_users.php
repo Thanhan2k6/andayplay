@@ -2,38 +2,96 @@
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
-// Import file header (Đã bao gồm kết nối CSDL và Sidebar)
-require_once __DIR__ . '/includes/header.php';
+require_once __DIR__ . '/includes/connect.php';
 
-// Kiểm tra quyền Admin (Chỉ role = 1 mới được vào)
-if (!isset($_SESSION['user_id']) || $_SESSION['role'] != 1) {
-    echo "<script>
-            alert('Cảnh báo: Bạn không có quyền truy cập khu vực này!');
-            window.location='index.php';
-          </script>";
-    exit();
-}
+// BẢO VỆ NGHIÊM NGẶT SERVER-SIDE: Tối thiểu phải là ADMIN (role 1 hoặc 2) mới được truy cập
+require_admin();
 
-// 1. XỬ LÝ NÂNG CẤP / GIÁNG CHỨC ADMIN
-if (isset($_GET['action']) && isset($_GET['id'])) {
-    $target_id = intval($_GET['id']);
-    
-    // Không cho phép Admin tự đổi quyền hoặc xóa chính mình
-    if ($target_id == $_SESSION['user_id']) {
-        echo "<script>alert('Lỗi: Bạn không thể tự thay đổi quyền của chính mình!'); window.location='admin_users.php';</script>";
-    } else {
-        if ($_GET['action'] == 'make_admin') {
-            $conn->query("UPDATE users SET role = 1 WHERE user_id = $target_id");
-            echo "<script>alert('Đã cấp quyền Quản trị viên cho tài khoản này!'); window.location='admin_users.php';</script>";
-        } elseif ($_GET['action'] == 'remove_admin') {
-            $conn->query("UPDATE users SET role = 0 WHERE user_id = $target_id");
-            echo "<script>alert('Đã gỡ quyền Quản trị viên của tài khoản này!'); window.location='admin_users.php';</script>";
-        } elseif ($_GET['action'] == 'delete') {
-            $conn->query("DELETE FROM users WHERE user_id = $target_id");
-            echo "<script>alert('Đã xóa tài khoản thành công!'); window.location='admin_users.php';</script>";
+$current_user_id = intval($_SESSION['user_id']);
+$actor_is_super = is_super_admin();
+
+// 1. XỬ LÝ NÂNG CẤP / GIÁNG CHỨC / XÓA USER (SERVER-SIDE AUTHORIZATION)
+$action = $_GET['action'] ?? ($_POST['action'] ?? '');
+$target_id = intval($_GET['id'] ?? ($_POST['id'] ?? 0));
+
+if (!empty($action) && $target_id > 0) {
+    // KIỂM SOÁT PHÂN QUYỀN CHẶT CHẼ:
+    // ADMIN (role 1) TUYỆT ĐỐI KHÔNG ĐƯỢC:
+    // - Quản lý, tạo, hạ quyền hoặc xóa SUPER_ADMIN (role 2)
+    // - Quản lý, hạ quyền hoặc xóa ADMIN (role 1)
+    // - Thay đổi role của bất kỳ ai (bao gồm tự phong Super Admin)
+    if (!$actor_is_super) {
+        if (in_array($action, ['make_super_admin', 'make_admin', 'remove_admin'])) {
+            render_403("Tài khoản Quản Trị Viên (Admin) không có quyền thay đổi role hoặc tạo Admin/Super Admin.");
         }
     }
+
+    // Không cho phép tự đổi quyền hoặc xóa chính mình
+    if ($target_id === $current_user_id) {
+        render_403("Bạn không thể tự thay đổi quyền hoặc xóa chính tài khoản của mình!");
+    }
+
+    $q_target = $conn->query("SELECT user_id, username, role FROM users WHERE user_id = $target_id");
+    if (!$q_target || $q_target->num_rows === 0) {
+        echo "<script>alert('Lỗi: Không tìm thấy người dùng!'); window.location='admin_users.php';</script>";
+        exit();
+    }
+    $target_user = $q_target->fetch_assoc();
+    $target_role = intval($target_user['role']);
+    $target_name = $target_user['username'];
+
+    if (!$actor_is_super) {
+        if ($target_role === ROLE_SUPER_ADMIN) {
+            render_403("Tài khoản Quản Trị Viên (Admin) không có quyền can thiệp vào tài khoản Super Admin.");
+        }
+        if ($target_role === ROLE_ADMIN) {
+            render_403("Tài khoản Quản Trị Viên (Admin) không có quyền can thiệp vào tài khoản Admin khác.");
+        }
+    }
+
+    // THỰC THI CHO SUPER ADMIN (hoặc Admin quản lý Customer hợp lệ)
+    if ($action === 'make_admin') {
+        if (!$actor_is_super) {
+            render_403("Chỉ Super Admin mới có quyền cấp quyền Admin.");
+        }
+        $conn->query("UPDATE users SET role = 1 WHERE user_id = $target_id");
+        write_audit_log($conn, $current_user_id, 'MAKE_ADMIN', 'user', $target_id, ['username' => $target_name]);
+        echo "<script>alert('Đã cấp quyền Quản trị viên (Admin) cho @{$target_name}!'); window.location='admin_users.php';</script>";
+        exit();
+    } elseif ($action === 'make_super_admin') {
+        if (!$actor_is_super) {
+            render_403("Chỉ Super Admin mới có quyền nâng cấp Super Admin.");
+        }
+        $conn->query("UPDATE users SET role = 2 WHERE user_id = $target_id");
+        write_audit_log($conn, $current_user_id, 'MAKE_SUPER_ADMIN', 'user', $target_id, ['username' => $target_name]);
+        echo "<script>alert('Đã cấp quyền Super Admin cho @{$target_name}!'); window.location='admin_users.php';</script>";
+        exit();
+    } elseif ($action === 'remove_admin') {
+        if (!$actor_is_super) {
+            render_403("Chỉ Super Admin mới có quyền hạ quyền Quản trị viên.");
+        }
+        $conn->query("UPDATE users SET role = 0 WHERE user_id = $target_id");
+        write_audit_log($conn, $current_user_id, 'REMOVE_ADMIN', 'user', $target_id, ['username' => $target_name]);
+        echo "<script>alert('Đã chuyển @{$target_name} về Game Thủ thông thường!'); window.location='admin_users.php';</script>";
+        exit();
+    } elseif ($action === 'delete') {
+        if ($target_role === ROLE_SUPER_ADMIN) {
+            render_403("Không thể xóa tài khoản Super Admin!");
+        }
+        if ($target_role === ROLE_ADMIN && !$actor_is_super) {
+            render_403("Admin không có quyền xóa tài khoản Admin khác!");
+        }
+        $conn->query("DELETE FROM user_permissions WHERE user_id = $target_id");
+        $conn->query("DELETE FROM notifications WHERE user_id = $target_id");
+        $conn->query("DELETE FROM users WHERE user_id = $target_id");
+        write_audit_log($conn, $current_user_id, 'DELETE_USER', 'user', $target_id, ['username' => $target_name, 'role' => $target_role]);
+        echo "<script>alert('Đã xóa tài khoản thành công!'); window.location='admin_users.php';</script>";
+        exit();
+    }
 }
+
+// Nạp layout Header sau khi đã xác thực xong quyền hạn
+require_once __DIR__ . '/includes/header.php';
 
 // 2. TÌM KIẾM THÀNH VIÊN
 $search_query = "";
@@ -107,7 +165,11 @@ $result_users = $conn->query($sql_users);
                                     <span class="text-light small"><?php echo htmlspecialchars($u['email']); ?></span>
                                 </td>
                                 <td class="text-center">
-                                    <?php if ($u['role'] == 1): ?>
+                                    <?php if ($u['role'] == 2): ?>
+                                        <span class="badge" style="background: rgba(244,63,94,0.2); color: #f43f5e; border: 1px solid rgba(244,63,94,0.4); padding: 6px 12px; font-size: 0.75rem;">
+                                            <i class="bi bi-shield-shaded me-1"></i> Super Admin
+                                        </span>
+                                    <?php elseif ($u['role'] == 1): ?>
                                         <span class="badge" style="background: rgba(99,102,241,0.2); color: var(--primary); border: 1px solid rgba(99,102,241,0.4); padding: 6px 12px; font-size: 0.75rem;">
                                             <i class="bi bi-shield-check me-1"></i> Quản Trị Viên
                                         </span>
@@ -129,14 +191,35 @@ $result_users = $conn->query($sql_users);
                                             <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-end shadow" style="background: var(--bg-card); border: 1px solid var(--border-color);">
                                                 <?php if ($u['role'] == 0): ?>
                                                     <li>
-                                                        <a class="dropdown-item text-info small" href="admin_users.php?action=make_admin&id=<?php echo $u['user_id']; ?>" onclick="return confirm('Bạn có chắc muốn thăng cấp người này làm Quản trị viên?');">
-                                                            <i class="bi bi-arrow-up-circle me-2"></i> Thăng cấp làm Admin
+                                                        <a class="dropdown-item text-info small" href="admin_users.php?action=make_admin&id=<?php echo $u['user_id']; ?>" onclick="return confirm('Bạn có chắc muốn cấp quyền Quản trị viên cho người này?');">
+                                                            <i class="bi bi-arrow-up-circle me-2"></i> Cấp quyền Admin
+                                                        </a>
+                                                    </li>
+                                                    <li>
+                                                        <a class="dropdown-item text-danger small" href="admin_users.php?action=make_super_admin&id=<?php echo $u['user_id']; ?>" onclick="return confirm('Bạn có chắc muốn cấp quyền Super Admin cho người này?');">
+                                                            <i class="bi bi-shield-shaded me-2"></i> Cấp quyền Super Admin
+                                                        </a>
+                                                    </li>
+                                                <?php elseif ($u['role'] == 1): ?>
+                                                    <li>
+                                                        <a class="dropdown-item text-danger small" href="admin_users.php?action=make_super_admin&id=<?php echo $u['user_id']; ?>" onclick="return confirm('Bạn có chắc muốn thăng cấp người này làm Super Admin?');">
+                                                            <i class="bi bi-shield-shaded me-2"></i> Thăng lên Super Admin
+                                                        </a>
+                                                    </li>
+                                                    <li>
+                                                        <a class="dropdown-item text-warning small" href="admin_users.php?action=remove_admin&id=<?php echo $u['user_id']; ?>" onclick="return confirm('Bạn có chắc muốn gỡ quyền Admin của người này?');">
+                                                            <i class="bi bi-arrow-down-circle me-2"></i> Gỡ quyền Admin
                                                         </a>
                                                     </li>
                                                 <?php else: ?>
                                                     <li>
-                                                        <a class="dropdown-item text-warning small" href="admin_users.php?action=remove_admin&id=<?php echo $u['user_id']; ?>" onclick="return confirm('Bạn có chắc muốn gỡ quyền Admin của người này?');">
-                                                            <i class="bi bi-arrow-down-circle me-2"></i> Gỡ quyền Admin
+                                                        <a class="dropdown-item text-warning small" href="admin_users.php?action=make_admin&id=<?php echo $u['user_id']; ?>" onclick="return confirm('Bạn có chắc muốn hạ cấp người này về Admin thông thường?');">
+                                                            <i class="bi bi-arrow-down-circle me-2"></i> Chuyển về Admin
+                                                        </a>
+                                                    </li>
+                                                    <li>
+                                                        <a class="dropdown-item text-warning small" href="admin_users.php?action=remove_admin&id=<?php echo $u['user_id']; ?>" onclick="return confirm('Bạn có chắc muốn gỡ toàn bộ quyền Quản trị của người này?');">
+                                                            <i class="bi bi-arrow-down-circle me-2"></i> Gỡ quyền Quản trị
                                                         </a>
                                                     </li>
                                                 <?php endif; ?>

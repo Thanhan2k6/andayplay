@@ -10,9 +10,12 @@ if (session_status() === PHP_SESSION_NONE) {
 
 require_once __DIR__ . '/includes/connect.php';
 
-// Kiểm tra quyền Quản trị viên
-if (!isset($_SESSION['user_id']) || $_SESSION['role'] != 1) {
-    header("Location: index.php");
+// Kiểm tra quyền Quản trị viên (ADMIN hoặc SUPER_ADMIN)
+require_admin();
+
+// Kiểm tra quyền xem trung tâm thông báo
+if (!check_user_permission($conn, $_SESSION['user_id'], 'notification.view')) {
+    header("Location: admin_dashboard.php?error=unauthorized");
     exit();
 }
 
@@ -29,7 +32,9 @@ $error_msg = "";
 
 // XỬ LÝ GỬI THÔNG BÁO (POST)
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['btn_send_notification'])) {
-    if (!verify_csrf_token($_POST['csrf_token'] ?? '')) {
+    if (!check_user_permission($conn, $_SESSION['user_id'], 'notification.send')) {
+        $error_msg = "Bạn không có quyền gửi thông báo hệ thống (cần quyền notification.send).";
+    } elseif (!verify_csrf_token($_POST['csrf_token'] ?? '')) {
         $error_msg = "Mã xác thực bảo mật không hợp lệ.";
     } else {
         $title = trim($_POST['title'] ?? '');
@@ -67,6 +72,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['btn_send_notification
             }
 
             if ($sent_count > 0) {
+                write_audit_log($conn, $_SESSION['user_id'], 'SEND_NOTIFICATION', 'notification', 0, [
+                    'target' => $target,
+                    'type' => $type,
+                    'title' => $title,
+                    'sent_count' => $sent_count
+                ]);
                 $success_msg = "Đã gửi thành công thông báo tới $sent_count tài khoản người dùng!";
             } elseif (empty($error_msg)) {
                 $error_msg = "Không có người dùng nào nhận được thông báo (có thể không có tài khoản phù hợp).";

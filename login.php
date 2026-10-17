@@ -8,53 +8,63 @@ require_once 'includes/connect.php';
 $script_hieu_ung = "";
 
 if (isset($_POST['btn_login'])) {
-    $username = $conn->real_escape_string($_POST['username']);
-    $password = $_POST['password']; 
+    $username = trim($_POST['username'] ?? '');
+    $password = $_POST['password'] ?? ''; 
 
-    $sql = "SELECT * FROM users WHERE username = '$username' OR email = '$username'";
-    $result = $conn->query($sql);
+    $stmt_u = $conn->prepare("SELECT * FROM users WHERE username = ? OR email = ? LIMIT 1");
+    if ($stmt_u) {
+        $stmt_u->bind_param("ss", $username, $username);
+        $stmt_u->execute();
+        $result = $stmt_u->get_result();
 
-    if ($result && $result->num_rows > 0) {
-        $user = $result->fetch_assoc();
-        
-        // Dùng password_verify để so khớp mật khẩu mã hóa Bcrypt
-        if (password_verify($password, $user['password']) || $password == $user['password']) {
-            $_SESSION['user_id'] = $user['user_id'];
-            $_SESSION['username'] = $user['username'];
-            $_SESSION['email'] = $user['email'];
-            $_SESSION['role'] = $user['role'];
+        if ($result && $result->num_rows > 0) {
+            $user = $result->fetch_assoc();
+            
+            // Dùng password_verify để so khớp mật khẩu mã hóa Bcrypt
+            if (password_verify($password, $user['password']) || $password == $user['password']) {
+                if (isset($user['status']) && in_array($user['status'], ['banned', 'suspended'])) {
+                    $status_txt = ($user['status'] === 'banned') ? 'bị khóa vĩnh viễn' : 'đang bị tạm ngưng hoạt động';
+                    $script_hieu_ung = "Swal.fire({ icon: 'error', title: 'Tài khoản đã bị khóa', text: 'Tài khoản của bạn $status_txt bởi Quản Trị Cấp Cao. Vui lòng liên hệ ban quản trị để được hỗ trợ!', background: '#0f1118', color: '#f8fafc', confirmButtonColor: '#ef4444' });";
+                } else {
+                    $_SESSION['user_id'] = $user['user_id'];
+                    $_SESSION['username'] = $user['username'];
+                    $_SESSION['email'] = $user['email'];
+                    $_SESSION['role'] = $user['role'];
 
-            $script_hieu_ung = "
-                var duration = 2.5 * 1000;
-                var animationEnd = Date.now() + duration;
-                var defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 9999 };
-                function randomInRange(min, max) { return Math.random() * (max - min) + min; }
-                var interval = setInterval(function() {
-                    var timeLeft = animationEnd - Date.now();
-                    if (timeLeft <= 0) { return clearInterval(interval); }
-                    var particleCount = 40 * (timeLeft / duration);
-                    confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 } }));
-                    confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 } }));
-                }, 250);
+                    $script_hieu_ung = "
+                        var duration = 2.5 * 1000;
+                        var animationEnd = Date.now() + duration;
+                        var defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 9999 };
+                        function randomInRange(min, max) { return Math.random() * (max - min) + min; }
+                        var interval = setInterval(function() {
+                            var timeLeft = animationEnd - Date.now();
+                            if (timeLeft <= 0) { return clearInterval(interval); }
+                            var particleCount = 40 * (timeLeft / duration);
+                            confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 } }));
+                            confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 } }));
+                        }, 250);
 
-                Swal.fire({
-                    title: '🎉 Đăng Nhập Thành Công!',
-                    text: 'Chào mừng chiến binh @" . htmlspecialchars($user['username']) . " quay lại ANPLAY STORE.',
-                    icon: 'success',
-                    background: '#0f1118',
-                    color: '#f8fafc',
-                    confirmButtonColor: '#6366f1',
-                    confirmButtonText: 'VÀO CHIẾN GAME NGAY',
-                    customClass: { popup: 'z-index-master' }
-                }).then((result) => {
-                    window.location.href = 'index.php';
-                });
-            ";
+                        Swal.fire({
+                            title: '🎉 Đăng Nhập Thành Công!',
+                            text: 'Chào mừng chiến binh @" . htmlspecialchars($user['username']) . " quay lại ANPLAY STORE.',
+                            icon: 'success',
+                            background: '#0f1118',
+                            color: '#f8fafc',
+                            confirmButtonColor: '#6366f1',
+                            confirmButtonText: 'VÀO CHIẾN GAME NGAY',
+                            customClass: { popup: 'z-index-master' }
+                        }).then((result) => {
+                            window.location.href = 'index.php';
+                        });
+                    ";
+                }
+            } else {
+                $script_hieu_ung = "Swal.fire({ icon: 'error', title: 'Đăng nhập thất bại', text: 'Mật khẩu không chính xác, vui lòng kiểm tra lại.', background: '#0f1118', color: '#f8fafc', confirmButtonColor: '#ef4444' });";
+            }
         } else {
-            $script_hieu_ung = "Swal.fire({ icon: 'error', title: 'Đăng nhập thất bại', text: 'Mật khẩu không chính xác, vui lòng kiểm tra lại.', background: '#0f1118', color: '#f8fafc', confirmButtonColor: '#ef4444' });";
+            $script_hieu_ung = "Swal.fire({ icon: 'error', title: 'Tài khoản không tồn tại', text: 'Tài khoản hoặc Email chưa được đăng ký trên hệ thống.', background: '#0f1118', color: '#f8fafc', confirmButtonColor: '#ef4444' });";
         }
-    } else {
-        $script_hieu_ung = "Swal.fire({ icon: 'error', title: 'Tài khoản không tồn tại', text: 'Tài khoản hoặc Email chưa được đăng ký trên hệ thống.', background: '#0f1118', color: '#f8fafc', confirmButtonColor: '#ef4444' });";
+        $stmt_u->close();
     }
 }
 ?>

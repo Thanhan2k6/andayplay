@@ -50,6 +50,7 @@ if ($conn->connect_error) {
 require_once __DIR__ . '/account_service.php';
 require_once __DIR__ . '/notification_service.php';
 require_once __DIR__ . '/support_service.php';
+require_once __DIR__ . '/auth_service.php';
 
 // =========================================================
 // AUTO-CHECK TRÊN WEB (DỰ PHÒNG KHI CHƯA CHẠY CRON)

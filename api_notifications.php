@@ -63,5 +63,27 @@ if ($action === 'mark_all_read') {
     exit();
 }
 
+// 5. XÓA 1 THÔNG BÁO (POLICY CHO PHÉP)
+if ($action === 'delete') {
+    $id = isset($_POST['id']) ? intval($_POST['id']) : (isset($_GET['id']) ? intval($_GET['id']) : 0);
+    if ($id > 0) {
+        $res = delete_notification($conn, $id, $user_id);
+        $new_count = get_unread_notification_count($conn, $user_id);
+        echo json_encode(['success' => $res, 'unread_count' => $new_count]);
+        exit();
+    }
+    echo json_encode(['success' => false, 'error' => 'ID không hợp lệ']);
+    exit();
+}
+
+// 6. XÓA TẤT CẢ THÔNG BÁO ĐÃ ĐỌC HOẶC TẤT CẢ
+if ($action === 'clear_all') {
+    $only_read = isset($_POST['only_read']) ? (bool)$_POST['only_read'] : (isset($_GET['only_read']) ? (bool)$_GET['only_read'] : false);
+    $res = delete_user_notifications($conn, $user_id, $only_read);
+    $new_count = get_unread_notification_count($conn, $user_id);
+    echo json_encode(['success' => $res, 'unread_count' => $new_count]);
+    exit();
+}
+
 echo json_encode(['success' => false, 'error' => 'Hành động không hỗ trợ']);
 

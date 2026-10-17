@@ -22,7 +22,12 @@ if (!in_array($tab, $valid_tabs)) {
     $tab = 'all';
 }
 
-// Xử lý action click / đánh dấu đọc
+// Tự động kiểm tra cảnh báo đơn thuê sắp hết hạn trong 24h
+if (function_exists('check_and_notify_expiring_rentals')) {
+    check_and_notify_expiring_rentals($conn, $user_id);
+}
+
+// Xử lý action click / đánh dấu đọc / xóa
 if (isset($_GET['action'])) {
     if ($_GET['action'] === 'read_and_go' && isset($_GET['id'])) {
         $notif_id = intval($_GET['id']);
@@ -41,6 +46,14 @@ if (isset($_GET['action'])) {
         exit();
     } elseif ($_GET['action'] === 'mark_single' && isset($_GET['id'])) {
         mark_notification_read($conn, intval($_GET['id']), $user_id);
+        header("Location: notifications.php?tab=" . urlencode($tab));
+        exit();
+    } elseif ($_GET['action'] === 'delete' && isset($_GET['id'])) {
+        delete_notification($conn, intval($_GET['id']), $user_id);
+        header("Location: notifications.php?tab=" . urlencode($tab));
+        exit();
+    } elseif ($_GET['action'] === 'clear_read') {
+        delete_user_notifications($conn, $user_id, true);
         header("Location: notifications.php?tab=" . urlencode($tab));
         exit();
     }
@@ -66,9 +79,17 @@ if ($unread_only) {
     $count_conditions[] = "is_read = 0";
 }
 if ($filter_type !== 'all') {
-    $count_conditions[] = "type = ?";
-    $count_types .= "s";
-    $count_params[] = $filter_type;
+    if ($filter_type === 'rental') {
+        $count_conditions[] = "type IN ('rental', 'order')";
+    } elseif ($filter_type === 'support') {
+        $count_conditions[] = "type IN ('support', 'complaint')";
+    } elseif ($filter_type === 'system') {
+        $count_conditions[] = "type IN ('system', 'security', 'account')";
+    } else {
+        $count_conditions[] = "type = ?";
+        $count_types .= "s";
+        $count_params[] = $filter_type;
+    }
 }
 $where_count_sql = implode(" AND ", $count_conditions);
 $total_rows = 0;
@@ -105,12 +126,15 @@ require_once __DIR__ . '/includes/header.php';
             </div>
             <h2 class="fw-extrabold text-white mb-0">Hộp Thư & Trung Tâm Thông Báo</h2>
         </div>
-        <div class="d-flex gap-2">
+        <div class="d-flex flex-wrap gap-2">
             <?php if ($total_unread > 0): ?>
                 <a href="notifications.php?action=mark_all&tab=<?php echo urlencode($tab); ?>" class="btn btn-gaming-secondary btn-sm d-flex align-items-center">
                     <i class="bi bi-check2-all me-1 text-success"></i> Đánh dấu tất cả đã đọc
                 </a>
             <?php endif; ?>
+            <a href="notifications.php?action=clear_read&tab=<?php echo urlencode($tab); ?>" class="btn btn-outline-danger btn-sm d-flex align-items-center" onclick="return confirm('Bạn có chắc muốn dọn dẹp tất cả thông báo đã đọc?');">
+                <i class="bi bi-trash3 me-1"></i> Dọn dẹp đã đọc
+            </a>
             <a href="support.php" class="btn btn-gaming-primary btn-sm d-flex align-items-center">
                 <i class="bi bi-headset me-1"></i> Trung tâm hỗ trợ
             </a>
@@ -203,10 +227,14 @@ require_once __DIR__ . '/includes/header.php';
                                         <?php endif; ?>
 
                                         <?php if ($is_unread): ?>
-                                            <a href="notifications.php?action=mark_single&id=<?php echo $n['id']; ?>&tab=<?php echo urlencode($tab); ?>" class="btn btn-outline-secondary btn-sm py-1 px-2 text-secondary" style="font-size: 0.78rem;">
-                                                <i class="bi bi-check2"></i> Đánh dấu đã đọc
+                                            <a href="notifications.php?action=mark_single&id=<?php echo $n['id']; ?>&tab=<?php echo urlencode($tab); ?>" class="btn btn-outline-secondary btn-sm py-1 px-2 text-secondary" style="font-size: 0.78rem;" title="Đánh dấu đã đọc">
+                                                <i class="bi bi-check2"></i> Đã đọc
                                             </a>
                                         <?php endif; ?>
+
+                                        <a href="notifications.php?action=delete&id=<?php echo $n['id']; ?>&tab=<?php echo urlencode($tab); ?>" class="btn btn-outline-danger btn-sm py-1 px-2 text-danger ms-auto" style="font-size: 0.78rem;" title="Xóa thông báo này" onclick="return confirm('Bạn có chắc muốn xóa thông báo này?');">
+                                            <i class="bi bi-trash3"></i>
+                                        </a>
                                     </div>
                                 </div>
                             </div>

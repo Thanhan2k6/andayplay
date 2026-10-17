@@ -2,13 +2,9 @@
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
-require_once __DIR__ . '/includes/header.php'; 
-
-// BẢO MẬT: Kiểm tra quyền Admin
-if(!isset($_SESSION['user_id']) || $_SESSION['role'] != 1) {
-    echo "<script>alert('Từ chối truy cập! Bạn không phải Quản trị viên.'); window.location='index.php';</script>";
-    exit();
-}
+require_once __DIR__ . '/includes/connect.php';
+require_admin();
+require_once __DIR__ . '/includes/header.php';
 
 // XỬ LÝ: Xóa game
 if(isset($_GET['delete_id'])) {

@@ -154,7 +154,7 @@ function create_support_ticket($conn, $user_id, $category, $title, $message, $pr
         if (!$stmt) {
             throw new Exception("Lỗi khởi tạo truy vấn tạo ticket: " . $conn->error);
         }
-        $stmt->bind_param("sissiii", $ticket_code, $user_id, $category, $title, $priority, $order_id, $game_id);
+        $stmt->bind_param("sisssii", $ticket_code, $user_id, $category, $title, $priority, $order_id, $game_id);
         $stmt->execute();
         $ticket_id = $conn->insert_id;
         $stmt->close();
@@ -189,7 +189,7 @@ function create_support_ticket($conn, $user_id, $category, $title, $message, $pr
 
         $conn->commit();
 
-        // 4. Gửi thông báo cho TẤT CẢ Quản Trị Viên
+        // 4. Gửi thông báo cho ADMIN và SUPER_ADMIN (đã bao gồm phân quyền)
         $priority_text = ($priority === 'urgent' || $priority === 'high') ? ' [ƯU TIÊN CAO]' : '';
         notify_all_admins(
             $conn,
@@ -198,10 +198,24 @@ function create_support_ticket($conn, $user_id, $category, $title, $message, $pr
             "Khách hàng vừa gửi ticket: \"{$title}\" (Danh mục: {$category})",
             "admin_support_detail.php?id={$ticket_id}",
             "SUP-NEW-{$ticket_id}",
-            5
+            5,
+            $user_id
         );
 
-        // 5. Gửi thông báo xác nhận cho chính khách hàng
+        // 5. Nếu là Khiếu nại dịch vụ (complaint) -> Gửi cảnh báo đặc biệt cho Super Admin
+        if ($category === 'complaint') {
+            notify_super_admins(
+                $conn,
+                'complaint',
+                "🚨 Khiếu nại dịch vụ mới {$ticket_code}",
+                "Khách hàng vừa gửi khiếu nại dịch vụ: \"{$title}\". Yêu cầu Ban quản trị xử lý!",
+                "admin_support_detail.php?id={$ticket_id}",
+                "COMPLAINT-{$ticket_id}",
+                5
+            );
+        }
+
+        // 6. Gửi thông báo xác nhận cho chính khách hàng
         create_notification(
             $conn,
             $user_id,
@@ -210,7 +224,7 @@ function create_support_ticket($conn, $user_id, $category, $title, $message, $pr
             "Yêu cầu \"{$title}\" đã được chuyển đến đội ngũ hỗ trợ ANPLAY. Chúng tôi sẽ xử lý sớm nhất!",
             "support_detail.php?id={$ticket_id}",
             "SUP-CONFIRM-{$ticket_id}",
-            10
+            5
         );
 
         return [
@@ -285,10 +299,11 @@ function send_support_message($conn, $ticket_id, $sender_id, $sender_type, $mess
 
         if ($sender_type === 'admin') {
             // Admin trả lời -> Chuyển sang chờ khách phản hồi (nếu chưa giải quyết/đóng)
-            $new_status = ($ticket['status'] === 'new' || $ticket['status'] === 'in_progress') ? 'waiting_customer' : $ticket['status'];
+            $new_status = in_array($ticket['status'], ['new', 'assigned', 'in_progress']) ? 'waiting_customer' : $ticket['status'];
             $first_res_sql = empty($ticket['first_response_at']) ? ", first_response_at = NOW()" : "";
+            $assign_sql = empty($ticket['assigned_to']) ? ", assigned_to = $sender_id" : "";
             
-            $conn->query("UPDATE support_tickets SET status = '$new_status', last_response_at = NOW(), updated_at = NOW() $first_res_sql WHERE ticket_id = $ticket_id");
+            $conn->query("UPDATE support_tickets SET status = '$new_status', last_response_at = NOW(), updated_at = NOW() $first_res_sql $assign_sql WHERE ticket_id = $ticket_id");
 
             // Bắn thông báo trực tiếp cho KHÁCH HÀNG
             create_notification(
@@ -297,25 +312,53 @@ function send_support_message($conn, $ticket_id, $sender_id, $sender_type, $mess
                 'support',
                 "Admin đã phản hồi {$ticket_code}",
                 "Đội ngũ hỗ trợ đã phản hồi yêu cầu \"{$ticket_title}\". Nhấn để xem và trao đổi thêm.",
-                "support_detail.php?id={$ticket_id}",
+                "support_detail.php?id={$ticket_id}#reply_end",
                 "SUP-ADMIN-REPLY-{$message_id}",
-                5
+                0
             );
         } else {
             // Khách hàng gửi tin nhắn -> Nếu ticket đang resolved hoặc waiting_customer, đưa về in_progress
             $new_status = in_array($ticket['status'], ['waiting_customer', 'resolved']) ? 'in_progress' : $ticket['status'];
             $conn->query("UPDATE support_tickets SET status = '$new_status', last_response_at = NOW(), updated_at = NOW() WHERE ticket_id = $ticket_id");
 
-            // Bắn thông báo cho QUẢN TRỊ VIÊN
-            notify_all_admins(
-                $conn,
-                'support',
-                "Khách hàng phản hồi {$ticket_code}",
-                "Khách hàng vừa gửi phản hồi mới cho yêu cầu \"{$ticket_title}\".",
-                "admin_support_detail.php?id={$ticket_id}",
-                "SUP-USER-REPLY-{$message_id}",
-                5
-            );
+            // Bắn thông báo cho ADMIN phụ trách và SUPER_ADMIN
+            $assigned_to = intval($ticket['assigned_to'] ?? 0);
+            if ($assigned_to > 0) {
+                // 1. ADMIN phụ trách ticket nhận notification
+                create_notification(
+                    $conn,
+                    $assigned_to,
+                    'support',
+                    "Khách hàng phản hồi {$ticket_code}",
+                    "Khách hàng vừa gửi phản hồi mới cho yêu cầu \"{$ticket_title}\".",
+                    "admin_support_detail.php?id={$ticket_id}#reply_bottom",
+                    "SUP-USER-REPLY-{$message_id}-U{$assigned_to}",
+                    0
+                );
+
+                // 2. SUPER_ADMIN nhận notification nếu khác admin phụ trách
+                notify_super_admins(
+                    $conn,
+                    'support',
+                    "Khách hàng phản hồi {$ticket_code}",
+                    "Khách hàng vừa gửi phản hồi mới cho yêu cầu \"{$ticket_title}\".",
+                    "admin_support_detail.php?id={$ticket_id}#reply_bottom",
+                    "SUP-USER-REPLY-{$message_id}",
+                    0,
+                    $assigned_to
+                );
+            } else {
+                // Ticket chưa phân công -> Toàn bộ ADMIN và SUPER_ADMIN nhận notification
+                notify_all_admins(
+                    $conn,
+                    'support',
+                    "Khách hàng phản hồi {$ticket_code}",
+                    "Khách hàng vừa gửi phản hồi mới cho yêu cầu \"{$ticket_title}\".",
+                    "admin_support_detail.php?id={$ticket_id}#reply_bottom",
+                    "SUP-USER-REPLY-{$message_id}",
+                    0
+                );
+            }
         }
 
         $conn->commit();
@@ -532,4 +575,41 @@ function upload_support_attachment($file, $ticket_id, $user_id) {
         'file_size' => $file['size']
     ];
 }
+
+/**
+ * Phân công hoặc chỉ định Quản trị viên phụ trách xử lý Ticket
+ */
+function assign_support_ticket($conn, $ticket_id, $admin_id, $by_admin_id = 0) {
+    if (!$conn || empty($ticket_id) || empty($admin_id)) return false;
+    $ticket_id = intval($ticket_id);
+    $admin_id = intval($admin_id);
+    $by_admin_id = intval($by_admin_id);
+
+    // Kiểm tra admin được phân công có tồn tại và có role admin/super admin không
+    $chk = $conn->query("SELECT user_id, username FROM users WHERE user_id = $admin_id AND role IN (1, 2)");
+    if (!$chk || $chk->num_rows === 0) return false;
+    $adm_user = $chk->fetch_assoc();
+
+    $upd = $conn->query("UPDATE support_tickets SET assigned_to = $admin_id, status = IF(status = 'new', 'assigned', status), updated_at = NOW() WHERE ticket_id = $ticket_id");
+    if ($upd) {
+        $qt = $conn->query("SELECT ticket_code, title FROM support_tickets WHERE ticket_id = $ticket_id");
+        if ($qt && $t = $qt->fetch_assoc()) {
+            if ($admin_id !== $by_admin_id) {
+                create_notification(
+                    $conn,
+                    $admin_id,
+                    'support',
+                    "Bạn được phân công hỗ trợ {$t['ticket_code']}",
+                    "Yêu cầu \"{$t['title']}\" vừa được phân công cho bạn xử lý.",
+                    "admin_support_detail.php?id={$ticket_id}",
+                    "SUP-ASSIGN-{$ticket_id}-U{$admin_id}",
+                    0
+                );
+            }
+        }
+        return true;
+    }
+    return false;
+}
+
 

@@ -11,10 +11,7 @@ if (session_status() === PHP_SESSION_NONE) {
 require_once __DIR__ . '/includes/connect.php';
 
 // Kiểm tra quyền Quản trị viên
-if (!isset($_SESSION['user_id']) || $_SESSION['role'] != 1) {
-    header("Location: index.php");
-    exit();
-}
+require_admin();
 
 $current_page = 'admin_support.php';
 
@@ -102,11 +99,12 @@ $total_pages = max(1, ceil($total_rows / $per_page));
 // Lấy danh sách ticket
 $tickets = [];
 try {
-    $sql = "SELECT st.*, u.username, u.email, g.title as game_title, br.order_code 
+    $sql = "SELECT st.*, u.username, u.email, g.title as game_title, br.order_code, u_adm.username as assigned_admin_name 
             FROM support_tickets st 
             JOIN users u ON st.user_id = u.user_id 
             LEFT JOIN games g ON st.game_id = g.game_id 
             LEFT JOIN borrow_records br ON st.order_id = br.borrow_id 
+            LEFT JOIN users u_adm ON st.assigned_to = u_adm.user_id 
             WHERE $where_sql 
             ORDER BY 
                 CASE WHEN st.priority = 'urgent' THEN 1 WHEN st.priority = 'high' THEN 2 ELSE 3 END, 
@@ -296,6 +294,15 @@ require_once __DIR__ . '/includes/header.php';
                                     <span class="badge <?php echo $st_info['badge_class']; ?>" style="font-size: 0.75rem;">
                                         <i class="bi <?php echo $st_info['icon']; ?> me-1"></i><?php echo $st_info['label']; ?>
                                     </span>
+                                    <?php if (!empty($t['assigned_admin_name'])): ?>
+                                        <div class="mt-1 small" style="font-size: 0.68rem; color: #a5b4fc;">
+                                            <i class="bi bi-person-check me-1"></i>@<?php echo htmlspecialchars($t['assigned_admin_name']); ?>
+                                        </div>
+                                    <?php else: ?>
+                                        <div class="mt-1 small text-secondary opacity-75" style="font-size: 0.68rem;">
+                                            <i class="bi bi-person-dash me-1"></i>Chưa giao
+                                        </div>
+                                    <?php endif; ?>
                                 </td>
                                 <td class="py-3 small text-secondary">
                                     <?php if (!empty($t['game_title'])): ?>

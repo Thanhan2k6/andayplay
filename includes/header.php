@@ -15,9 +15,9 @@ if (isset($_SESSION['user_id'])) {
     if (function_exists('get_unread_notification_count')) {
         $header_unread_notifs = get_unread_notification_count($conn, $hdr_uid);
     }
-    if (isset($_SESSION['role']) && $_SESSION['role'] == 1) {
+    if (isset($_SESSION['role']) && in_array(intval($_SESSION['role']), [1, 2])) {
         try {
-            $q_ot = $conn->query("SELECT COUNT(*) as c FROM support_tickets WHERE status = 'new'");
+            $q_ot = $conn->query("SELECT COUNT(*) as c FROM support_tickets WHERE status IN ('new', 'assigned', 'in_progress')");
             if ($q_ot && $r_ot = $q_ot->fetch_assoc()) {
                 $header_admin_open_tickets = intval($r_ot['c'] ?? 0);
             }
@@ -88,7 +88,7 @@ if (isset($_SESSION['user_id'])) {
             <i class="bi bi-headset text-info"></i> Hỗ trợ khách hàng
         </a>
         
-        <?php if(isset($_SESSION['role']) && $_SESSION['role'] == 1): ?>
+        <?php if(isset($_SESSION['role']) && in_array(intval($_SESSION['role']), [1, 2])): ?>
             <!-- Khu vực Quản trị Admin -->
             <div class="sidebar-title mt-4" style="color: #f43f5e;">Quản Trị Hệ Thống</div>
             <a href="admin_dashboard.php" class="sidebar-item <?php echo ($current_page == 'admin_dashboard.php') ? 'active' : ''; ?>">
@@ -115,6 +115,15 @@ if (isset($_SESSION['user_id'])) {
             <a href="admin_users.php" class="sidebar-item <?php echo ($current_page == 'admin_users.php') ? 'active' : ''; ?>">
                 <i class="bi bi-people-fill text-danger"></i> Quản lý Khách Hàng
             </a>
+            <?php if (function_exists('is_super_admin') && is_super_admin()): ?>
+                <div class="sidebar-title mt-3" style="color: #c084fc;"><i class="bi bi-shield-shaded me-1"></i> Super Admin</div>
+                <a href="admin_management.php" class="sidebar-item <?php echo ($current_page == 'admin_management.php' || $current_page == 'admin_roles.php') ? 'active' : ''; ?>">
+                    <i class="bi bi-person-gear" style="color: #c084fc;"></i> Quản Trị Admin & Phân Quyền
+                </a>
+                <a href="admin_system.php" class="sidebar-item <?php echo ($current_page == 'admin_system.php') ? 'active' : ''; ?>">
+                    <i class="bi bi-sliders" style="color: #c084fc;"></i> Cấu Hình Sàn & Audit Logs
+                </a>
+            <?php endif; ?>
         <?php endif; ?>
     <?php endif; ?>
 
@@ -177,7 +186,9 @@ if (isset($_SESSION['user_id'])) {
             <?php if(isset($_SESSION['user_id'])): 
                 $hdr_username = htmlspecialchars($_SESSION['username'] ?? 'User');
                 $hdr_email = htmlspecialchars($_SESSION['email'] ?? '');
-                $hdr_is_admin = (isset($_SESSION['role']) && $_SESSION['role'] == 1);
+                $hdr_role = intval($_SESSION['role'] ?? 0);
+                $hdr_is_admin = in_array($hdr_role, [1, 2]);
+                $hdr_is_super = ($hdr_role === 2);
             ?>
                 <!-- NOTIFICATION DROPDOWN (DESKTOP & MOBILE) -->
                 <div class="dropdown" id="topbarNotifWrapper">
@@ -223,7 +234,15 @@ if (isset($_SESSION['user_id'])) {
                         <div class="d-none d-md-flex flex-column text-start">
                             <span class="fw-bold" style="font-size: 0.86rem; line-height: 1.2;">@<?php echo $hdr_username; ?></span>
                             <span class="text-secondary" style="font-size: 0.70rem;">
-                                <?php echo $hdr_is_admin ? '<span class="text-danger fw-bold"><i class="bi bi-shield-check"></i> Admin</span>' : '<span class="text-info"><i class="bi bi-patch-check-fill"></i> Thành viên VIP</span>'; ?>
+                                <?php 
+                                if ($hdr_is_super) {
+                                    echo '<span class="text-danger fw-bold"><i class="bi bi-shield-shaded"></i> Super Admin</span>';
+                                } elseif ($hdr_is_admin) {
+                                    echo '<span class="text-warning fw-bold"><i class="bi bi-shield-check"></i> Admin</span>';
+                                } else {
+                                    echo '<span class="text-info"><i class="bi bi-patch-check-fill"></i> Thành viên VIP</span>';
+                                }
+                                ?>
                             </span>
                         </div>
                     </button>
@@ -238,8 +257,12 @@ if (isset($_SESSION['user_id'])) {
                                         <div class="text-secondary small text-truncate" style="font-size: 0.75rem;"><?php echo $hdr_email; ?></div>
                                     <?php endif; ?>
                                     <div class="mt-1">
-                                        <?php if($hdr_is_admin): ?>
+                                        <?php if($hdr_is_super): ?>
                                             <span class="badge" style="background: rgba(244,63,94,0.2); color: #f43f5e; border: 1px solid rgba(244,63,94,0.4); font-size: 0.68rem; padding: 2px 6px;">
+                                                <i class="bi bi-shield-shaded me-1"></i> Super Admin
+                                            </span>
+                                        <?php elseif($hdr_is_admin): ?>
+                                            <span class="badge" style="background: rgba(99,102,241,0.2); color: #6366f1; border: 1px solid rgba(99,102,241,0.4); font-size: 0.68rem; padding: 2px 6px;">
                                                 <i class="bi bi-shield-lock-fill me-1"></i> Quản Trị Viên
                                             </span>
                                         <?php else: ?>
@@ -315,6 +338,22 @@ if (isset($_SESSION['user_id'])) {
                             <li>
                                 <a class="dropdown-item py-2 px-3 rounded-2 d-flex align-items-center text-danger" href="admin_notifications.php">
                                     <i class="bi bi-broadcast me-2"></i> Gửi Thông Báo Toàn Sàn
+                                </a>
+                            </li>
+                        <?php endif; ?>
+
+                        <!-- SECTION: SUPER ADMIN NẾU CÓ -->
+                        <?php if($hdr_is_super): ?>
+                            <li><hr class="dropdown-divider border-secondary border-opacity-25 my-2"></li>
+                            <li><h6 class="dropdown-header text-uppercase fw-bold px-3 py-1" style="color: #c084fc; font-size: 0.68rem; letter-spacing: 0.5px;"><i class="bi bi-shield-shaded me-1"></i> Super Admin Cấp Cao</h6></li>
+                            <li>
+                                <a class="dropdown-item py-2 px-3 rounded-2 d-flex align-items-center" style="color: #f3e8ff;" href="admin_management.php">
+                                    <i class="bi bi-person-gear me-2" style="color: #c084fc;"></i> Quản Trị Admin & Phân Quyền
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item py-2 px-3 rounded-2 d-flex align-items-center" style="color: #f3e8ff;" href="admin_system.php">
+                                    <i class="bi bi-sliders me-2" style="color: #c084fc;"></i> Cấu Hình Sàn & Audit Logs
                                 </a>
                             </li>
                         <?php endif; ?>
@@ -459,23 +498,29 @@ if (isset($_SESSION['user_id'])) {
                 }
                 let html = '';
                 items.forEach(item => {
-                    const iconInfo = item.icon_info || { icon: 'bi-bell-fill', color: '#6366f1', bg: 'rgba(99,102,241,0.15)' };
+                    const iconInfo = item.icon_info || { icon: 'bi-bell-fill', color: '#6366f1', bg: 'rgba(99,102,241,0.15)', label: 'Hệ thống' };
                     const isUnread = (parseInt(item.is_read) === 0);
                     const linkUrl = item.link ? ('notifications.php?action=read_and_go&id=' + item.id + '&redirect=' + encodeURIComponent(item.link)) : ('notifications.php?action=mark_single&id=' + item.id);
                     
-                    html += '<a href="' + linkUrl + '" class="p-3 text-decoration-none border-bottom border-secondary border-opacity-10 d-flex align-items-start gap-3 transition-all" style="background: ' + (isUnread ? 'rgba(99,102,241,0.06)' : 'transparent') + ';">' +
+                    html += '<div class="p-3 border-bottom border-secondary border-opacity-10 d-flex align-items-start gap-3 transition-all position-relative" style="background: ' + (isUnread ? 'rgba(99,102,241,0.06)' : 'transparent') + ';">' +
                         '<div class="rounded-3 p-2 d-flex align-items-center justify-content-center flex-shrink-0" style="width: 36px; height: 36px; background: ' + iconInfo.bg + '; color: ' + iconInfo.color + ';">' +
                             '<i class="bi ' + iconInfo.icon + '"></i>' +
                         '</div>' +
                         '<div class="flex-grow-1 overflow-hidden">' +
                             '<div class="d-flex align-items-center justify-content-between gap-1 mb-1">' +
-                                '<strong class="text-white small text-truncate ' + (isUnread ? 'text-primary' : '') + '">' + escapeHtml(item.title) + '</strong>' +
-                                (isUnread ? '<span class="p-1 bg-primary rounded-circle" style="width: 6px; height: 6px;"></span>' : '') +
+                                '<a href="' + linkUrl + '" class="text-white text-decoration-none small text-truncate fw-bold ' + (isUnread ? 'text-primary' : '') + '" style="max-width: 210px;">' + escapeHtml(item.title) + '</a>' +
+                                '<div class="d-flex align-items-center gap-1">' +
+                                    (isUnread ? '<span class="p-1 bg-primary rounded-circle" style="width: 6px; height: 6px;"></span>' : '') +
+                                    '<button type="button" class="btn btn-link text-secondary p-0 ms-1 opacity-50 hover-danger" style="font-size: 0.8rem;" title="Xóa thông báo" onclick="deleteNotificationQuick(event, ' + item.id + ')"><i class="bi bi-x-lg"></i></button>' +
+                                '</div>' +
                             '</div>' +
-                            '<div class="text-secondary small text-truncate" style="font-size: 0.78rem; line-height: 1.3;">' + escapeHtml(item.message) + '</div>' +
-                            '<div class="text-secondary small mt-1" style="font-size: 0.68rem;"><i class="bi bi-clock me-1"></i>' + (item.time_ago || '') + '</div>' +
+                            '<a href="' + linkUrl + '" class="text-secondary text-decoration-none small text-truncate d-block" style="font-size: 0.78rem; line-height: 1.3;">' + escapeHtml(item.message) + '</a>' +
+                            '<div class="d-flex align-items-center justify-content-between mt-1">' +
+                                '<span class="badge py-0 px-1" style="background: ' + iconInfo.bg + '; color: ' + iconInfo.color + '; font-size: 0.65rem;">' + escapeHtml(iconInfo.label) + '</span>' +
+                                '<span class="text-secondary small" style="font-size: 0.68rem;"><i class="bi bi-clock me-1"></i>' + (item.time_ago || '') + '</span>' +
+                            '</div>' +
                         '</div>' +
-                    '</a>';
+                    '</div>';
                 });
                 notifList.innerHTML = html;
             }
@@ -512,6 +557,21 @@ if (isset($_SESSION['user_id'])) {
                                     .then(r => r.json())
                                     .then(d => d.success && renderNotifications(d.items));
                             }
+                        }
+                    })
+                    .catch(() => {});
+            };
+
+            window.deleteNotificationQuick = function(e, notifId) {
+                if (e) { e.preventDefault(); e.stopPropagation(); }
+                fetch('api_notifications.php?action=delete&id=' + notifId, { method: 'POST' })
+                    .then(r => r.json())
+                    .then(data => {
+                        if (data.success) {
+                            updateBadges(data.unread_count);
+                            fetch('api_notifications.php?action=get_dropdown')
+                                .then(r => r.json())
+                                .then(d => d.success && renderNotifications(d.items));
                         }
                     })
                     .catch(() => {});
