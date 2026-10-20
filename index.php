@@ -88,43 +88,84 @@ if (!$result) {
 <!-- HERO BANNER GAMING STORE CAO CẤP -->
 <?php if (!isset($_GET['search']) && !isset($_GET['category']) && !isset($_GET['platform'])): ?>
 <section class="gaming-hero">
-    <div class="hero-tag">
-        <i class="bi bi-fire text-danger"></i> NỀN TẢNG CHO THUÊ TÀI KHOẢN GAME SỐ 1
-    </div>
-    <h1 class="hero-title">
-        THUÊ TÀI KHOẢN GAME CHÍNH HÃNG<br>
-        <span>TRẢI NGHIỆM ĐỈNH CAO CHỈ TỪ 5.000Đ</span>
-    </h1>
-    <p class="hero-desc">
-        Thưởng thức hàng trăm tựa game bom tấn AAA trên Steam, EA, Epic Games mà không cần tốn tiền triệu mua đứt. Cấp phát tài khoản tự động trong 30 giây, bảo hành trọn vẹn suốt thời gian thuê.
-    </p>
-    <div class="d-flex flex-wrap align-items-center gap-3">
-        <a href="#gameCatalog" class="btn btn-gaming-primary px-4 py-3 fs-6">
-            <i class="bi bi-controller fs-5"></i> KHÁM PHÁ KHO GAME
-        </a>
-        <a href="#rentalGuide" class="btn btn-gaming-secondary px-4 py-3 fs-6">
-            <i class="bi bi-play-circle fs-5"></i> HƯỚNG DẪN THUÊ
-        </a>
+    <div class="row align-items-center g-4">
+        <div class="col-lg-7">
+            <div class="hero-tag">
+                <i class="bi bi-controller text-primary"></i> DỊCH VỤ THUÊ TÀI KHOẢN GAME BẢN QUYỀN
+            </div>
+            <h1 class="hero-title">
+                CHIẾN GAME BOM TẤN AAA<br>
+                <span>GIÁ THUÊ CHỈ TỪ <strong class="text-warning">5.000Đ</strong> / GIỜ</span>
+            </h1>
+            <p class="hero-desc">
+                Trải nghiệm trọn vẹn Black Myth: Wukong, Cyberpunk 2077, Elden Ring, EA FC 24... trên Steam, EA, Epic Games. Cấp tài khoản tự động trong 30 giây, bảo hành 1 đổi 1 suốt thời gian thuê.
+            </p>
+            <div class="d-flex flex-wrap align-items-center gap-3">
+                <a href="#gameCatalog" class="btn btn-gaming-primary px-4 py-3 fs-6">
+                    <i class="bi bi-controller fs-5"></i> THUÊ GAME NGAY (TỪ 5.000Đ)
+                </a>
+                <a href="#rentalGuide" class="btn btn-gaming-secondary px-4 py-3 fs-6">
+                    <i class="bi bi-lightning-charge fs-5"></i> QUY TRÌNH 3 BƯỚC
+                </a>
+            </div>
+        </div>
+        <div class="col-lg-5 d-none d-lg-block">
+            <!-- Hero Stats Card -->
+            <div class="p-4 rounded-4" style="background: rgba(15, 18, 29, 0.75); border: 1px solid rgba(255,255,255,0.1); backdrop-filter: blur(12px);">
+                <div class="row g-3">
+                    <div class="col-6">
+                        <div class="p-3 rounded-3 text-center" style="background: rgba(99,102,241,0.1); border: 1px solid rgba(99,102,241,0.25);">
+                            <div class="fs-2 fw-black text-warning">5.000đ</div>
+                            <span class="small text-secondary fw-semibold">Giá thuê từ / giờ</span>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="p-3 rounded-3 text-center" style="background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.25);">
+                            <div class="fs-2 fw-black text-success">30 Giây</div>
+                            <span class="small text-secondary fw-semibold">Cấp tài khoản tự động</span>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="p-3 rounded-3 text-center" style="background: rgba(6,182,212,0.1); border: 1px solid rgba(6,182,212,0.25);">
+                            <div class="fs-2 fw-black text-info">23+ Tựa</div>
+                            <span class="small text-secondary fw-semibold">Game AAA bản quyền</span>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="p-3 rounded-3 text-center" style="background: rgba(245,158,11,0.1); border: 1px solid rgba(245,158,11,0.25);">
+                            <div class="fs-2 fw-black text-white">1 Đổi 1</div>
+                            <span class="small text-secondary fw-semibold">Bảo hành suốt thời gian</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
-    <!-- 3 Điểm Cam Kết Nổi Bật -->
+    <!-- 4 Điểm Cam Kết Nổi Bật -->
     <div class="row g-3 mt-4 pt-3 border-top border-white border-opacity-10">
-        <div class="col-md-4 col-sm-6">
+        <div class="col-md-3 col-6">
             <div class="d-flex align-items-center gap-2">
-                <i class="bi bi-lightning-charge-fill text-warning fs-5"></i>
-                <span class="small fw-bold text-light">Cấp tài khoản tự động 24/7</span>
+                <i class="bi bi-currency-dollar text-warning fs-5"></i>
+                <span class="small fw-bold text-light">Tiết kiệm đến 90% chi phí</span>
             </div>
         </div>
-        <div class="col-md-4 col-sm-6">
+        <div class="col-md-3 col-6">
             <div class="d-flex align-items-center gap-2">
                 <i class="bi bi-shield-check text-success fs-5"></i>
-                <span class="small fw-bold text-light">Bảo hành 1 đổi 1 nếu sự cố</span>
+                <span class="small fw-bold text-light">Bảo hành 1 đổi 1 nếu lỗi acc</span>
             </div>
         </div>
-        <div class="col-md-4 col-sm-6">
+        <div class="col-md-3 col-6">
             <div class="d-flex align-items-center gap-2">
                 <i class="bi bi-qr-code-scan text-info fs-5"></i>
-                <span class="small fw-bold text-light">Thanh toán VietQR tiện lợi</span>
+                <span class="small fw-bold text-light">VietQR quét xong nhận acc</span>
+            </div>
+        </div>
+        <div class="col-md-3 col-6">
+            <div class="d-flex align-items-center gap-2">
+                <i class="bi bi-headset text-primary fs-5"></i>
+                <span class="small fw-bold text-light">Kỹ thuật viên 24/7 hỗ trợ</span>
             </div>
         </div>
     </div>
@@ -244,8 +285,8 @@ if (!$result) {
                             <span class="gaming-card-price-label">Hình thức</span>
                             <span class="gaming-card-price-val text-info">FREE</span>
                         <?php else: ?>
-                            <span class="gaming-card-price-label">Giá thuê chỉ từ</span>
-                            <span class="gaming-card-price-val"><?php echo number_format($min_price, 0, ',', '.'); ?>đ<small style="font-size: 0.72rem; -webkit-text-fill-color: #94a3b8;">/giờ</small></span>
+                            <span class="gaming-card-price-label">Giá thuê từ</span>
+                            <span class="gaming-card-price-val text-warning fw-bold"><?php echo number_format($min_price, 0, ',', '.'); ?>đ<small class="text-secondary fw-normal ms-1" style="font-size: 0.72rem; -webkit-text-fill-color: #94a3b8;">/giờ</small></span>
                         <?php endif; ?>
                     </div>
 

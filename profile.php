@@ -15,6 +15,7 @@ if (!isset($_SESSION['user_id'])) {
 }
 
 require_once __DIR__ . '/includes/connect.php';
+require_once __DIR__ . '/includes/totp_service.php';
 
 $user_id = intval($_SESSION['user_id']);
 $tab = isset($_GET['tab']) ? trim($_GET['tab']) : 'overview';
@@ -35,6 +36,26 @@ $csrf_token = $_SESSION['csrf_token'];
 function verify_csrf($token) {
     return !empty($token) && !empty($_SESSION['csrf_token']) && hash_equals($_SESSION['csrf_token'], $token);
 }
+
+// Tải thông tin người dùng từ CSDL sớm
+$user_info = null;
+$u_stmt = $conn->prepare("SELECT * FROM users WHERE user_id = ?");
+if ($u_stmt) {
+    $u_stmt->bind_param("i", $user_id);
+    $u_stmt->execute();
+    $user_info = $u_stmt->get_result()->fetch_assoc();
+    $u_stmt->close();
+}
+
+if (!$user_info) {
+    header("Location: logout.php");
+    exit();
+}
+
+// Đồng bộ session
+$_SESSION['username'] = $user_info['username'];
+$_SESSION['email'] = $user_info['email'];
+$_SESSION['role'] = $user_info['role'];
 
 // ----------------------------------------------------
 // 1. XỬ LÝ CẬP NHẬT THÔNG TIN CÁ NHÂN (TAB: INFO)
@@ -141,26 +162,148 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['btn_change_password']
 }
 
 // ----------------------------------------------------
-// 3. TẢI THÔNG TIN NGƯỜI DÙNG TỪ CSDL
+// 3. XỬ LÝ 2FA (TWO-FACTOR AUTHENTICATION)
 // ----------------------------------------------------
-$user_info = null;
-$u_stmt = $conn->prepare("SELECT * FROM users WHERE user_id = ?");
-if ($u_stmt) {
-    $u_stmt->bind_param("i", $user_id);
-    $u_stmt->execute();
-    $user_info = $u_stmt->get_result()->fetch_assoc();
-    $u_stmt->close();
-}
-
-if (!$user_info) {
-    header("Location: logout.php");
+if (isset($_GET['dismiss_backup'])) {
+    unset($_SESSION['newly_generated_backup_codes']);
+    header("Location: profile.php?tab=security");
     exit();
 }
 
-// Đồng bộ session
-$_SESSION['username'] = $user_info['username'];
-$_SESSION['email'] = $user_info['email'];
-$_SESSION['role'] = $user_info['role'];
+if (isset($_GET['action']) && $_GET['action'] === 'cancel_2fa') {
+    unset($_SESSION['temp_2fa_secret'], $_SESSION['temp_2fa_backup_codes']);
+    header("Location: profile.php?tab=security");
+    exit();
+}
+
+// Bật 2FA
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['btn_confirm_enable_2fa'])) {
+    if (!verify_csrf($_POST['csrf_token'] ?? '')) {
+        $error_msg = "Mã xác thực bảo mật (CSRF) không hợp lệ.";
+        $tab = 'security';
+    } else {
+        $pwd = $_POST['current_password'] ?? '';
+        $otp = trim($_POST['totp_code'] ?? '');
+        $temp_secret = $_SESSION['temp_2fa_secret'] ?? '';
+        $temp_backup = $_SESSION['temp_2fa_backup_codes'] ?? [];
+
+        if (empty($temp_secret) || empty($temp_backup)) {
+            $error_msg = "Phiên thiết lập 2FA đã hết hạn hoặc không hợp lệ. Vui lòng bấm thiết lập lại.";
+            $tab = 'security';
+        } elseif (!password_verify($pwd, $user_info['password']) && $pwd !== $user_info['password']) {
+            $error_msg = "Mật khẩu tài khoản không chính xác.";
+            $tab = 'security';
+        } elseif (!TotpService::verifyCode($temp_secret, $otp)) {
+            $error_msg = "Mã xác thực 6 số không chính xác hoặc đã quá hạn 30 giây. Vui lòng kiểm tra đồng hồ thiết bị và thử lại.";
+            $tab = 'security';
+        } else {
+            $hashed_backup = TotpService::hashBackupCodes($temp_backup);
+            $stmt = $conn->prepare("UPDATE users SET two_factor_enabled = 1, two_factor_secret = ?, two_factor_backup_codes = ? WHERE user_id = ?");
+            if ($stmt) {
+                $stmt->bind_param("ssi", $temp_secret, $hashed_backup, $user_id);
+                $stmt->execute();
+                $stmt->close();
+
+                $user_info['two_factor_enabled'] = 1;
+                $user_info['two_factor_secret'] = $temp_secret;
+                $user_info['two_factor_backup_codes'] = $hashed_backup;
+                $_SESSION['newly_generated_backup_codes'] = $temp_backup;
+                unset($_SESSION['temp_2fa_secret'], $_SESSION['temp_2fa_backup_codes']);
+
+                if (function_exists('create_notification')) {
+                    create_notification($conn, $user_id, 'account', 'Xác thực 2 bước (2FA) đã được kích hoạt 🛡️', 'Tài khoản của bạn hiện đã được bảo vệ với xác thực 2 lớp qua Google Authenticator.', 'profile.php?tab=security');
+                }
+                $success_msg = "Kích hoạt xác thực 2 bước (2FA) thành công! Hãy lưu lại danh sách mã dự phòng bên dưới.";
+                $tab = 'security';
+            } else {
+                $error_msg = "Lỗi hệ thống khi lưu cài đặt 2FA. Vui lòng thử lại.";
+                $tab = 'security';
+            }
+        }
+    }
+}
+
+// Tắt 2FA
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['btn_disable_2fa'])) {
+    if (!verify_csrf($_POST['csrf_token'] ?? '')) {
+        $error_msg = "Mã xác thực bảo mật không hợp lệ.";
+        $tab = 'security';
+    } else {
+        $pwd = $_POST['current_password'] ?? '';
+        $otp = trim($_POST['totp_code'] ?? '');
+
+        if (!password_verify($pwd, $user_info['password']) && $pwd !== $user_info['password']) {
+            $error_msg = "Mật khẩu tài khoản không chính xác.";
+            $tab = 'security';
+        } else {
+            $valid_otp = TotpService::verifyCode($user_info['two_factor_secret'] ?? '', $otp);
+            $valid_backup = false;
+            if (!$valid_otp) {
+                $valid_backup = TotpService::verifyAndConsumeBackupCode($conn, $user_id, $otp);
+            }
+
+            if (!$valid_otp && !$valid_backup) {
+                $error_msg = "Mã xác thực 6 số hoặc mã dự phòng không đúng.";
+                $tab = 'security';
+            } else {
+                $stmt = $conn->prepare("UPDATE users SET two_factor_enabled = 0, two_factor_secret = NULL, two_factor_backup_codes = NULL WHERE user_id = ?");
+                if ($stmt) {
+                    $stmt->bind_param("i", $user_id);
+                    $stmt->execute();
+                    $stmt->close();
+
+                    $user_info['two_factor_enabled'] = 0;
+                    $user_info['two_factor_secret'] = null;
+                    $user_info['two_factor_backup_codes'] = null;
+                    unset($_SESSION['newly_generated_backup_codes']);
+
+                    if (function_exists('create_notification')) {
+                        create_notification($conn, $user_id, 'account', 'Xác thực 2 bước (2FA) đã bị tắt ⚠️', 'Bạn vừa tắt xác thực 2 lớp cho tài khoản ANPLAY lúc ' . date('H:i d/m/Y'), 'profile.php?tab=security');
+                    }
+                    $success_msg = "Đã tắt xác thực 2 bước (2FA) thành công.";
+                    $tab = 'security';
+                }
+            }
+        }
+    }
+}
+
+// Tạo lại mã dự phòng
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['btn_regenerate_backup_codes'])) {
+    if (!verify_csrf($_POST['csrf_token'] ?? '')) {
+        $error_msg = "Mã xác thực bảo mật không hợp lệ.";
+        $tab = 'security';
+    } else {
+        $pwd = $_POST['current_password'] ?? '';
+        $otp = trim($_POST['totp_code'] ?? '');
+
+        if (!password_verify($pwd, $user_info['password']) && $pwd !== $user_info['password']) {
+            $error_msg = "Mật khẩu tài khoản không chính xác.";
+            $tab = 'security';
+        } elseif (!TotpService::verifyCode($user_info['two_factor_secret'] ?? '', $otp)) {
+            $error_msg = "Mã xác thực OTP 6 số không chính xác.";
+            $tab = 'security';
+        } else {
+            $new_backup = TotpService::generateBackupCodes(8);
+            $hashed = TotpService::hashBackupCodes($new_backup);
+            $stmt = $conn->prepare("UPDATE users SET two_factor_backup_codes = ? WHERE user_id = ?");
+            if ($stmt) {
+                $stmt->bind_param("si", $hashed, $user_id);
+                $stmt->execute();
+                $stmt->close();
+
+                $user_info['two_factor_backup_codes'] = $hashed;
+                $_SESSION['newly_generated_backup_codes'] = $new_backup;
+
+                if (function_exists('create_notification')) {
+                    create_notification($conn, $user_id, 'account', 'Mã dự phòng 2FA đã được tạo mới 🔑', 'Danh sách 8 mã dự phòng mới đã được cấp cho tài khoản của bạn.', 'profile.php?tab=security');
+                }
+                $success_msg = "Đã tạo lại danh sách 8 mã dự phòng mới! Hãy lưu lại các mã bên dưới.";
+                $tab = 'security';
+            }
+        }
+    }
+}
 
 // ----------------------------------------------------
 // 4. TÍNH TOÁN THỐNG KÊ (KPIs)
@@ -724,6 +867,246 @@ require_once __DIR__ . '/includes/header.php';
                         </div>
                     </div>
                 </div>
+
+                <!-- ================= 2FA (TWO-FACTOR AUTHENTICATION) ================= -->
+                <div class="gaming-card p-4 mt-4" style="background: var(--bg-card); border: 1px solid var(--border-color);">
+                    <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+                        <div>
+                            <h4 class="fw-bold text-white mb-1">
+                                <i class="bi bi-shield-check text-primary me-2"></i> Xác Thực 2 Bước (2FA / Google Authenticator)
+                            </h4>
+                            <p class="text-secondary small mb-0">Bảo vệ tài khoản và kho game của bạn với lớp bảo mật RFC 6238 TOTP tiêu chuẩn ngân hàng</p>
+                        </div>
+                        <div>
+                            <?php if (($user_info['two_factor_enabled'] ?? 0) == 1): ?>
+                                <span class="badge bg-success bg-opacity-20 text-success border border-success border-opacity-30 px-3 py-2 fw-bold">
+                                    <i class="bi bi-shield-fill-check me-1"></i> 2FA ĐANG BẬT
+                                </span>
+                            <?php else: ?>
+                                <span class="badge bg-secondary bg-opacity-20 text-secondary border border-secondary border-opacity-30 px-3 py-2 fw-bold">
+                                    <i class="bi bi-shield-x me-1"></i> 2FA ĐANG TẮT
+                                </span>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+
+                    <?php if (!empty($_SESSION['newly_generated_backup_codes'])): ?>
+                        <!-- HIỂN THỊ MÃ DỰ PHÒNG KHI VỪA TẠO HOẶC KÍCH HOẠT -->
+                        <div class="p-3 p-md-4 rounded-3 mb-4" style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.3);">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <h6 class="text-success fw-bold mb-0">
+                                    <i class="bi bi-key-fill me-1"></i> 8 MÃ DỰ PHÒNG CỦA BẠN (LƯU LẠI NGAY)
+                                </h6>
+                                <button type="button" class="btn btn-sm btn-outline-success" onclick="copyAllBackupCodes(this)">
+                                    <i class="bi bi-clipboard me-1"></i> Sao chép tất cả
+                                </button>
+                            </div>
+                            <p class="text-secondary small mb-3">Mỗi mã chỉ dùng được 1 lần để đăng nhập khi mất điện thoại hoặc không mở được Authenticator. Hệ thống chỉ lưu mã băm bảo mật SHA-256 nên các mã này sẽ không hiển thị lại sau khi rời trang.</p>
+                            <div class="row g-2 mb-3">
+                                <?php foreach ($_SESSION['newly_generated_backup_codes'] as $bcode): ?>
+                                    <div class="col-6 col-md-3">
+                                        <div class="p-2 text-center rounded font-monospace fw-bold text-white bg-dark border border-secondary border-opacity-25 user-select-all backup-code-item">
+                                            <?php echo htmlspecialchars($bcode); ?>
+                                        </div>
+                                    </div>
+                                <?php endforeach; ?>
+                            </div>
+                            <div class="text-end">
+                                <a href="profile.php?tab=security&dismiss_backup=1" class="btn btn-sm btn-gaming-secondary">
+                                    <i class="bi bi-check2 me-1"></i> Tôi đã lưu các mã an toàn
+                                </a>
+                            </div>
+                        </div>
+                    <?php endif; ?>
+
+                    <?php if (($user_info['two_factor_enabled'] ?? 0) == 1): ?>
+                        <!-- TRẠNG THÁI: 2FA ĐANG BẬT -->
+                        <?php 
+                        $stored_backup_codes = json_decode($user_info['two_factor_backup_codes'] ?? '[]', true);
+                        $remaining_codes_count = is_array($stored_backup_codes) ? count($stored_backup_codes) : 0;
+                        ?>
+                        <div class="row g-4 align-items-center">
+                            <div class="col-md-7">
+                                <div class="p-3 rounded-3 mb-3" style="background: rgba(16, 185, 129, 0.05); border: 1px solid rgba(16, 185, 129, 0.2);">
+                                    <div class="d-flex align-items-center gap-3">
+                                        <div class="p-3 rounded-circle bg-success bg-opacity-20 text-success fs-3">
+                                            <i class="bi bi-shield-lock-fill"></i>
+                                        </div>
+                                        <div>
+                                            <h6 class="text-white fw-bold mb-1">Tài khoản được bảo vệ bởi xác thực 2 bước</h6>
+                                            <p class="text-secondary small mb-0">Mỗi lần đăng nhập sẽ yêu cầu mật khẩu và mã OTP 6 số từ Google Authenticator hoặc mã dự phòng.</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="d-flex align-items-center justify-content-between p-3 rounded-3" style="background: #141724; border: 1px solid var(--border-color);">
+                                    <div>
+                                        <span class="text-light small fw-bold d-block">Mã dự phòng khả dụng:</span>
+                                        <span class="text-secondary small">Dùng khi không truy cập được điện thoại</span>
+                                    </div>
+                                    <span class="badge <?php echo $remaining_codes_count > 2 ? 'bg-primary' : 'bg-warning text-dark'; ?> fs-6 px-3 py-2">
+                                        <?php echo $remaining_codes_count; ?> / 8 mã
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div class="col-md-5">
+                                <div class="d-grid gap-2">
+                                    <button class="btn btn-gaming-secondary text-white py-2" type="button" data-bs-toggle="collapse" data-bs-target="#collapseRegenBackup">
+                                        <i class="bi bi-arrow-repeat me-1"></i> Tạo Lại Mã Dự Phòng Mới
+                                    </button>
+                                    <button class="btn btn-outline-danger py-2" type="button" data-bs-toggle="collapse" data-bs-target="#collapseDisable2fa">
+                                        <i class="bi bi-shield-slash me-1"></i> Tắt Xác Thực 2 Bước (2FA)
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Form Tạo Lại Mã Dự Phòng -->
+                        <div class="collapse mt-3" id="collapseRegenBackup">
+                            <div class="p-3 rounded-3" style="background: #111420; border: 1px solid var(--border-subtle);">
+                                <h6 class="text-warning fw-bold mb-2"><i class="bi bi-key me-1"></i> Tạo Lại Danh Sách 8 Mã Dự Phòng Mới</h6>
+                                <p class="text-secondary small mb-3">Mọi mã dự phòng cũ sẽ bị hủy bỏ. Vui lòng xác thực mật khẩu và mã OTP hiện tại:</p>
+                                <form method="POST" action="profile.php?tab=security" class="row g-2 align-items-end">
+                                    <input type="hidden" name="csrf_token" value="<?php echo $csrf_token; ?>">
+                                    <div class="col-md-5">
+                                        <label class="form-label text-secondary small mb-1">Mật khẩu tài khoản:</label>
+                                        <input type="password" name="current_password" required class="form-control form-control-sm form-control-gaming" placeholder="Mật khẩu của bạn">
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label text-secondary small mb-1">Mã OTP 6 số:</label>
+                                        <input type="text" name="totp_code" maxlength="6" pattern="[0-9]{6}" required class="form-control form-control-sm form-control-gaming font-monospace text-center" placeholder="000000">
+                                    </div>
+                                    <div class="col-md-3">
+                                        <button type="submit" name="btn_regenerate_backup_codes" class="btn btn-sm btn-warning w-100 py-1">
+                                            Cấp 8 Mã Mới
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+
+                        <!-- Form Tắt 2FA -->
+                        <div class="collapse mt-3" id="collapseDisable2fa">
+                            <div class="p-3 rounded-3" style="background: rgba(239, 68, 68, 0.05); border: 1px solid rgba(239, 68, 68, 0.25);">
+                                <h6 class="text-danger fw-bold mb-2"><i class="bi bi-exclamation-triangle-fill me-1"></i> Xác Nhận Tắt Bảo Vệ 2FA</h6>
+                                <p class="text-secondary small mb-3">Tài khoản của bạn sẽ giảm mức độ an toàn. Vui lòng nhập mật khẩu và mã OTP (hoặc mã dự phòng) để xác nhận:</p>
+                                <form method="POST" action="profile.php?tab=security" class="row g-2 align-items-end">
+                                    <input type="hidden" name="csrf_token" value="<?php echo $csrf_token; ?>">
+                                    <div class="col-md-5">
+                                        <label class="form-label text-secondary small mb-1">Mật khẩu tài khoản:</label>
+                                        <input type="password" name="current_password" required class="form-control form-control-sm form-control-gaming" placeholder="Mật khẩu của bạn">
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label text-secondary small mb-1">Mã OTP 6 số hoặc Mã dự phòng:</label>
+                                        <input type="text" name="totp_code" required class="form-control form-control-sm form-control-gaming font-monospace text-center" placeholder="OTP / XXXX-XXXX">
+                                    </div>
+                                    <div class="col-md-3">
+                                        <button type="submit" name="btn_disable_2fa" class="btn btn-sm btn-danger w-100 py-1">
+                                            Xác Nhận Tắt 2FA
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+
+                    <?php else: ?>
+                        <!-- TRẠNG THÁI: 2FA ĐANG TẮT -->
+                        <?php if (isset($_GET['action']) && $_GET['action'] === 'setup_2fa'): ?>
+                            <?php 
+                            if (empty($_SESSION['temp_2fa_secret'])) {
+                                $_SESSION['temp_2fa_secret'] = TotpService::generateSecret(16);
+                                $_SESSION['temp_2fa_backup_codes'] = TotpService::generateBackupCodes(8);
+                            }
+                            $temp_secret = $_SESSION['temp_2fa_secret'];
+                            $temp_backup = $_SESSION['temp_2fa_backup_codes'];
+                            $qr_url = TotpService::getQrCodeUrl($user_info['username'], $temp_secret);
+                            ?>
+                            <div class="p-3 p-md-4 rounded-3" style="background: #111420; border: 1px solid rgba(99, 102, 241, 0.3);">
+                                <h5 class="fw-bold text-white mb-3"><i class="bi bi-qr-code-scan text-primary me-2"></i> Thiết Lập Xác Thực 2 Bước (3 Bước Đơn Giản)</h5>
+
+                                <div class="row g-4">
+                                    <!-- Bước 1: Quét mã QR -->
+                                    <div class="col-md-4 text-center">
+                                        <div class="p-2 bg-white rounded-3 d-inline-block border mb-2">
+                                            <img src="<?php echo $qr_url; ?>" alt="QR Code 2FA" class="img-fluid" style="width: 170px; height: 170px;">
+                                        </div>
+                                        <small class="text-secondary d-block mb-1">Dùng Google Authenticator quét mã</small>
+                                        <div class="mt-2">
+                                            <small class="text-muted d-block" style="font-size: 0.72rem;">Hoặc nhập khóa bí mật thủ công:</small>
+                                            <span class="font-monospace text-info fw-bold user-select-all small d-block"><?php echo $temp_secret; ?></span>
+                                        </div>
+                                    </div>
+
+                                    <!-- Bước 2 & 3: Lưu mã dự phòng & Nhập OTP -->
+                                    <div class="col-md-8">
+                                        <div class="mb-3">
+                                            <label class="text-light fw-bold small d-block mb-1">
+                                                Bước 2: Lưu 8 mã dự phòng (Phòng khi mất điện thoại):
+                                            </label>
+                                            <div class="row g-1 mb-2">
+                                                <?php foreach ($temp_backup as $tc): ?>
+                                                    <div class="col-6 col-sm-3">
+                                                        <div class="p-1 px-2 text-center rounded font-monospace small text-white bg-dark border border-secondary border-opacity-25 user-select-all">
+                                                            <?php echo htmlspecialchars($tc); ?>
+                                                        </div>
+                                                    </div>
+                                                <?php endforeach; ?>
+                                            </div>
+                                            <small class="text-secondary" style="font-size: 0.75rem;">
+                                                <i class="bi bi-info-circle me-1"></i> Mã dự phòng dùng một lần sẽ tự động có hiệu lực sau khi bạn kích hoạt thành công.
+                                            </small>
+                                        </div>
+
+                                        <form method="POST" action="profile.php?tab=security" class="pt-2 border-top border-secondary border-opacity-25">
+                                            <input type="hidden" name="csrf_token" value="<?php echo $csrf_token; ?>">
+                                            <label class="text-light fw-bold small d-block mb-2">Bước 3: Nhập Mật khẩu & Mã OTP 6 số để kích hoạt:</label>
+
+                                            <div class="row g-2 mb-3">
+                                                <div class="col-sm-6">
+                                                    <input type="password" name="current_password" required class="form-control form-control-gaming" placeholder="Mật khẩu tài khoản...">
+                                                </div>
+                                                <div class="col-sm-6">
+                                                    <input type="text" name="totp_code" maxlength="6" pattern="[0-9]{6}" required class="form-control form-control-gaming font-monospace text-center fs-5 text-warning fw-bold" placeholder="000000" autocomplete="one-time-code">
+                                                </div>
+                                            </div>
+
+                                            <div class="d-flex gap-2">
+                                                <a href="profile.php?tab=security&action=cancel_2fa" class="btn btn-gaming-secondary">Hủy bỏ</a>
+                                                <button type="submit" name="btn_confirm_enable_2fa" class="btn btn-gaming-primary flex-grow-1">
+                                                    <i class="bi bi-check2-circle me-1"></i> Hoàn Tất & Bật Bảo Vệ 2FA
+                                                </button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        <?php else: ?>
+                            <div class="row align-items-center">
+                                <div class="col-md-8">
+                                    <p class="text-secondary small mb-3">
+                                        Khi bật xác thực 2 bước (2FA), bạn sẽ cần nhập thêm mã 6 số từ ứng dụng bảo mật (Google Authenticator, Microsoft Authenticator) mỗi khi đăng nhập. Điều này ngăn chặn hacker dù họ có biết mật khẩu của bạn.
+                                    </p>
+                                    <div class="d-flex flex-wrap gap-2">
+                                        <span class="badge bg-dark border border-secondary text-secondary small py-2 px-3">
+                                            <i class="bi bi-google text-danger me-1"></i> Google Authenticator
+                                        </span>
+                                        <span class="badge bg-dark border border-secondary text-secondary small py-2 px-3">
+                                            <i class="bi bi-microsoft text-primary me-1"></i> Microsoft Authenticator
+                                        </span>
+                                        <span class="badge bg-dark border border-secondary text-secondary small py-2 px-3">
+                                            <i class="bi bi-shield text-info me-1"></i> Twilio Authy
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="col-md-4 text-md-end mt-3 mt-md-0">
+                                    <a href="profile.php?tab=security&action=setup_2fa" class="btn btn-gaming-primary py-2 px-4 shadow">
+                                        <i class="bi bi-qr-code-scan me-1"></i> Bắt Đầu Thiết Lập 2FA
+                                    </a>
+                                </div>
+                            </div>
+                        <?php endif; ?>
+                    <?php endif; ?>
+                </div>
             <?php endif; ?>
         </div>
     </div>
@@ -740,6 +1123,19 @@ function togglePasswordVisibility(fieldId, btn) {
         field.type = 'password';
         icon.className = 'bi bi-eye';
     }
+}
+
+function copyAllBackupCodes(btn) {
+    var codes = [];
+    document.querySelectorAll('.backup-code-item').forEach(function(el) {
+        codes.push(el.innerText.trim());
+    });
+    var text = "MÃ DỰ PHÒNG ANPLAY STORE (2FA BACKUP CODES):\n" + codes.join("\n") + "\n(Lưu ý: Mỗi mã chỉ dùng 1 lần)";
+    navigator.clipboard.writeText(text).then(function() {
+        var orig = btn.innerHTML;
+        btn.innerHTML = '<i class="bi bi-check2 text-success"></i> Đã chép tất cả!';
+        setTimeout(function() { btn.innerHTML = orig; }, 2000);
+    });
 }
 </script>
 

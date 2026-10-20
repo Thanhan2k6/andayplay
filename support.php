@@ -179,6 +179,27 @@ require_once __DIR__ . '/includes/header.php';
         </div>
     <?php endif; ?>
 
+    <!-- Cam kết Hỗ trợ Con người & 1 đổi 1 -->
+    <div class="p-3 px-4 mb-4 rounded-4 d-flex flex-wrap align-items-center justify-content-between gap-3" style="background: linear-gradient(90deg, rgba(99,102,241,0.12) 0%, rgba(139,92,246,0.12) 100%); border: 1px solid rgba(99,102,241,0.3);">
+        <div class="d-flex align-items-center gap-3">
+            <div class="p-2 px-3 rounded-circle" style="background: rgba(99,102,241,0.25); color: #818cf8; font-size: 1.5rem;">
+                <i class="bi bi-person-check-fill"></i>
+            </div>
+            <div>
+                <h6 class="fw-bold text-white mb-1"><i class="bi bi-shield-check text-success me-1"></i> Đội Ngũ Kỹ Thuật Viên 24/7 Trực Tiếp Xử Lý (Human Support)</h6>
+                <p class="text-secondary small mb-0">Mọi yêu cầu hỗ trợ (Ticket) và báo lỗi tài khoản được xử lý bởi nhân viên kỹ thuật thực tế của shop. Cam kết bảo hành 1 đổi 1 ngay nếu tài khoản gặp sự cố đăng nhập.</p>
+            </div>
+        </div>
+        <div class="d-flex gap-2">
+            <span class="badge bg-success bg-opacity-25 text-success border border-success border-opacity-25 px-3 py-2">
+                <i class="bi bi-check-circle-fill me-1"></i> Bảo hành 1 đổi 1
+            </span>
+            <span class="badge bg-primary bg-opacity-25 text-primary border border-primary border-opacity-25 px-3 py-2">
+                <i class="bi bi-clock-history me-1"></i> Phản hồi nhanh
+            </span>
+        </div>
+    </div>
+
     <!-- KPI Summary Row -->
     <div class="row g-3 mb-4">
         <div class="col-6 col-lg-3">

@@ -104,10 +104,10 @@ if (empty($_SESSION['chat_csrf_token'])) {
                 <div class="anplay-chat-title-text">
                     <h4>
                         ANPLAY ASSISTANT 
-                        <span class="anplay-chat-badge">AI 3.5 Lite</span>
+                        <span class="anplay-chat-badge" style="background: rgba(99, 102, 241, 0.2); color: #818cf8; border: 1px solid rgba(99, 102, 241, 0.3);">Trợ lý ảo AI</span>
                     </h4>
                     <p class="anplay-chat-subtitle">
-                        <span class="anplay-status-pill"></span> Trợ lý tư vấn game bản quyền
+                        <span class="anplay-status-pill"></span> Tư vấn & Hướng dẫn tự động 24/7
                     </p>
                 </div>
             </div>
@@ -123,17 +123,17 @@ if (empty($_SESSION['chat_csrf_token'])) {
 
         <!-- Gợi ý câu hỏi nhanh (Quick Suggestion Chips) -->
         <div class="anplay-chat-suggestions" id="anplay-chat-suggestions">
+            <a href="support.php" class="anplay-suggestion-chip text-decoration-none" style="background: rgba(239, 68, 68, 0.15); border-color: rgba(239, 68, 68, 0.35); color: #f87171;">
+                <i class="bi bi-headset text-danger"></i> Gặp nhân viên hỗ trợ
+            </a>
             <button class="anplay-suggestion-chip" type="button" data-question="Shop có những game gì đang cho thuê?" onclick="anplayQuickAsk(this)">
                 <i class="bi bi-joystick text-primary"></i> Game cho thuê?
             </button>
             <button class="anplay-suggestion-chip" type="button" data-question="Hướng dẫn quy trình thuê tài khoản game" onclick="anplayQuickAsk(this)">
                 <i class="bi bi-question-circle text-info"></i> Cách thuê game?
             </button>
-            <button class="anplay-suggestion-chip" type="button" data-question="Thuê game tại ANPLAY STORE có uy tín không?" onclick="anplayQuickAsk(this)">
-                <i class="bi bi-shield-check text-success"></i> Có uy tín không?
-            </button>
-            <button class="anplay-suggestion-chip" type="button" data-question="Sau khi thuê thì kiểm tra tài khoản ở đâu?" onclick="anplayQuickAsk(this)">
-                <i class="bi bi-collection-play text-warning"></i> Xem tài khoản đã thuê?
+            <button class="anplay-suggestion-chip" type="button" data-question="Chính sách bảo hành và đổi tài khoản thế nào?" onclick="anplayQuickAsk(this)">
+                <i class="bi bi-shield-check text-success"></i> Bảo hành 1 đổi 1?
             </button>
         </div>
 
@@ -144,8 +144,14 @@ if (empty($_SESSION['chat_csrf_token'])) {
                 <div class="anplay-msg-avatar"><i class="bi bi-robot"></i></div>
                 <div class="anplay-msg-content">
                     <div class="anplay-msg bot">
-                        Xin chào game thủ! 👋 Tôi là <strong>ANPLAY ASSISTANT</strong>. 
-                        Tôi có thể giúp bạn tìm kiếm game bản quyền, báo giá thuê và hướng dẫn trải nghiệm kho game AAA của shop!
+                        Xin chào bạn! 👋 Tôi là <strong>Trợ lý ảo tự động của ANPLAY STORE</strong>. 
+                        Tôi có thể giúp bạn tra cứu danh mục game, báo giá gói thuê từ <strong>5.000đ</strong> và hướng dẫn các bước thuê tài khoản.
+                        <div class="mt-2 pt-2 border-top border-secondary border-opacity-25" style="font-size:0.8rem;">
+                            👨‍💻 <em>Nếu cần hỗ trợ kỹ thuật, cấp đổi tài khoản lỗi hoặc khiếu nại, vui lòng bấm nút:</em><br>
+                            <a href="support.php" class="btn btn-sm btn-outline-danger py-1 px-2 mt-1 text-decoration-none" style="font-size:0.75rem;">
+                                <i class="bi bi-headset me-1"></i> Gặp nhân viên hỗ trợ (Ticket)
+                            </a>
+                        </div>
                     </div>
                     <span class="anplay-msg-time"><?php echo date('H:i'); ?></span>
                 </div>
@@ -415,14 +421,13 @@ window.ANPLAY_CHAT_CSRF = "<?php echo htmlspecialchars($_SESSION['chat_csrf_toke
                 const errMsg = (data && data.error) ? data.error : 'Phiên làm việc bảo mật đã hết hạn. Vui lòng tải lại trang (F5) để tiếp tục!';
                 appendMessage('bot', errMsg, true, false);
             } else if (response.status === 503) {
-                appendMessage('bot', (data && data.error) ? data.error : 'Hệ thống AI đang bảo trì. Vui lòng thử lại sau ít phút!', true, true);
+                appendMessage('bot', 'Hiện trợ lý AI đang tạm thời không khả dụng. Bạn có thể [Liên hệ nhân viên hỗ trợ](support.php) để được giải quyết ngay.', true, false);
             } else {
-                const errMsg = (data && data.error) ? data.error : 'Đã có sự cố khi kết nối tới trợ lý AI. Vui lòng bấm Thử lại!';
-                appendMessage('bot', errMsg, true, true);
+                appendMessage('bot', 'Hiện trợ lý AI đang tạm thời không khả dụng. Bạn có thể [Liên hệ nhân viên hỗ trợ](support.php) để được giải quyết ngay.', true, false);
             }
         } catch (netErr) {
             if (typingIndicator) typingIndicator.style.display = 'none';
-            appendMessage('bot', 'Không thể kết nối đến máy chủ. Vui lòng kiểm tra đường truyền mạng và bấm Thử lại!', true, true);
+            appendMessage('bot', 'Hiện trợ lý AI đang tạm thời không khả dụng. Bạn có thể [Liên hệ nhân viên hỗ trợ](support.php) để được giải quyết ngay.', true, false);
         } finally {
             isSending = false;
             if (inputField) {
