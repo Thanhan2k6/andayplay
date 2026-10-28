@@ -17,6 +17,12 @@ if (isset($_SESSION['user_id'])) {
 $filter_conditions = [];
 $category_title = "TẤT CẢ TỰA GAME CHO THUÊ"; 
 
+if (isset($_GET['type']) && in_array($_GET['type'], ['free', 'paid'])) {
+    $price_type = $conn->real_escape_string($_GET['type']);
+    $filter_conditions[] = "g.price_type = '$price_type'";
+    $category_title = ($price_type === 'free') ? "DANH MỤC GAME MIỄN PHÍ" : "GAME BẢN QUYỀN CHO THUÊ";
+}
+
 if (isset($_GET['category']) && !empty($_GET['category'])) {
     $cat_id = intval($_GET['category']);
     $filter_conditions[] = "g.category_id = $cat_id";
@@ -183,8 +189,21 @@ if (!$result) {
 
     <!-- Thanh công cụ lọc & sắp xếp -->
     <div class="d-flex align-items-center flex-wrap gap-2 w-100 w-lg-auto justify-content-start justify-content-lg-end">
+        <!-- Lọc Mô hình (Free / Thuê) -->
+        <form method="GET" action="index.php" class="d-flex align-items-center gap-1">
+            <?php if(isset($_GET['category'])): ?><input type="hidden" name="category" value="<?php echo intval($_GET['category']); ?>"><?php endif; ?>
+            <?php if(isset($_GET['platform'])): ?><input type="hidden" name="platform" value="<?php echo htmlspecialchars($_GET['platform']); ?>"><?php endif; ?>
+            <?php if(isset($_GET['sort'])): ?><input type="hidden" name="sort" value="<?php echo htmlspecialchars($_GET['sort']); ?>"><?php endif; ?>
+            <select name="type" class="form-select form-select-sm py-2 px-3 border-secondary" onchange="this.form.submit()" style="min-width: 140px;">
+                <option value="">🎯 Tất cả mô hình</option>
+                <option value="paid" <?php echo (isset($_GET['type']) && $_GET['type']=='paid')?'selected':''; ?>>🎮 Game Cho Thuê</option>
+                <option value="free" <?php echo (isset($_GET['type']) && $_GET['type']=='free')?'selected':''; ?>>🎁 Game Miễn Phí</option>
+            </select>
+        </form>
+
         <!-- Lọc Nền tảng -->
         <form method="GET" action="index.php" class="d-flex align-items-center gap-1">
+            <?php if(isset($_GET['type'])): ?><input type="hidden" name="type" value="<?php echo htmlspecialchars($_GET['type']); ?>"><?php endif; ?>
             <?php if(isset($_GET['category'])): ?><input type="hidden" name="category" value="<?php echo intval($_GET['category']); ?>"><?php endif; ?>
             <?php if(isset($_GET['sort'])): ?><input type="hidden" name="sort" value="<?php echo htmlspecialchars($_GET['sort']); ?>"><?php endif; ?>
             <select name="platform" class="form-select form-select-sm py-2 px-3 border-secondary" onchange="this.form.submit()" style="min-width: 120px;">
@@ -196,6 +215,7 @@ if (!$result) {
 
         <!-- Sắp xếp -->
         <form method="GET" action="index.php" class="d-flex align-items-center gap-1">
+            <?php if(isset($_GET['type'])): ?><input type="hidden" name="type" value="<?php echo htmlspecialchars($_GET['type']); ?>"><?php endif; ?>
             <?php if(isset($_GET['category'])): ?><input type="hidden" name="category" value="<?php echo intval($_GET['category']); ?>"><?php endif; ?>
             <?php if(isset($_GET['platform'])): ?><input type="hidden" name="platform" value="<?php echo htmlspecialchars($_GET['platform']); ?>"><?php endif; ?>
             <select name="sort" class="form-select form-select-sm py-2 px-3 border-secondary" onchange="this.form.submit()" style="min-width: 130px;">
@@ -205,7 +225,7 @@ if (!$result) {
             </select>
         </form>
 
-        <?php if(!empty($_GET['category']) || !empty($_GET['platform']) || !empty($_GET['sort']) || !empty($_GET['search'])): ?>
+        <?php if(!empty($_GET['type']) || !empty($_GET['category']) || !empty($_GET['platform']) || !empty($_GET['sort']) || !empty($_GET['search'])): ?>
             <a href="index.php" class="btn btn-sm btn-outline-danger px-3 py-2">
                 <i class="bi bi-x-circle me-1"></i> Xóa Lọc
             </a>

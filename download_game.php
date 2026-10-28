@@ -123,15 +123,29 @@ if (!$is_allowed) {
                     </div>
                 <?php endif; ?>
 
-                <!-- NÚT TẢI BỘ CÀI ĐẶT -->
-                <?php if (!empty($game['download_link'])): ?>
-                    <div class="mb-4">
-                        <a href="<?php echo htmlspecialchars($game['download_link']); ?>" target="_blank" class="btn btn-gaming-primary w-100 py-3 fs-5 d-flex align-items-center justify-content-center text-decoration-none">
-                            <i class="bi bi-cloud-arrow-down-fill me-2 fs-4"></i> TẢI XUỐNG BỘ CÀI ĐẶT CHÍNH THỨC
+                <!-- NÚT TẢI BỘ CÀI ĐẶT HOẶC MỞ LAUNCHER CHÍNH THỨC -->
+                <div class="mb-4">
+                    <?php if (!empty($game['download_link'])): ?>
+                        <a href="<?php echo htmlspecialchars($game['download_link']); ?>" target="_blank" class="btn btn-gaming-primary w-100 py-3 fs-5 d-flex align-items-center justify-content-center text-decoration-none shadow mb-2">
+                            <i class="bi bi-cloud-arrow-down-fill me-2 fs-4"></i> TẢI XUỐNG BỘ CÀI ĐẶT GAME
                         </a>
-                        <small class="text-secondary d-block mt-2 text-center">Tải file cài đặt trực tiếp từ máy chủ phát hành chính hãng hoặc Launcher của Game</small>
+                    <?php endif; ?>
+
+                    <div class="p-3 rounded-3 mt-2 text-start" style="background: rgba(15, 23, 42, 0.6); border: 1px solid var(--border-color);">
+                        <small class="text-light fw-bold d-block mb-2"><i class="bi bi-laptop me-1 text-primary"></i> Khởi Động Launcher Game Trên Máy Bạn:</small>
+                        <div class="d-flex flex-wrap gap-2">
+                            <a href="steam://open/main" class="btn btn-sm btn-gaming-secondary py-1 px-3">
+                                <i class="bi bi-steam me-1"></i> Mở Steam Client
+                            </a>
+                            <a href="https://store.steampowered.com/about/" target="_blank" class="btn btn-sm btn-outline-secondary py-1 px-2 text-secondary" style="font-size: 0.78rem;">
+                                Cài đặt Steam
+                            </a>
+                            <a href="https://store.epicgames.com/download" target="_blank" class="btn btn-sm btn-gaming-secondary py-1 px-3">
+                                <i class="bi bi-box-arrow-up-right me-1"></i> Epic Games
+                            </a>
+                        </div>
                     </div>
-                <?php endif; ?>
+                </div>
 
                 <!-- Quy định an toàn tài khoản -->
                 <div class="p-3 rounded-3 mb-4 text-start" style="background: rgba(245, 158, 11, 0.08); border: 1px solid rgba(245, 158, 11, 0.25);">

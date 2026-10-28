@@ -439,10 +439,10 @@ require_once __DIR__ . '/includes/header.php';
                         </form>
 
                         <?php if ($is_active): ?>
-                            <!-- Báo lỗi tài khoản & Tải game -->
+                            <!-- Nút Chơi ngay & Báo lỗi tài khoản -->
                             <div class="d-flex gap-2">
-                                <a href="download_game.php?id=<?php echo $row['game_id']; ?>" class="btn btn-sm btn-gaming-secondary flex-grow-1 text-center text-decoration-none">
-                                    <i class="bi bi-cloud-arrow-down me-1"></i> Bộ cài game
+                                <a href="download_game.php?id=<?php echo $row['game_id']; ?>" class="btn btn-sm btn-gaming-primary flex-grow-1 text-center text-decoration-none fw-bold">
+                                    <i class="bi bi-controller me-1"></i> Chơi Ngay / Bộ Cài
                                 </a>
                                 <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#reportModal_<?php echo $row['borrow_id']; ?>" title="Báo lỗi đổi tài khoản">
                                     <i class="bi bi-flag-fill"></i> Báo lỗi

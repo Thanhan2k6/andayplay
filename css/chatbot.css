@@ -565,8 +565,8 @@
 /* 10. RESPONSIVE DESIGN (MOBILE / TABLET) */
 @media (max-width: 575.98px) {
     .anplay-chatbot-wrapper {
-        bottom: 18px !important;
-        right: 18px !important;
+        bottom: calc(var(--bottom-nav-height, 64px) + 16px) !important;
+        right: 16px !important;
     }
 
     .anplay-chat-toggle {

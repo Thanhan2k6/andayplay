@@ -44,6 +44,22 @@ if (isset($_SESSION['user_id'])) {
     <!-- SweetAlert2 -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
+    <!-- Early Theme Detection (Tránh giật màn hình khi tải trang) -->
+    <script>
+        (function() {
+            try {
+                var savedTheme = localStorage.getItem('anplay_theme');
+                if (savedTheme === 'light') {
+                    document.documentElement.setAttribute('data-theme', 'light');
+                } else if (!savedTheme && window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) {
+                    document.documentElement.setAttribute('data-theme', 'light');
+                } else {
+                    document.documentElement.setAttribute('data-theme', 'dark');
+                }
+            } catch(e) {}
+        })();
+    </script>
+
     <!-- Main Stylesheet & Chatbot Stylesheet -->
     <link rel="stylesheet" href="css/style.css?v=<?php echo time(); ?>">
     <link rel="stylesheet" href="css/chatbot.css?v=<?php echo time(); ?>">
@@ -149,8 +165,13 @@ if (isset($_SESSION['user_id'])) {
         </button>
 
         <!-- Menu Action bên phải -->
-        <!-- Menu Action bên phải -->
         <div class="d-flex align-items-center gap-2 ms-auto">
+            <!-- Nút Chuyển Đổi Giao Diện Sáng / Tối (Light / Dark Mode) -->
+            <button class="topbar-action-btn" id="themeToggleBtn" type="button" title="Chuyển chế độ Sáng / Tối" onclick="toggleThemeMode()" aria-label="Đổi giao diện">
+                <i class="bi bi-sun-fill" id="themeIconSun" style="display: none; color: #f59e0b;"></i>
+                <i class="bi bi-moon-stars-fill" id="themeIconMoon"></i>
+            </button>
+
             <!-- Nút hỗ trợ khách hàng nhanh -->
             <a href="support.php" class="topbar-action-btn" title="Trung tâm hỗ trợ 24/7">
                 <i class="bi bi-headset"></i>
@@ -542,5 +563,35 @@ if (isset($_SESSION['user_id'])) {
                     .catch(() => {});
             }, 35000);
             <?php endif; ?>
+        });
+
+        // XỬ LÝ CHUYỂN ĐỔI CHẾ ĐỘ LIGHT / DARK THEME
+        window.toggleThemeMode = function() {
+            var current = document.documentElement.getAttribute('data-theme') || 'dark';
+            var next = (current === 'light') ? 'dark' : 'light';
+            document.documentElement.setAttribute('data-theme', next);
+            try {
+                localStorage.setItem('anplay_theme', next);
+            } catch(e) {}
+            updateThemeIcon(next);
+        };
+
+        function updateThemeIcon(theme) {
+            var sun = document.getElementById('themeIconSun');
+            var moon = document.getElementById('themeIconMoon');
+            if (sun && moon) {
+                if (theme === 'light') {
+                    sun.style.display = 'inline-block';
+                    moon.style.display = 'none';
+                } else {
+                    sun.style.display = 'none';
+                    moon.style.display = 'inline-block';
+                }
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            var currentTheme = document.documentElement.getAttribute('data-theme') || 'dark';
+            updateThemeIcon(currentTheme);
         });
     </script>

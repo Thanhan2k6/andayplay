@@ -1,9 +1,13 @@
 <?php
+// OUTPUT BUFFERING — Prevent headers-already-sent on InfinityFree (output buffering may be OFF)
+ob_start();
+
 if (session_status() === PHP_SESSION_NONE) { session_start(); }
 require_once __DIR__ . '/includes/connect.php';
 require_once __DIR__ . '/includes/account_service.php';
 
 if (!isset($_SESSION['user_id'])) {
+    ob_end_clean();
     header("Location: login.php");
     exit();
 }
@@ -87,8 +91,9 @@ if (isset($_POST['btn_extend_submit'])) {
     }
 }
 
-// BẮT ĐẦU LOAD GIAO DIỆN
-require_once __DIR__ . '/includes/header.php';
+// =====================================================================
+// LOAD THÔNG TIN ĐƠN HÀNG VÀ XỬ LÝ POST TRƯỚC KHI OUTPUT HEADER.PHP
+// =====================================================================
 
 // Lấy thông tin đơn hàng từ DB
 $order = null;
@@ -127,38 +132,18 @@ if ($order_id > 0) {
     }
 }
 
-if (!$order) {
-    echo "<div class='container my-5 text-center text-white'>
-            <div class='panel-dark p-5 mx-auto' style='max-width: 600px;'>
-                <i class='bi bi-receipt-cutoff fs-1 text-warning d-block mb-3'></i>
-                <h3 class='fw-bold text-white mb-2'>Chưa có thông tin đơn thuê hợp lệ</h3>
-                <p class='text-secondary small mb-4'>Vui lòng vào Thư viện hoặc Cửa hàng để tiến hành thuê hoặc gia hạn thời gian chơi game.</p>
-                <div class='d-flex justify-content-center gap-2'>
-                    <a href='my_library.php' class='btn btn-gaming-secondary px-4 py-2'>Thư viện của tôi</a>
-                    <a href='index.php' class='btn btn-gaming-primary px-4 py-2'>Khám phá Cửa hàng</a>
-                </div>
-            </div>
-          </div>";
-    include 'includes/footer.php';
-    exit();
-}
-
-$game_id = intval($order['game_id']);
-$amount = floatval($order['rental_price'] ?? 15000);
+// Tính toán các flag quan trọng trước khi xử lý POST
+$game_id      = $order ? intval($order['game_id']) : 0;
+$amount       = $order ? floatval($order['rental_price'] ?? 15000) : 15000;
 if ($amount <= 0) $amount = 15000;
-$order_code = !empty($order['order_code']) ? $order['order_code'] : ("ORD" . $order['borrow_id']);
-$is_extension = (($order['rent_type'] ?? '') === 'extend');
-$is_paid_and_active = (($order['payment_status'] ?? '') === 'paid' && ($order['status'] ?? '') === 'active');
-$has_account = !empty($order['account_username']);
+$order_code   = $order && !empty($order['order_code']) ? $order['order_code'] : ("ORD" . $order_id);
+$is_extension = $order && (($order['rent_type'] ?? '') === 'extend');
+$is_paid_and_active = $order && (($order['payment_status'] ?? '') === 'paid' && ($order['status'] ?? '') === 'active');
+$has_account  = $order && !empty($order['account_username']);
 
-$plain_game_pass = '';
-if ($is_paid_and_active && !empty($order['account_password_encrypted'])) {
-    $plain_game_pass = decrypt_game_password($order['account_password_encrypted']);
-}
-
-// XỬ LÝ XÁC NHẬN THANH TOÁN
+// XỬ LÝ XÁC NHẬN THANH TOÁN — PHẢI Ở ĐÂY TRƯỚC KHI INCLUDE HEADER.PHP
 $allocation_error = null;
-if (isset($_POST['confirm_payment_webhook'])) {
+if ($order && isset($_POST['confirm_payment_webhook'])) {
     if (!verify_csrf_token($_POST['csrf_token'] ?? '')) {
         $allocation_error = "Phiên bảo mật đã hết hạn. Vui lòng bấm xác nhận lại.";
     } else {
@@ -271,6 +256,57 @@ if (isset($_POST['confirm_payment_webhook'])) {
             }
         }
     }
+}
+
+// Re-query để cập nhật trạng thái mới nhất nếu vừa xử lý POST
+if ($order && !$is_paid_and_active) {
+    try {
+        $stmt2 = $conn->prepare("SELECT br.*, g.title, g.image_url, g.platform, rp.package_name, 
+                               ga.account_username, ga.account_password_encrypted, ga.server_region, ga.status as account_status 
+                               FROM borrow_records br 
+                               JOIN games g ON br.game_id = g.game_id 
+                               LEFT JOIN rental_packages rp ON br.package_id = rp.package_id 
+                               LEFT JOIN game_accounts ga ON br.account_id = ga.account_id 
+                               WHERE br.borrow_id = ? AND br.user_id = ?");
+        if ($stmt2) {
+            $stmt2->bind_param("ii", $order_id, $user_id);
+            $stmt2->execute();
+            $refreshed = $stmt2->get_result()->fetch_assoc();
+            $stmt2->close();
+            if ($refreshed) {
+                $order = $refreshed;
+                $is_paid_and_active = (($order['payment_status'] ?? '') === 'paid' && ($order['status'] ?? '') === 'active');
+                $has_account = !empty($order['account_username']);
+            }
+        }
+    } catch (Throwable $e) {}
+}
+
+// Giải mã mật khẩu sau khi biết chắc trạng thái
+$plain_game_pass = '';
+if ($is_paid_and_active && !empty($order['account_password_encrypted'])) {
+    $plain_game_pass = decrypt_game_password($order['account_password_encrypted']);
+}
+
+// BẮT ĐẦU OUTPUT HTML — INCLUDE HEADER.PHP Ở ĐÂY (SAU KHI ĐÃ XỬ LÝ TOÀN BỘ POST)
+require_once __DIR__ . '/includes/header.php';
+
+// Nếu không có đơn hàng hợp lệ
+if (!$order) {
+    echo "<div class='container my-5 text-center text-white'>
+            <div class='panel-dark p-5 mx-auto' style='max-width: 600px;'>
+                <i class='bi bi-receipt-cutoff fs-1 text-warning d-block mb-3'></i>
+                <h3 class='fw-bold text-white mb-2'>Chưa có thông tin đơn thuê hợp lệ</h3>
+                <p class='text-secondary small mb-4'>Vui lòng vào Thư viện hoặc Cửa hàng để tiến hành thuê hoặc gia hạn thời gian chơi game.</p>
+                <div class='d-flex justify-content-center gap-2'>
+                    <a href='my_library.php' class='btn btn-gaming-secondary px-4 py-2'>Thư viện của tôi</a>
+                    <a href='index.php' class='btn btn-gaming-primary px-4 py-2'>Khám phá Cửa hàng</a>
+                </div>
+            </div>
+          </div>";
+    include 'includes/footer.php';
+    ob_end_flush();
+    exit();
 }
 
 // Cấu hình VietQR
@@ -612,4 +648,4 @@ function togglePassView(fieldId, btn) {
 <?php endif; ?>
 </script>
 
-<?php include 'includes/footer.php'; ?>
+<?php include 'includes/footer.php'; ob_end_flush(); ?>

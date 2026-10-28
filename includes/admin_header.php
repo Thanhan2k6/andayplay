@@ -55,6 +55,22 @@ $page_file_name = basename($_SERVER['PHP_SELF']);
     <!-- SweetAlert2 -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
+    <!-- Early Theme Detection -->
+    <script>
+        (function() {
+            try {
+                var savedTheme = localStorage.getItem('anplay_theme');
+                if (savedTheme === 'light') {
+                    document.documentElement.setAttribute('data-theme', 'light');
+                } else if (!savedTheme && window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) {
+                    document.documentElement.setAttribute('data-theme', 'light');
+                } else {
+                    document.documentElement.setAttribute('data-theme', 'dark');
+                }
+            } catch(e) {}
+        })();
+    </script>
+
     <!-- Main Stylesheet -->
     <link rel="stylesheet" href="css/style.css?v=<?php echo time(); ?>">
 
