@@ -192,12 +192,12 @@ if (isset($_SESSION['user_id'])) {
                             <?php echo $header_unread_notifs; ?>
                         </span>
                     </button>
-                    <div class="dropdown-menu dropdown-menu-dark dropdown-menu-end shadow-lg mt-2 p-0 rounded-4" aria-labelledby="notifDropdownBtn" style="width: 360px; max-width: 92vw; background-color: #0f121a; border: 1px solid rgba(255,255,255,0.12); box-shadow: 0 20px 40px -10px rgba(0,0,0,0.9);">
+                    <div class="dropdown-menu dropdown-menu-end shadow-lg mt-2 p-0 rounded-4 topbar-custom-dropdown" aria-labelledby="notifDropdownBtn" style="width: 360px; max-width: 92vw; background-color: var(--surface-bg); border: 1px solid var(--border-subtle); box-shadow: var(--shadow-elevated);">
                         <!-- Header -->
                         <div class="p-3 border-bottom border-secondary border-opacity-25 d-flex justify-content-between align-items-center">
                             <div class="d-flex align-items-center gap-2">
                                 <i class="bi bi-bell-fill text-warning"></i>
-                                <h6 class="fw-bold text-white mb-0" style="font-size: 0.95rem;">Thông Báo</h6>
+                                <h6 class="fw-bold mb-0" style="font-size: 0.95rem; color: var(--text-heading);">Thông Báo</h6>
                                 <span class="badge bg-danger rounded-pill <?php echo ($header_unread_notifs > 0) ? '' : 'd-none'; ?>" id="notifDropdownHeaderBadge"><?php echo $header_unread_notifs; ?></span>
                             </div>
                             <button class="btn btn-link btn-sm text-decoration-none p-0 text-secondary hover-white" id="markAllReadQuickBtn" style="font-size: 0.75rem;" onclick="markAllNotificationsReadQuick(event)">
@@ -213,7 +213,7 @@ if (isset($_SESSION['user_id'])) {
                         </div>
 
                         <!-- Footer -->
-                        <div class="p-2 border-top border-secondary border-opacity-25 text-center bg-dark bg-opacity-25 rounded-bottom-4">
+                        <div class="p-2 border-top border-secondary border-opacity-25 text-center rounded-bottom-4" style="background-color: var(--surface-secondary);">
                             <a href="notifications.php" class="text-primary text-decoration-none small fw-bold d-block py-1 hover-underline">
                                 Xem tất cả thông báo <i class="bi bi-arrow-right ms-1"></i>
                             </a>
@@ -226,7 +226,7 @@ if (isset($_SESSION['user_id'])) {
                     <button class="user-profile-btn dropdown-toggle text-decoration-none border-0" type="button" id="userMenuDropdown" data-bs-toggle="dropdown" aria-expanded="false" style="cursor: pointer;">
                         <img src="https://ui-avatars.com/api/?name=<?php echo urlencode($hdr_username); ?>&background=6366f1&color=fff&bold=true&rounded=true" width="32" height="32" class="rounded-circle shadow-sm" alt="Avatar">
                         <div class="d-none d-md-flex flex-column text-start">
-                            <span class="fw-bold" style="font-size: 0.86rem; line-height: 1.2;">@<?php echo $hdr_username; ?></span>
+                            <span class="fw-bold user-profile-name" style="font-size: 0.86rem; line-height: 1.2; color: var(--text-heading);">@<?php echo $hdr_username; ?></span>
                             <span class="text-secondary" style="font-size: 0.70rem;">
                                 <?php 
                                 if ($hdr_is_super) {
@@ -240,13 +240,13 @@ if (isset($_SESSION['user_id'])) {
                             </span>
                         </div>
                     </button>
-                    <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-end shadow-lg mt-2 p-2" aria-labelledby="userMenuDropdown" style="min-width: 265px; background-color: #0f121a; border: 1px solid rgba(255,255,255,0.12); border-radius: 16px; box-shadow: 0 20px 40px -10px rgba(0,0,0,0.9);">
+                    <ul class="dropdown-menu dropdown-menu-end shadow-lg mt-2 p-2 topbar-custom-dropdown" aria-labelledby="userMenuDropdown" style="min-width: 265px; background-color: var(--surface-bg); border: 1px solid var(--border-subtle); border-radius: 16px; box-shadow: var(--shadow-elevated);">
                         <!-- USER SUMMARY CARD IN DROPDOWN -->
-                        <li class="px-3 py-3 mb-2 rounded-3" style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06);">
+                        <li class="px-3 py-3 mb-2 rounded-3" style="background: var(--surface-secondary); border: 1px solid var(--border-subtle);">
                             <div class="d-flex align-items-center gap-3">
                                 <img src="https://ui-avatars.com/api/?name=<?php echo urlencode($hdr_username); ?>&background=6366f1&color=fff&bold=true&rounded=true" width="40" height="40" class="rounded-circle shadow" alt="Avatar">
                                 <div class="overflow-hidden">
-                                    <div class="fw-bold text-white text-truncate" style="font-size: 0.92rem;">@<?php echo $hdr_username; ?></div>
+                                    <div class="fw-bold text-truncate" style="font-size: 0.92rem; color: var(--text-heading);">@<?php echo $hdr_username; ?></div>
                                     <?php if(!empty($hdr_email)): ?>
                                         <div class="text-secondary small text-truncate" style="font-size: 0.75rem;"><?php echo $hdr_email; ?></div>
                                     <?php endif; ?>

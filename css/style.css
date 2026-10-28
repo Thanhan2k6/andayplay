@@ -6,19 +6,30 @@
    ========================================================= */
 
 :root {
-    --bg-base: #08090d;
-    --bg-surface: #0f1118;
-    --bg-surface-elevated: #151822;
-    --bg-surface-card: #12151e;
-    --bg-glass: rgba(15, 17, 24, 0.92);
-    --bg-glass-card: rgba(18, 21, 30, 0.75);
+    color-scheme: dark;
 
-    --primary: #6366f1;
-    --primary-hover: #4f46e5;
-    --primary-light: #818cf8;
-    --primary-glow: rgba(99, 102, 241, 0.35);
-    --primary-gradient: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #a855f7 100%);
-    --primary-gradient-subtle: linear-gradient(135deg, rgba(99, 102, 241, 0.12) 0%, rgba(168, 85, 247, 0.04) 100%);
+    /* Base Page & Surface Colors (Dark Mode) */
+    --page-bg: #08090d;
+    --surface-bg: #0f1118;
+    --surface-secondary: #151822;
+    --surface-card: #12151e;
+    --surface-glass: rgba(15, 17, 24, 0.92);
+    --surface-glass-card: rgba(18, 21, 30, 0.75);
+
+    /* Typography Colors (Dark Mode) */
+    --text-primary: #ffffff;
+    --text-secondary: #f1f5f9;
+    --text-muted: #94a3b8;
+    --text-dim: #64748b;
+    --text-heading: #ffffff;
+
+    /* Brand & Accent Colors */
+    --brand-primary: #6366f1;
+    --brand-primary-hover: #4f46e5;
+    --brand-primary-light: #818cf8;
+    --brand-primary-glow: rgba(99, 102, 241, 0.35);
+    --brand-gradient: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #a855f7 100%);
+    --brand-gradient-subtle: linear-gradient(135deg, rgba(99, 102, 241, 0.12) 0%, rgba(168, 85, 247, 0.04) 100%);
     
     --accent-cyan: #06b6d4;
     --accent-cyan-glow: rgba(6, 182, 212, 0.3);
@@ -29,15 +40,29 @@
     --accent-rose: #f43f5e;
     --accent-rose-glow: rgba(244, 63, 94, 0.3);
 
+    /* Border Colors */
     --border-subtle: rgba(255, 255, 255, 0.08);
     --border-card: rgba(255, 255, 255, 0.06);
+    --border-strong: rgba(255, 255, 255, 0.15);
     --border-focus: rgba(99, 102, 241, 0.6);
     --border-highlight: rgba(99, 102, 241, 0.35);
 
-    --text-white: #ffffff;
-    --text-main: #f1f5f9;
-    --text-muted: #94a3b8;
-    --text-dim: #64748b;
+    /* Legacy compatibility mappings */
+    --bg-base: var(--page-bg);
+    --bg-surface: var(--surface-bg);
+    --bg-surface-elevated: var(--surface-secondary);
+    --bg-surface-card: var(--surface-card);
+    --bg-glass: var(--surface-glass);
+    --bg-glass-card: var(--surface-glass-card);
+    --primary: var(--brand-primary);
+    --primary-hover: var(--brand-primary-hover);
+    --primary-light: var(--brand-primary-light);
+    --primary-glow: var(--brand-primary-glow);
+    --primary-gradient: var(--brand-gradient);
+    --primary-gradient-subtle: var(--brand-gradient-subtle);
+    --border-color: var(--border-subtle);
+    --text-white: var(--text-primary);
+    --text-main: var(--text-secondary);
 
     --radius-sm: 8px;
     --radius-md: 14px;
@@ -60,69 +85,160 @@
 }
 
 /* =========================================================
-   LIGHT MODE DESIGN SYSTEM
+   LIGHT MODE DESIGN SYSTEM (WCAG 2.2 AA COMPLIANT)
+   Phong cách sáng, sạch, hiện đại và gaming cao cấp
    ========================================================= */
 [data-theme="light"] {
-    --bg-base: #f8fafc;
-    --bg-surface: #ffffff;
-    --bg-surface-elevated: #ffffff;
-    --bg-surface-card: #ffffff;
-    --bg-glass: rgba(255, 255, 255, 0.95);
-    --bg-glass-card: rgba(255, 255, 255, 0.9);
+    color-scheme: light;
 
-    --primary: #4f46e5;
-    --primary-hover: #4338ca;
-    --primary-light: #6366f1;
-    --primary-glow: rgba(79, 70, 229, 0.18);
-    --primary-gradient: linear-gradient(135deg, #4f46e5 0%, #7c3aed 50%, #9333ea 100%);
-    --primary-gradient-subtle: linear-gradient(135deg, rgba(79, 70, 229, 0.08) 0%, rgba(147, 51, 234, 0.03) 100%);
+    /* Base Page & Surface Colors (Light Mode) */
+    --page-bg: #f8fafc;
+    --surface-bg: #ffffff;
+    --surface-secondary: #f1f5f9;
+    --surface-card: #ffffff;
+    --surface-glass: rgba(255, 255, 255, 0.96);
+    --surface-glass-card: rgba(255, 255, 255, 0.92);
 
-    --accent-cyan: #0284c7;
+    /* Typography Colors (Độ tương phản cao: Dark Slate & Charcoal) */
+    --text-primary: #0f172a;       /* Tương phản > 14:1 trên #ffffff */
+    --text-secondary: #334155;     /* Tương phản > 7:1 */
+    --text-muted: #64748b;         /* Tương phản > 4.5:1 (WCAG AA) */
+    --text-dim: #94a3b8;
+    --text-heading: #0f172a;
+
+    /* Brand & Accent Colors */
+    --brand-primary: #4f46e5;
+    --brand-primary-hover: #4338ca;
+    --brand-primary-light: #6366f1;
+    --brand-primary-glow: rgba(79, 70, 229, 0.18);
+    --brand-gradient: linear-gradient(135deg, #4f46e5 0%, #7c3aed 50%, #9333ea 100%);
+    --brand-gradient-subtle: linear-gradient(135deg, rgba(79, 70, 229, 0.08) 0%, rgba(147, 51, 234, 0.03) 100%);
+
+    --accent-cyan: #0284c7;        /* Xanh dương đậm hơn, rõ trên nền sáng */
     --accent-cyan-glow: rgba(2, 132, 199, 0.2);
-    --accent-emerald: #059669;
-    --accent-emerald-glow: rgba(5, 150, 105, 0.2);
-    --accent-amber: #d97706;
-    --accent-amber-glow: rgba(217, 119, 6, 0.2);
-    --accent-rose: #e11d48;
-    --accent-rose-glow: rgba(225, 29, 72, 0.2);
+    --accent-emerald: #047857;     /* Xanh lục đậm chuẩn AA */
+    --accent-emerald-glow: rgba(4, 120, 87, 0.2);
+    --accent-amber: #b45309;       /* Vàng hổ phách đậm dễ đọc */
+    --accent-amber-glow: rgba(180, 83, 9, 0.2);
+    --accent-rose: #be123c;        /* Đỏ ruby đậm */
+    --accent-rose-glow: rgba(190, 18, 60, 0.2);
 
-    --border-subtle: rgba(0, 0, 0, 0.08);
-    --border-card: rgba(0, 0, 0, 0.08);
+    /* Border Colors */
+    --border-subtle: #e2e8f0;
+    --border-card: #e2e8f0;
+    --border-strong: #cbd5e1;
     --border-focus: rgba(79, 70, 229, 0.5);
     --border-highlight: rgba(79, 70, 229, 0.3);
 
-    --text-white: #0f172a;
-    --text-main: #1e293b;
-    --text-muted: #64748b;
-    --text-dim: #94a3b8;
+    /* Legacy compatibility mappings */
+    --bg-base: var(--page-bg);
+    --bg-surface: var(--surface-bg);
+    --bg-surface-elevated: var(--surface-secondary);
+    --bg-surface-card: var(--surface-card);
+    --bg-glass: var(--surface-glass);
+    --bg-glass-card: var(--surface-glass-card);
+    --primary: var(--brand-primary);
+    --primary-hover: var(--brand-primary-hover);
+    --primary-light: var(--brand-primary-light);
+    --primary-glow: var(--brand-primary-glow);
+    --primary-gradient: var(--brand-gradient);
+    --primary-gradient-subtle: var(--brand-gradient-subtle);
+    --border-color: var(--border-subtle);
+    --text-white: var(--text-primary);
+    --text-main: var(--text-secondary);
 
-    --shadow-card: 0 4px 20px -2px rgba(0, 0, 0, 0.06);
-    --shadow-card-hover: 0 12px 28px -4px rgba(0, 0, 0, 0.12), 0 0 15px -3px rgba(79, 70, 229, 0.15);
+    --shadow-card: 0 4px 20px -2px rgba(15, 23, 42, 0.06);
+    --shadow-card-hover: 0 12px 28px -4px rgba(15, 23, 42, 0.12), 0 0 18px -3px rgba(79, 70, 229, 0.15);
     --shadow-glow: 0 0 15px -3px rgba(79, 70, 229, 0.2);
-    --shadow-elevated: 0 20px 35px -8px rgba(0, 0, 0, 0.1);
+    --shadow-elevated: 0 20px 35px -8px rgba(15, 23, 42, 0.08);
 }
 
+/* ---------------------------------------------------------
+   GLOBAL TEXT & UTILITY OVERRIDES FOR LIGHT MODE
+   Tự động đảo màu tiêu đề và văn bản tránh chữ trắng trên nền sáng
+   --------------------------------------------------------- */
 [data-theme="light"] body {
     --bs-body-bg: #f8fafc !important;
     --bs-body-color: #1e293b !important;
-    background-color: #f8fafc !important;
-    color: #1e293b !important;
+    background-color: var(--page-bg) !important;
+    color: var(--text-secondary) !important;
 }
 
+[data-theme="light"] h1,
+[data-theme="light"] h2,
+[data-theme="light"] h3,
+[data-theme="light"] h4,
+[data-theme="light"] h5,
+[data-theme="light"] h6 {
+    color: var(--text-heading) !important;
+}
+
+/* Chuyển class .text-white và .text-light sang chữ đậm trên nền sáng, trừ nút/badge nền màu */
+[data-theme="light"] .text-white:not(.btn):not(.btn *):not(.badge):not(.badge *):not(.badge-platform):not(.badge-gaming):not(.platform-pill):not(.status-pill):not([data-keep-color]) {
+    color: var(--text-heading) !important;
+}
+
+[data-theme="light"] .text-light:not(.btn):not(.btn *):not(.badge):not(.badge *):not(.badge-platform):not(.badge-gaming):not(.platform-pill):not(.status-pill):not([data-keep-color]) {
+    color: var(--text-secondary) !important;
+}
+
+[data-theme="light"] .text-secondary {
+    color: var(--text-muted) !important;
+}
+
+[data-theme="light"] .border-secondary,
+[data-theme="light"] .border-white {
+    border-color: var(--border-subtle) !important;
+}
+
+[data-theme="light"] .bg-dark {
+    background-color: var(--surface-secondary) !important;
+}
+
+/* Các trường hợp bắt buộc giữ màu chữ trắng trên nền màu */
+[data-theme="light"] .btn-primary,
+[data-theme="light"] .btn-primary *,
+[data-theme="light"] .btn-gaming-primary,
+[data-theme="light"] .btn-gaming-primary *,
+[data-theme="light"] .btn-danger,
+[data-theme="light"] .btn-danger *,
+[data-theme="light"] .btn-success,
+[data-theme="light"] .btn-success *,
+[data-theme="light"] .badge.bg-primary,
+[data-theme="light"] .badge.bg-primary *,
+[data-theme="light"] .badge.bg-danger,
+[data-theme="light"] .badge.bg-danger *,
+[data-theme="light"] .badge.bg-success,
+[data-theme="light"] .badge.bg-success *,
+[data-theme="light"] .badge-gaming-paid,
+[data-theme="light"] .badge-platform,
+[data-theme="light"] .sidebar-brand .brand-icon-box * {
+    color: #ffffff !important;
+}
+
+/* ---------------------------------------------------------
+   SIDEBAR & NAVIGATION (LIGHT MODE)
+   --------------------------------------------------------- */
 [data-theme="light"] .sidebar {
     background-color: #ffffff !important;
-    border-right-color: rgba(0, 0, 0, 0.08) !important;
+    border-right-color: var(--border-subtle) !important;
+    box-shadow: 2px 0 15px rgba(0, 0, 0, 0.03);
 }
 
 [data-theme="light"] .sidebar-brand {
-    border-bottom-color: rgba(0, 0, 0, 0.08) !important;
-    color: #0f172a !important;
+    border-bottom-color: var(--border-subtle) !important;
+    color: var(--text-heading) !important;
 }
 
 [data-theme="light"] .brand-text {
     background: linear-gradient(90deg, #0f172a 0%, #334155 50%, #4f46e5 100%) !important;
     -webkit-background-clip: text !important;
     -webkit-text-fill-color: transparent !important;
+}
+
+[data-theme="light"] .sidebar-title {
+    color: #64748b !important;
+    font-weight: 800;
 }
 
 [data-theme="light"] .sidebar-item {
@@ -132,79 +248,375 @@
 [data-theme="light"] .sidebar-item:hover,
 [data-theme="light"] .sidebar-item.active {
     background-color: #eef2ff !important;
-    color: var(--primary) !important;
+    color: var(--brand-primary) !important;
+    font-weight: 700;
 }
 
+[data-theme="light"] .sidebar-item.active i {
+    color: var(--brand-primary) !important;
+}
+
+/* ---------------------------------------------------------
+   TOPBAR & HEADER ACTIONS (LIGHT MODE)
+   --------------------------------------------------------- */
 [data-theme="light"] .topbar {
     background: rgba(255, 255, 255, 0.95) !important;
-    border-bottom-color: rgba(0, 0, 0, 0.08) !important;
+    border-bottom-color: var(--border-subtle) !important;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
 }
 
 [data-theme="light"] .topbar-action-btn {
     background-color: #f1f5f9 !important;
     color: #334155 !important;
-    border-color: rgba(0, 0, 0, 0.08) !important;
+    border-color: var(--border-subtle) !important;
 }
 
 [data-theme="light"] .topbar-action-btn:hover {
     background-color: #e2e8f0 !important;
-    color: var(--primary) !important;
+    color: var(--brand-primary) !important;
 }
 
 [data-theme="light"] .search-input-box {
     background-color: #f1f5f9 !important;
-    color: #0f172a !important;
-    border-color: rgba(0, 0, 0, 0.08) !important;
+    color: var(--text-heading) !important;
+    border-color: var(--border-subtle) !important;
+}
+
+[data-theme="light"] .search-input-box::placeholder {
+    color: #94a3b8 !important;
+}
+
+[data-theme="light"] .search-input-box:focus {
+    background-color: #ffffff !important;
+    border-color: var(--brand-primary) !important;
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15) !important;
+}
+
+[data-theme="light"] .search-kbd-hint {
+    background: #e2e8f0 !important;
+    color: #64748b !important;
+    border-color: #cbd5e1 !important;
 }
 
 [data-theme="light"] .user-profile-btn {
     background-color: #f1f5f9 !important;
-    border-color: rgba(0, 0, 0, 0.08) !important;
-    color: #0f172a !important;
+    border-color: var(--border-subtle) !important;
+    color: var(--text-heading) !important;
 }
 
-[data-theme="light"] .panel-dark,
-[data-theme="light"] .gaming-card,
-[data-theme="light"] .table-gaming-container {
-    background-color: #ffffff !important;
-    border-color: rgba(0, 0, 0, 0.08) !important;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05) !important;
+[data-theme="light"] .user-profile-btn:hover {
+    background-color: #e2e8f0 !important;
 }
 
-[data-theme="light"] .gaming-card-body {
-    background-color: #ffffff !important;
-}
-
+/* ---------------------------------------------------------
+   HERO BANNER & STATS BOX (LIGHT MODE)
+   --------------------------------------------------------- */
 [data-theme="light"] .gaming-hero {
-    background: linear-gradient(135deg, rgba(79,70,229,0.06) 0%, rgba(6,182,212,0.04) 100%), #ffffff !important;
-    border-color: rgba(0, 0, 0, 0.08) !important;
+    background: linear-gradient(135deg, #ffffff 0%, #f8fafc 40%, #eef2ff 100%) !important;
+    border: 1px solid var(--border-subtle) !important;
+    box-shadow: var(--shadow-card) !important;
+}
+
+[data-theme="light"] .hero-tag {
+    background: rgba(79, 70, 229, 0.1) !important;
+    color: var(--brand-primary) !important;
+    border-color: rgba(79, 70, 229, 0.25) !important;
 }
 
 [data-theme="light"] .hero-title {
     color: #0f172a !important;
 }
 
-[data-theme="light"] .form-control-gaming,
+[data-theme="light"] .hero-title span {
+    color: #334155 !important;
+}
+
+[data-theme="light"] .hero-desc {
+    color: #475569 !important;
+}
+
+/* Khung thống kê bên phải hero banner */
+[data-theme="light"] .hero-stats-box {
+    background: #ffffff !important;
+    border: 1px solid var(--border-subtle) !important;
+    box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.08) !important;
+}
+
+[data-theme="light"] .hero-stat-card {
+    transition: transform var(--transition-fast);
+}
+
+[data-theme="light"] .hero-stat-card.hero-stat-price {
+    background: rgba(180, 83, 9, 0.06) !important;
+    border: 1px solid rgba(180, 83, 9, 0.2) !important;
+}
+
+[data-theme="light"] .hero-stat-card.hero-stat-speed {
+    background: rgba(4, 120, 87, 0.06) !important;
+    border: 1px solid rgba(4, 120, 87, 0.2) !important;
+}
+
+[data-theme="light"] .hero-stat-card.hero-stat-games {
+    background: rgba(2, 132, 199, 0.06) !important;
+    border: 1px solid rgba(2, 132, 199, 0.2) !important;
+}
+
+[data-theme="light"] .hero-stat-card.hero-stat-warranty {
+    background: rgba(79, 70, 229, 0.06) !important;
+    border: 1px solid rgba(79, 70, 229, 0.2) !important;
+}
+
+[data-theme="light"] .hero-stat-val.text-warning {
+    color: #b45309 !important; /* Vàng hổ phách đậm chuẩn tương phản */
+}
+
+[data-theme="light"] .hero-stat-val.text-success {
+    color: #047857 !important; /* Xanh lục đậm */
+}
+
+[data-theme="light"] .hero-stat-val.text-info {
+    color: #0284c7 !important; /* Xanh cyan đậm */
+}
+
+[data-theme="light"] .hero-stat-val.text-accent-amber {
+    color: #4f46e5 !important; /* Tím đậm nổi bật thay cho chữ trắng */
+}
+
+[data-theme="light"] .hero-stat-label {
+    color: #475569 !important;
+    font-weight: 600;
+}
+
+/* 4 Dòng cam kết dưới banner hero */
+[data-theme="light"] .hero-commitments-bar {
+    border-top: 1px solid var(--border-subtle) !important;
+}
+
+[data-theme="light"] .hero-commit-text {
+    color: #1e293b !important;
+    font-weight: 700;
+}
+
+[data-theme="light"] .hero-commit-item i.text-warning {
+    color: #b45309 !important;
+}
+
+[data-theme="light"] .hero-commit-item i.text-success {
+    color: #047857 !important;
+}
+
+[data-theme="light"] .hero-commit-item i.text-info {
+    color: #0284c7 !important;
+}
+
+[data-theme="light"] .hero-commit-item i.text-primary {
+    color: #4f46e5 !important;
+}
+
+/* ---------------------------------------------------------
+   CATALOG HEADER & FILTER BAR (LIGHT MODE)
+   --------------------------------------------------------- */
+[data-theme="light"] .catalog-header-bar {
+    border-bottom: 1px solid var(--border-subtle) !important;
+}
+
+[data-theme="light"] .catalog-title {
+    color: var(--text-heading) !important;
+}
+
+[data-theme="light"] .catalog-subtitle {
+    color: var(--text-muted) !important;
+}
+
 [data-theme="light"] .form-select {
     background-color: #ffffff !important;
-    color: #0f172a !important;
-    border-color: rgba(0, 0, 0, 0.15) !important;
+    color: var(--text-heading) !important;
+    border-color: var(--border-subtle) !important;
+}
+
+[data-theme="light"] .form-select:focus {
+    border-color: var(--brand-primary) !important;
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15) !important;
+}
+
+/* ---------------------------------------------------------
+   GAMING CARD & PRODUCTS (LIGHT MODE)
+   --------------------------------------------------------- */
+[data-theme="light"] .gaming-card {
+    background-color: #ffffff !important;
+    border: 1px solid var(--border-subtle) !important;
+    box-shadow: var(--shadow-card) !important;
+}
+
+[data-theme="light"] .gaming-card:hover {
+    border-color: rgba(79, 70, 229, 0.4) !important;
+    box-shadow: var(--shadow-card-hover) !important;
+}
+
+[data-theme="light"] .gaming-card-body {
+    background-color: #ffffff !important;
+}
+
+[data-theme="light"] .gaming-card-title {
+    color: var(--text-heading) !important;
+}
+
+[data-theme="light"] .gaming-card:hover .gaming-card-title {
+    color: var(--brand-primary) !important;
+}
+
+[data-theme="light"] .gaming-card-meta {
+    color: var(--text-muted) !important;
+}
+
+[data-theme="light"] .gaming-card-footer {
+    border-top: 1px solid #f1f5f9 !important;
+}
+
+[data-theme="light"] .gaming-card-price-label {
+    color: var(--text-muted) !important;
+}
+
+[data-theme="light"] .gaming-card-price-val {
+    background: linear-gradient(90deg, #4f46e5 0%, #0284c7 100%) !important;
+    -webkit-background-clip: text !important;
+    -webkit-text-fill-color: transparent !important;
+    font-weight: 900;
+}
+
+[data-theme="light"] .badge-gaming-paid {
+    background: #eef2ff !important;
+    color: #4338ca !important;
+    border: 1px solid #c7d2fe !important;
+}
+
+[data-theme="light"] .badge-gaming-free {
+    background: #ecfdf5 !important;
+    color: #047857 !important;
+    border: 1px solid #a7f3d0 !important;
+}
+
+[data-theme="light"] .badge-gaming-avail {
+    background: #ecfdf5 !important;
+    color: #047857 !important;
+    border: 1px solid #a7f3d0 !important;
+}
+
+[data-theme="light"] .badge-gaming-out {
+    background: #fff1f2 !important;
+    color: #be123c !important;
+    border: 1px solid #fecdd3 !important;
+}
+
+/* ---------------------------------------------------------
+   PANELS & CONTAINERS (LIGHT MODE)
+   --------------------------------------------------------- */
+[data-theme="light"] .panel-dark {
+    background: #ffffff !important;
+    border: 1px solid var(--border-subtle) !important;
+    box-shadow: var(--shadow-card) !important;
+}
+
+[data-theme="light"] .section-main-title {
+    color: var(--text-heading) !important;
+}
+
+[data-theme="light"] .section-sub-title {
+    color: var(--text-muted) !important;
+}
+
+[data-theme="light"] .step-title {
+    color: var(--text-heading) !important;
+}
+
+/* ---------------------------------------------------------
+   FORM CONTROLS & BUTTONS (LIGHT MODE)
+   --------------------------------------------------------- */
+[data-theme="light"] .form-control-gaming {
+    background-color: #ffffff !important;
+    color: var(--text-heading) !important;
+    border-color: #cbd5e1 !important;
+}
+
+[data-theme="light"] .form-control-gaming:focus {
+    border-color: var(--brand-primary) !important;
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15) !important;
 }
 
 [data-theme="light"] .btn-gaming-secondary {
     background-color: #f1f5f9 !important;
-    color: #1e293b !important;
-    border-color: rgba(0, 0, 0, 0.1) !important;
+    color: var(--text-heading) !important;
+    border-color: #cbd5e1 !important;
 }
 
 [data-theme="light"] .btn-gaming-secondary:hover {
     background-color: #e2e8f0 !important;
-    color: #0f172a !important;
+    color: var(--brand-primary) !important;
+    border-color: #94a3b8 !important;
 }
 
+/* ---------------------------------------------------------
+   TABLES & SAAS LISTS (LIGHT MODE)
+   --------------------------------------------------------- */
+[data-theme="light"] .table-gaming-container {
+    background-color: #ffffff !important;
+    border-color: var(--border-subtle) !important;
+    box-shadow: var(--shadow-card) !important;
+}
+
+[data-theme="light"] .table-gaming thead th {
+    background-color: #f8fafc !important;
+    color: #475569 !important;
+    border-bottom: 2px solid var(--border-subtle) !important;
+}
+
+[data-theme="light"] .table-gaming tbody td {
+    color: var(--text-heading) !important;
+    border-bottom: 1px solid #f1f5f9 !important;
+}
+
+[data-theme="light"] .table-gaming tbody tr:hover td {
+    background-color: #f8fafc !important;
+}
+
+/* ---------------------------------------------------------
+   DROPDOWNS & MODALS (LIGHT MODE)
+   --------------------------------------------------------- */
+[data-theme="light"] .dropdown-menu-dark,
+[data-theme="light"] .dropdown-menu {
+    background-color: #ffffff !important;
+    border: 1px solid var(--border-subtle) !important;
+    box-shadow: 0 20px 35px -5px rgba(15, 23, 42, 0.15) !important;
+    color: var(--text-heading) !important;
+}
+
+[data-theme="light"] .dropdown-item {
+    color: #334155 !important;
+}
+
+[data-theme="light"] .dropdown-item:hover {
+    background-color: #f1f5f9 !important;
+    color: var(--brand-primary) !important;
+}
+
+[data-theme="light"] .dropdown-divider {
+    border-top-color: var(--border-subtle) !important;
+}
+
+[data-theme="light"] .modal-gaming {
+    background-color: #ffffff !important;
+    border: 1px solid var(--border-subtle) !important;
+    box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.25) !important;
+    color: var(--text-heading) !important;
+}
+
+/* ---------------------------------------------------------
+   MOBILE BOTTOM NAVIGATION (LIGHT MODE)
+   --------------------------------------------------------- */
 [data-theme="light"] .mobile-bottom-nav {
     background: rgba(255, 255, 255, 0.95) !important;
-    border-top-color: rgba(0, 0, 0, 0.08) !important;
+    border-top-color: var(--border-subtle) !important;
+    box-shadow: 0 -4px 15px rgba(0, 0, 0, 0.04) !important;
 }
 
 [data-theme="light"] .bottom-nav-item {
@@ -212,7 +624,216 @@
 }
 
 [data-theme="light"] .bottom-nav-item.active {
-    color: var(--primary) !important;
+    color: var(--brand-primary) !important;
+}
+
+/* ---------------------------------------------------------
+   PAGE SPECIFIC LIGHT MODE OVERRIDES
+   Xử lý chi tiết Checkout, Library, Download, Support, Profile, Admin
+   --------------------------------------------------------- */
+/* 1. Các hộp phụ và gói thuê (borrow_process.php & checkout_qr.php) */
+[data-theme="light"] .pkg-card {
+    background: #ffffff !important;
+    border-color: var(--border-subtle) !important;
+}
+
+[data-theme="light"] .pkg-card:hover {
+    border-color: var(--brand-primary) !important;
+    background: #f8fafc !important;
+}
+
+[data-theme="light"] .pkg-card strong {
+    color: var(--text-heading) !important;
+}
+
+/* 2. Hộp thông tin tài khoản (checkout_qr.php, my_library.php, download_game.php) */
+[data-theme="light"] .credentials-box,
+[data-theme="light"] div[style*="background: #0b0d13"],
+[data-theme="light"] div[style*="background: #0f121a"],
+[data-theme="light"] div[style*="background: #111420"],
+[data-theme="light"] div[style*="background: #141724"],
+[data-theme="light"] div[style*="background: #121622"],
+[data-theme="light"] div[style*="background: rgba(15, 17, 24"],
+[data-theme="light"] div[style*="background: rgba(15, 18, 29"],
+[data-theme="light"] div[style*="background: rgba(15, 23, 42"],
+[data-theme="light"] label[style*="background: #0f121a"],
+[data-theme="light"] .card[style*="background: #121622"] {
+    background-color: #f8fafc !important;
+    border-color: var(--border-subtle) !important;
+    color: var(--text-heading) !important;
+}
+
+/* Các trường hợp con bên trong hộp phụ */
+[data-theme="light"] div[style*="background: #0b0d13"] strong,
+[data-theme="light"] div[style*="background: #111420"] strong,
+[data-theme="light"] div[style*="background: rgba(15, 17, 24"] strong,
+[data-theme="light"] div[style*="background: rgba(15, 23, 42"] strong {
+    color: var(--text-heading) !important;
+}
+
+[data-theme="light"] div[style*="background: #0b0d13"] span,
+[data-theme="light"] div[style*="background: #111420"] span,
+[data-theme="light"] div[style*="background: rgba(15, 17, 24"] span,
+[data-theme="light"] div[style*="background: rgba(15, 23, 42"] span {
+    color: var(--text-secondary) !important;
+}
+
+/* Hướng dẫn an toàn Steam Offline Mode */
+[data-theme="light"] div[style*="background: rgba(15, 23, 42, 0.7)"],
+[data-theme="light"] div[style*="background: rgba(15, 23, 42, 0.6)"] {
+    background-color: #eef2ff !important;
+    border-color: #c7d2fe !important;
+}
+
+[data-theme="light"] div[style*="background: rgba(15, 23, 42, 0.7)"] ol,
+[data-theme="light"] div[style*="background: rgba(15, 23, 42, 0.6)"] ol,
+[data-theme="light"] div[style*="background: rgba(15, 23, 42, 0.7)"] li,
+[data-theme="light"] div[style*="background: rgba(15, 23, 42, 0.6)"] li {
+    color: #334155 !important;
+}
+
+[data-theme="light"] div[style*="background: rgba(15, 23, 42, 0.7)"] small,
+[data-theme="light"] div[style*="background: rgba(15, 23, 42, 0.6)"] small {
+    color: #1e293b !important;
+}
+
+/* 3. Countdown Timer Boxes (my_library.php, checkout_qr.php) */
+[data-theme="light"] div[style*="background: rgba(99, 102, 241, 0.08)"] {
+    background-color: #eef2ff !important;
+    border-color: #c7d2fe !important;
+}
+
+[data-theme="light"] div[style*="background: rgba(244, 63, 94, 0.1)"] {
+    background-color: #fff1f2 !important;
+    border-color: #fecdd3 !important;
+}
+
+[data-theme="light"] #countdown_clock {
+    color: #be123c !important;
+}
+
+/* 4. Support Tickets & Chat Message (support.php, support_detail.php) */
+[data-theme="light"] .support-ticket-item,
+[data-theme="light"] .ticket-card {
+    background-color: #ffffff !important;
+    border-color: var(--border-subtle) !important;
+}
+
+[data-theme="light"] .ticket-msg-admin {
+    background-color: #eef2ff !important;
+    border-color: #c7d2fe !important;
+    color: var(--text-heading) !important;
+}
+
+[data-theme="light"] .ticket-msg-user {
+    background-color: #f1f5f9 !important;
+    border-color: var(--border-subtle) !important;
+    color: var(--text-heading) !important;
+}
+
+/* 5. Notifications List (notifications.php) */
+[data-theme="light"] .notification-item {
+    background-color: #ffffff !important;
+    border-color: var(--border-subtle) !important;
+    color: var(--text-heading) !important;
+}
+
+[data-theme="light"] .notification-item.unread {
+    background-color: #f8faff !important;
+    border-left: 4px solid var(--brand-primary) !important;
+}
+
+[data-theme="light"] .notification-item:hover {
+    background-color: #f1f5f9 !important;
+}
+
+[data-theme="light"] .notification-title {
+    color: var(--text-heading) !important;
+}
+
+[data-theme="light"] .notification-desc {
+    color: var(--text-muted) !important;
+}
+
+/* 6. Profile Tabs & Security Cards (profile.php) */
+[data-theme="light"] .profile-nav-tab {
+    color: var(--text-secondary) !important;
+}
+
+[data-theme="light"] .profile-nav-tab.active {
+    background-color: var(--brand-primary) !important;
+    color: #ffffff !important;
+}
+
+[data-theme="light"] .profile-card {
+    background-color: #ffffff !important;
+    border-color: var(--border-subtle) !important;
+}
+
+/* 7. Dedicated Admin Console (admin_*.php) */
+[data-theme="light"] .admin-sidebar {
+    background-color: #ffffff !important;
+    border-right-color: var(--border-subtle) !important;
+}
+
+[data-theme="light"] .admin-topbar {
+    background: rgba(255, 255, 255, 0.95) !important;
+    border-bottom-color: var(--border-subtle) !important;
+}
+
+[data-theme="light"] .admin-card {
+    background-color: #ffffff !important;
+    border-color: var(--border-subtle) !important;
+    color: var(--text-heading) !important;
+}
+
+[data-theme="light"] .admin-kpi-val {
+    color: var(--text-heading) !important;
+}
+
+[data-theme="light"] .admin-kpi-lbl {
+    color: var(--text-muted) !important;
+}
+
+/* 8. Breadcrumbs chung */
+[data-theme="light"] .breadcrumb-item a {
+    color: var(--text-muted) !important;
+}
+
+[data-theme="light"] .breadcrumb-item a:hover {
+    color: var(--brand-primary) !important;
+}
+
+[data-theme="light"] .breadcrumb-item.active {
+    color: var(--text-heading) !important;
+    font-weight: 600;
+}
+
+/* 9. Input group addon & icons */
+[data-theme="light"] .input-group-text {
+    background-color: #f1f5f9 !important;
+    border-color: #cbd5e1 !important;
+    color: var(--text-muted) !important;
+}
+
+[data-theme="light"] .user-select-all {
+    background-color: #ffffff !important;
+    color: var(--text-heading) !important;
+}
+
+/* 10. SweetAlert2 Theme Sync */
+[data-theme="light"] .swal2-popup {
+    background: #ffffff !important;
+    color: var(--text-heading) !important;
+    border: 1px solid var(--border-subtle) !important;
+}
+
+[data-theme="light"] .swal2-title {
+    color: var(--text-heading) !important;
+}
+
+[data-theme="light"] .swal2-html-container {
+    color: var(--text-secondary) !important;
 }
 
 /* =========================================================

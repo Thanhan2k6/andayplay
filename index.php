@@ -117,30 +117,30 @@ if (!$result) {
         </div>
         <div class="col-lg-5 d-none d-lg-block">
             <!-- Hero Stats Card -->
-            <div class="p-4 rounded-4" style="background: rgba(15, 18, 29, 0.75); border: 1px solid rgba(255,255,255,0.1); backdrop-filter: blur(12px);">
+            <div class="p-4 rounded-4 hero-stats-box">
                 <div class="row g-3">
                     <div class="col-6">
-                        <div class="p-3 rounded-3 text-center" style="background: rgba(99,102,241,0.1); border: 1px solid rgba(99,102,241,0.25);">
-                            <div class="fs-2 fw-black text-warning">5.000đ</div>
-                            <span class="small text-secondary fw-semibold">Giá thuê từ / giờ</span>
+                        <div class="p-3 rounded-3 text-center hero-stat-card hero-stat-price">
+                            <div class="fs-2 fw-black hero-stat-val text-warning">5.000đ</div>
+                            <span class="small hero-stat-label fw-semibold">Giá thuê từ / giờ</span>
                         </div>
                     </div>
                     <div class="col-6">
-                        <div class="p-3 rounded-3 text-center" style="background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.25);">
-                            <div class="fs-2 fw-black text-success">30 Giây</div>
-                            <span class="small text-secondary fw-semibold">Cấp tài khoản tự động</span>
+                        <div class="p-3 rounded-3 text-center hero-stat-card hero-stat-speed">
+                            <div class="fs-2 fw-black hero-stat-val text-success">30 Giây</div>
+                            <span class="small hero-stat-label fw-semibold">Cấp tài khoản tự động</span>
                         </div>
                     </div>
                     <div class="col-6">
-                        <div class="p-3 rounded-3 text-center" style="background: rgba(6,182,212,0.1); border: 1px solid rgba(6,182,212,0.25);">
-                            <div class="fs-2 fw-black text-info">23+ Tựa</div>
-                            <span class="small text-secondary fw-semibold">Game AAA bản quyền</span>
+                        <div class="p-3 rounded-3 text-center hero-stat-card hero-stat-games">
+                            <div class="fs-2 fw-black hero-stat-val text-info">23+ Tựa</div>
+                            <span class="small hero-stat-label fw-semibold">Game AAA bản quyền</span>
                         </div>
                     </div>
                     <div class="col-6">
-                        <div class="p-3 rounded-3 text-center" style="background: rgba(245,158,11,0.1); border: 1px solid rgba(245,158,11,0.25);">
-                            <div class="fs-2 fw-black text-white">1 Đổi 1</div>
-                            <span class="small text-secondary fw-semibold">Bảo hành suốt thời gian</span>
+                        <div class="p-3 rounded-3 text-center hero-stat-card hero-stat-warranty">
+                            <div class="fs-2 fw-black hero-stat-val text-accent-amber">1 Đổi 1</div>
+                            <span class="small hero-stat-label fw-semibold">Bảo hành suốt thời gian</span>
                         </div>
                     </div>
                 </div>
@@ -149,29 +149,29 @@ if (!$result) {
     </div>
 
     <!-- 4 Điểm Cam Kết Nổi Bật -->
-    <div class="row g-3 mt-4 pt-3 border-top border-white border-opacity-10">
+    <div class="row g-3 mt-4 pt-3 hero-commitments-bar">
         <div class="col-md-3 col-6">
-            <div class="d-flex align-items-center gap-2">
+            <div class="d-flex align-items-center gap-2 hero-commit-item">
                 <i class="bi bi-currency-dollar text-warning fs-5"></i>
-                <span class="small fw-bold text-light">Tiết kiệm đến 90% chi phí</span>
+                <span class="small fw-bold hero-commit-text">Tiết kiệm đến 90% chi phí</span>
             </div>
         </div>
         <div class="col-md-3 col-6">
-            <div class="d-flex align-items-center gap-2">
+            <div class="d-flex align-items-center gap-2 hero-commit-item">
                 <i class="bi bi-shield-check text-success fs-5"></i>
-                <span class="small fw-bold text-light">Bảo hành 1 đổi 1 nếu lỗi acc</span>
+                <span class="small fw-bold hero-commit-text">Bảo hành 1 đổi 1 nếu lỗi acc</span>
             </div>
         </div>
         <div class="col-md-3 col-6">
-            <div class="d-flex align-items-center gap-2">
+            <div class="d-flex align-items-center gap-2 hero-commit-item">
                 <i class="bi bi-qr-code-scan text-info fs-5"></i>
-                <span class="small fw-bold text-light">VietQR quét xong nhận acc</span>
+                <span class="small fw-bold hero-commit-text">VietQR quét xong nhận acc</span>
             </div>
         </div>
         <div class="col-md-3 col-6">
-            <div class="d-flex align-items-center gap-2">
+            <div class="d-flex align-items-center gap-2 hero-commit-item">
                 <i class="bi bi-headset text-primary fs-5"></i>
-                <span class="small fw-bold text-light">Kỹ thuật viên 24/7 hỗ trợ</span>
+                <span class="small fw-bold hero-commit-text">Kỹ thuật viên 24/7 hỗ trợ</span>
             </div>
         </div>
     </div>
@@ -179,12 +179,12 @@ if (!$result) {
 <?php endif; ?>
 
 <!-- BỘ LỌC VÀ DANH MỤC TRÒ CHƠI -->
-<div id="gameCatalog" class="d-flex flex-column flex-lg-row justify-content-between align-items-start align-items-lg-center mb-4 pb-3 border-bottom border-secondary border-opacity-25 gap-3">
+<div id="gameCatalog" class="d-flex flex-column flex-lg-row justify-content-between align-items-start align-items-lg-center mb-4 pb-3 catalog-header-bar gap-3">
     <div>
-        <h3 class="fw-bold m-0 text-white fs-4 d-flex align-items-center gap-2">
+        <h3 class="fw-bold m-0 catalog-title fs-4 d-flex align-items-center gap-2">
             <i class="bi bi-joystick text-primary"></i> <?php echo $category_title; ?>
         </h3>
-        <span class="text-secondary small">Lựa chọn tựa game yêu thích và trải nghiệm theo gói thời gian linh hoạt</span>
+        <span class="catalog-subtitle small">Lựa chọn tựa game yêu thích và trải nghiệm theo gói thời gian linh hoạt</span>
     </div>
 
     <!-- Thanh công cụ lọc & sắp xếp -->
@@ -347,8 +347,8 @@ if (!$result) {
 <section id="rentalGuide" class="mb-5 pt-4">
     <div class="text-center mb-4 pb-2">
         <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 px-3 py-2 text-uppercase fw-bold" style="font-size: 0.75rem;">Quy trình đơn giản</span>
-        <h3 class="fw-bold text-white mt-2 mb-1">Thuê Tài Khoản Chỉ Với 3 Bước</h3>
-        <p class="text-secondary small">Hệ thống cấp phát hoàn toàn tự động, nhận tài khoản game ngay sau khi quét mã QR</p>
+        <h3 class="fw-bold section-main-title mt-2 mb-1">Thuê Tài Khoản Chỉ Với 3 Bước</h3>
+        <p class="section-sub-title small">Hệ thống cấp phát hoàn toàn tự động, nhận tài khoản game ngay sau khi quét mã QR</p>
     </div>
 
     <div class="row g-4">
@@ -357,7 +357,7 @@ if (!$result) {
                 <div class="brand-icon-box mx-auto mb-3" style="width: 52px; height: 52px; font-size: 1.5rem;">
                     1
                 </div>
-                <h5 class="fw-bold text-white mb-2">Chọn Game & Gói Giờ</h5>
+                <h5 class="fw-bold step-title mb-2">Chọn Game & Gói Giờ</h5>
                 <p class="text-secondary small mb-0">Tìm tựa game bạn muốn chiến và chọn thời hạn phù hợp: 1 Giờ, 1 Ngày, 7 Ngày hoặc 1 Tháng.</p>
             </div>
         </div>
@@ -366,7 +366,7 @@ if (!$result) {
                 <div class="brand-icon-box mx-auto mb-3" style="width: 52px; height: 52px; font-size: 1.5rem; background: linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%);">
                     2
                 </div>
-                <h5 class="fw-bold text-white mb-2">Quét Mã VietQR</h5>
+                <h5 class="fw-bold step-title mb-2">Quét Mã VietQR</h5>
                 <p class="text-secondary small mb-0">Mở app ngân hàng quét mã QR thanh toán với số tiền và nội dung chính xác. Máy chủ xác nhận tức thì.</p>
             </div>
         </div>
@@ -375,7 +375,7 @@ if (!$result) {
                 <div class="brand-icon-box mx-auto mb-3" style="width: 52px; height: 52px; font-size: 1.5rem; background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
                     3
                 </div>
-                <h5 class="fw-bold text-white mb-2">Nhận Tài Khoản & Chiến</h5>
+                <h5 class="fw-bold step-title mb-2">Nhận Tài Khoản & Chiến</h5>
                 <p class="text-secondary small mb-0">Thông tin đăng nhập hiển thị ngay trong <strong>Thư viện của tôi</strong>. Đăng nhập Steam/Epic và thưởng thức game!</p>
             </div>
         </div>

@@ -606,3 +606,78 @@
         max-width: 88%;
     }
 }
+
+/* 11. LIGHT MODE CHATBOT SYSTEM */
+[data-theme="light"] .anplay-chat-box {
+    background: #ffffff !important;
+    border: 1px solid #e2e8f0 !important;
+    box-shadow: 0 25px 60px -15px rgba(15, 23, 42, 0.25), 0 0 30px rgba(79, 70, 229, 0.12) !important;
+}
+
+[data-theme="light"] .anplay-chat-header {
+    background: linear-gradient(135deg, #4f46e5 0%, #6366f1 50%, #7c3aed 100%) !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.15) !important;
+}
+
+[data-theme="light"] .anplay-chat-header * {
+    color: #ffffff !important;
+}
+
+[data-theme="light"] .anplay-chat-messages {
+    background: #f8fafc !important;
+}
+
+[data-theme="light"] .anplay-msg-bot .anplay-msg-content {
+    background: #ffffff !important;
+    border: 1px solid #e2e8f0 !important;
+    color: #0f172a !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04) !important;
+}
+
+[data-theme="light"] .anplay-msg-bot .anplay-msg-content p,
+[data-theme="light"] .anplay-msg-bot .anplay-msg-content li,
+[data-theme="light"] .anplay-msg-bot .anplay-msg-content span {
+    color: #1e293b !important;
+}
+
+[data-theme="light"] .anplay-msg-user .anplay-msg-content {
+    background: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%) !important;
+    color: #ffffff !important;
+    box-shadow: 0 4px 12px rgba(79, 70, 229, 0.25) !important;
+}
+
+[data-theme="light"] .anplay-msg-time {
+    color: #94a3b8 !important;
+}
+
+[data-theme="light"] .anplay-chat-input-area {
+    background: #ffffff !important;
+    border-top: 1px solid #e2e8f0 !important;
+}
+
+[data-theme="light"] .anplay-chat-input {
+    background: #f1f5f9 !important;
+    border: 1px solid #cbd5e1 !important;
+    color: #0f172a !important;
+}
+
+[data-theme="light"] .anplay-chat-input::placeholder {
+    color: #94a3b8 !important;
+}
+
+[data-theme="light"] .anplay-chat-input:focus {
+    background: #ffffff !important;
+    border-color: #4f46e5 !important;
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15) !important;
+}
+
+[data-theme="light"] .anplay-chat-footer-note {
+    background: #f8fafc !important;
+    border-top: 1px solid #e2e8f0 !important;
+    color: #64748b !important;
+}
+
+[data-theme="light"] .anplay-chat-footer-note a {
+    color: #4f46e5 !important;
+    font-weight: 600;
+}

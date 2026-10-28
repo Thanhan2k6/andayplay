@@ -183,6 +183,36 @@
             }
         });
     });
+
+    // 4. Quản lý Chuyển Đổi Dark / Light Theme cho Admin Console
+    window.toggleAdminThemeMode = function() {
+        var current = document.documentElement.getAttribute('data-theme') || 'dark';
+        var next = (current === 'light') ? 'dark' : 'light';
+        document.documentElement.setAttribute('data-theme', next);
+        try {
+            localStorage.setItem('anplay_theme', next);
+        } catch(e) {}
+        updateAdminThemeIcon(next);
+    };
+
+    function updateAdminThemeIcon(theme) {
+        var sun = document.getElementById('adminThemeIconSun');
+        var moon = document.getElementById('adminThemeIconMoon');
+        if (sun && moon) {
+            if (theme === 'light') {
+                sun.style.display = 'inline-block';
+                moon.style.display = 'none';
+            } else {
+                sun.style.display = 'none';
+                moon.style.display = 'inline-block';
+            }
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        var currentTheme = document.documentElement.getAttribute('data-theme') || 'dark';
+        updateAdminThemeIcon(currentTheme);
+    });
 </script>
 </body>
 </html>

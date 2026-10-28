@@ -89,6 +89,47 @@ $page_file_name = basename($_SERVER['PHP_SELF']);
             --admin-topbar-height: 64px;
         }
 
+        /* Light mode admin overrides */
+        [data-theme="light"] {
+            --admin-bg-base: #f8fafc;
+            --admin-bg-surface: #ffffff;
+            --admin-bg-card: #ffffff;
+            --admin-border: #e2e8f0;
+            --admin-border-focus: rgba(79, 70, 229, 0.4);
+        }
+
+        [data-theme="light"] body.admin-body {
+            background-color: var(--admin-bg-base) !important;
+            color: #1e293b !important;
+        }
+
+        [data-theme="light"] .admin-brand-title {
+            color: #0f172a !important;
+        }
+
+        [data-theme="light"] .admin-nav-item {
+            color: #475569 !important;
+        }
+
+        [data-theme="light"] .admin-nav-item:hover {
+            color: var(--brand-primary) !important;
+            background: #f1f5f9 !important;
+        }
+
+        [data-theme="light"] .admin-nav-item.active {
+            color: #ffffff !important;
+            background: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%) !important;
+        }
+
+        [data-theme="light"] .admin-topbar {
+            background: rgba(255, 255, 255, 0.95) !important;
+            border-bottom: 1px solid var(--admin-border) !important;
+        }
+
+        [data-theme="light"] .admin-topbar-title {
+            color: #0f172a !important;
+        }
+
         body.admin-body {
             background-color: var(--admin-bg-base);
             color: #f1f5f9;
@@ -412,6 +453,12 @@ $page_file_name = basename($_SERVER['PHP_SELF']);
 
             <!-- Right: Actions, Notifications & Profile -->
             <div class="d-flex align-items-center gap-2 gap-sm-3">
+                <!-- Nút Chuyển Đổi Giao Diện Sáng / Tối (Light / Dark Mode) -->
+                <button class="btn btn-sm btn-outline-secondary p-2" id="adminThemeToggleBtn" type="button" title="Chuyển chế độ Sáng / Tối" onclick="toggleAdminThemeMode()" aria-label="Đổi giao diện">
+                    <i class="bi bi-sun-fill" id="adminThemeIconSun" style="display: none; color: #f59e0b;"></i>
+                    <i class="bi bi-moon-stars-fill" id="adminThemeIconMoon"></i>
+                </button>
+
                 <!-- Nút mở cửa hàng ngoài storefront -->
                 <a href="index.php" target="_blank" class="btn btn-sm btn-outline-secondary d-none d-md-inline-flex align-items-center gap-1 py-1 px-3 text-decoration-none">
                     <i class="bi bi-box-arrow-up-right text-info"></i>
