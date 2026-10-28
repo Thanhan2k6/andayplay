@@ -321,12 +321,12 @@ $csrf_token = generate_csrf_token();
 
 <div class="container my-4" style="max-width: 880px;">
     <!-- Step Indicator Progress Bar -->
-    <div class="d-flex align-items-center justify-content-center gap-2 gap-md-3 mb-4">
-        <span class="badge bg-secondary bg-opacity-25 text-secondary px-3 py-2 fs-6 rounded-pill">1. Chọn Gói</span>
-        <i class="bi bi-chevron-right text-secondary"></i>
-        <span class="badge <?php echo $is_paid_and_active ? 'bg-secondary bg-opacity-25 text-secondary' : 'bg-primary'; ?> px-3 py-2 fs-6 rounded-pill">2. Quét VietQR</span>
-        <i class="bi bi-chevron-right text-secondary"></i>
-        <span class="badge <?php echo $is_paid_and_active ? 'bg-success shadow' : 'bg-secondary bg-opacity-25 text-secondary'; ?> px-3 py-2 fs-6 rounded-pill">
+    <div class="d-flex align-items-center justify-content-center gap-2 gap-md-3 mb-4 flex-wrap">
+        <span class="step-pill"><i class="bi bi-check-circle-fill me-1"></i> 1. Chọn Gói</span>
+        <i class="bi bi-chevron-right step-arrow"></i>
+        <span class="step-pill <?php echo !$is_paid_and_active ? 'step-pill-active' : ''; ?>"><i class="bi bi-qr-code me-1"></i> 2. Quét VietQR</span>
+        <i class="bi bi-chevron-right step-arrow"></i>
+        <span class="step-pill <?php echo $is_paid_and_active ? 'step-pill-active' : ''; ?>">
             <i class="bi bi-controller me-1"></i> 3. Nhận Tài Khoản
         </span>
     </div>
@@ -349,12 +349,12 @@ $csrf_token = generate_csrf_token();
             <div class="row g-4 align-items-stretch">
                 <!-- Cột Trái: Thông tin Đơn hàng & Tựa Game -->
                 <div class="col-md-5">
-                    <div class="p-3 rounded-4 h-100 d-flex flex-column justify-content-between" style="background: #0b0d13; border: 1px solid var(--border-subtle);">
+                    <div class="p-3 rounded-4 h-100 d-flex flex-column justify-content-between borrow-summary-card">
                         <div>
                             <?php if (!empty($order['image_url'])): ?>
                                 <img src="<?php echo htmlspecialchars($order['image_url']); ?>" alt="<?php echo htmlspecialchars($order['title']); ?>" class="w-100 rounded-3 mb-3 object-fit-cover" style="height: 180px;">
                             <?php endif; ?>
-                            <h5 class="fw-bold text-white mb-2"><?php echo htmlspecialchars($order['title']); ?></h5>
+                            <h5 class="fw-bold game-title-display mb-2"><?php echo htmlspecialchars($order['title']); ?></h5>
                             <div class="d-flex flex-wrap gap-1 mb-3">
                                 <span class="badge bg-primary bg-opacity-20 text-primary border border-primary border-opacity-25">
                                     <i class="bi bi-clock me-1"></i> <?php echo intval($order['duration_hours'] ?? 24); ?> Giờ
@@ -391,7 +391,7 @@ $csrf_token = generate_csrf_token();
 
                 <!-- Cột Phải: Thông tin Đăng nhập Game An toàn -->
                 <div class="col-md-7">
-                    <div class="p-3 p-md-4 rounded-4 h-100" style="background: #111420; border: 1px solid rgba(99, 102, 241, 0.25);">
+                    <div class="p-3 p-md-4 rounded-4 h-100 account-credentials-card">
                         <div class="d-flex justify-content-between align-items-center mb-3">
                             <span class="text-white fw-bold d-flex align-items-center">
                                 <i class="bi bi-key-fill text-warning me-2"></i> THÔNG TIN TÀI KHOẢN GAME
@@ -524,9 +524,9 @@ $csrf_token = generate_csrf_token();
 
                 <!-- Cột 2: Thông tin chuyển khoản & 1-Click Copy -->
                 <div class="col-md-6">
-                    <div class="p-3 rounded-4 mb-3" style="background: #0b0d13; border: 1px solid var(--border-subtle);">
-                        <small class="text-secondary d-block fw-bold mb-1">TỰA GAME & GÓI THUÊ:</small>
-                        <h5 class="fw-bold text-white mb-1"><?php echo htmlspecialchars($order['title']); ?></h5>
+                    <div class="p-3 rounded-4 mb-3 borrow-summary-card">
+                        <small class="summary-label d-block fw-bold mb-1">TỰA GAME & GÓI THUÊ:</small>
+                        <h5 class="fw-bold game-title-display mb-1"><?php echo htmlspecialchars($order['title']); ?></h5>
                         <span class="badge bg-primary bg-opacity-25 text-primary">
                             <?php echo htmlspecialchars($order['package_name'] ?? 'Gói Thuê'); ?> (<?php echo intval($order['duration_hours'] ?? 24); ?> giờ)
                         </span>

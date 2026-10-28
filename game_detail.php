@@ -119,7 +119,7 @@ if (empty($packages) && ($game['price_type'] ?? 'paid') == 'paid') {
         <div class="row g-4 align-items-start">
             <!-- Cột 1: Ảnh Bìa Game -->
             <div class="col-lg-5 col-md-6 text-center">
-                <div class="position-relative rounded-4 overflow-hidden shadow-lg border border-secondary border-opacity-25" style="background: #0b0d13;">
+                <div class="position-relative rounded-4 overflow-hidden shadow-lg border game-preview-cover-wrapper">
                     <?php if (!empty($game['image_url']) && file_exists($game['image_url'])): ?>
                         <img src="<?php echo htmlspecialchars($game['image_url']); ?>" class="img-fluid w-100" alt="<?php echo htmlspecialchars($game['title']); ?>" style="max-height: 480px; object-fit: cover;">
                     <?php else: ?>
@@ -197,9 +197,9 @@ if (empty($packages) && ($game['price_type'] ?? 'paid') == 'paid') {
                         <div class="row g-2">
                             <?php foreach ($packages as $idx => $pkg): ?>
                                 <div class="col-sm-4 col-6">
-                                    <div class="p-3 rounded-3 text-center border border-secondary border-opacity-25 h-100 d-flex flex-column justify-content-center" style="background: #0f121a;">
-                                        <small class="text-secondary d-block fw-bold mb-1" style="font-size: 0.78rem;"><?php echo htmlspecialchars($pkg['package_name']); ?></small>
-                                        <div class="gaming-card-price-val fs-5"><?php echo number_format($pkg['price'], 0, ',', '.'); ?>đ</div>
+                                    <div class="p-3 rounded-3 text-center border h-100 d-flex flex-column justify-content-center pkg-card">
+                                        <small class="summary-label d-block fw-bold mb-1" style="font-size: 0.78rem;"><?php echo htmlspecialchars($pkg['package_name']); ?></small>
+                                        <div class="pkg-price-val fs-5"><?php echo number_format($pkg['price'], 0, ',', '.'); ?>đ</div>
                                     </div>
                                 </div>
                             <?php endforeach; ?>
@@ -275,7 +275,7 @@ if (empty($packages) && ($game['price_type'] ?? 'paid') == 'paid') {
                 <h4 class="fw-bold text-white mb-3 d-flex align-items-center gap-2">
                     <i class="bi bi-cpu-fill text-info"></i> Yêu Cầu Cấu Hình Thiết Bị
                 </h4>
-                <div class="p-3 rounded-3" style="background: #0b0d13; border: 1px solid var(--border-subtle); font-family: monospace; font-size: 0.9rem; line-height: 1.7; color: #cbd5e1;">
+                <div class="p-3 rounded-3 system-requirements-box" style="font-family: monospace; font-size: 0.9rem; line-height: 1.7;">
                     <?php echo nl2br(htmlspecialchars($game['system_req'])); ?>
                 </div>
             </div>

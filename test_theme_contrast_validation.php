@@ -68,6 +68,27 @@ assertTheme("admin_header.php có nút chuyển đổi theme adminThemeToggleBtn
 assertTheme("admin_footer.php có hàm toggleAdminThemeMode()", strpos($admin_ftr, 'toggleAdminThemeMode') !== false);
 assertTheme("admin_header.php có Early Theme Detection tránh giật màn hình", strpos($admin_hdr, 'localStorage.getItem(\'anplay_theme\')') !== false);
 
+// 7. Kiểm tra Trang Thuê Game & Checkout VietQR (borrow_process.php & checkout_qr.php)
+echo "\n--- NHÓM 7: QUY TRÌNH THUÊ GAME & THANH TOÁN QR ---\n";
+$borrow_php = file_get_contents(__DIR__ . '/borrow_process.php');
+$checkout_php = file_get_contents(__DIR__ . '/checkout_qr.php');
+
+assertTheme("borrow_process.php có step progress bar đồng bộ (.step-pill)", strpos($borrow_php, 'step-pill') !== false);
+assertTheme("borrow_process.php không dùng inline style nền đen cứng trên pkg-card", strpos($borrow_php, 'style="background: #0f121a;"') === false);
+assertTheme("checkout_qr.php đã chuyển sang dùng class ngữ nghĩa .step-pill", strpos($checkout_php, 'step-pill') !== false);
+assertTheme("checkout_qr.php không có inline style nền đen cứng #0b0d13", strpos($checkout_php, 'style="background: #0b0d13;') === false);
+assertTheme("style.css có rule [data-theme=\"light\"] cho .pkg-card và .borrow-summary-card", strpos($style_css, '[data-theme="light"] .pkg-card') !== false && strpos($style_css, '[data-theme="light"] .borrow-summary-card') !== false);
+
+// 8. Kiểm tra Chống Cache Hosting (Cache Busting)
+echo "\n--- NHÓM 8: CƠ CHẾ CHỐNG CACHE HOSTING INFINITYFREE ---\n";
+assertTheme("header.php có cache busting query string trên style.css", strpos($header_php, 'style.css?v=') !== false);
+assertTheme("admin_header.php có cache busting query string trên style.css", strpos($admin_hdr, 'style.css?v=') !== false);
+
+// 9. Kiểm tra Reset Gradient Hero Banner Trong Light Mode
+echo "\n--- NHÓM 9: RESET GRADIENT CHỮ HERO BANNER LIGHT MODE ---\n";
+assertTheme("style.css reset -webkit-text-fill-color cho hero-title span trong Light Mode", strpos($style_css, '[data-theme="light"] .hero-title span') !== false && strpos($style_css, '-webkit-text-fill-color: #1e293b !important;') !== false);
+assertTheme("style.css reset background: none cho hero-title span trong Light Mode", strpos($style_css, 'background: none !important;') !== false);
+
 echo "\n============================================================\n";
 echo "                      TỔNG KẾT KIỂM THỬ                     \n";
 echo "============================================================\n";
@@ -78,7 +99,7 @@ $rate = round(($passed / $total) * 100, 1);
 echo "Tỷ lệ vượt qua   : $rate%\n";
 
 if ($failed === 0) {
-    echo "\n\033[32m>>> TẤT CẢ 19 TIÊU CHÍ LIGHT/DARK THEME ĐÃ ĐẠT CHUẨN 100%! <<<\033[0m\n";
+    echo "\n\033[32m>>> TẤT CẢ $total TIÊU CHÍ LIGHT/DARK THEME ĐÃ ĐẠT CHUẨN 100%! <<<\033[0m\n";
     exit(0);
 } else {
     echo "\n\033[31m>>> CẦN SỬA LẠI CÁC MỤC BỊ FAILED! <<<\033[0m\n";

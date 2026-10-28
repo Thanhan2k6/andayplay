@@ -198,19 +198,19 @@ $csrf_token = generate_csrf_token();
 
 <div class="container my-4" style="max-width: 960px;">
     <!-- Step Indicator Progress Bar -->
-    <div class="d-flex align-items-center justify-content-center gap-3 mb-4">
-        <span class="badge bg-primary px-3 py-2 fs-6 rounded-pill">1. Chọn Gói Thuê</span>
-        <i class="bi bi-chevron-right text-secondary"></i>
-        <span class="badge bg-secondary bg-opacity-25 text-secondary px-3 py-2 fs-6 rounded-pill">2. Quét Mã VietQR</span>
-        <i class="bi bi-chevron-right text-secondary"></i>
-        <span class="badge bg-secondary bg-opacity-25 text-secondary px-3 py-2 fs-6 rounded-pill">3. Nhận Tài Khoản</span>
+    <div class="d-flex align-items-center justify-content-center gap-2 gap-md-3 mb-4 flex-wrap">
+        <span class="step-pill step-pill-active"><i class="bi bi-check-circle-fill me-1"></i> 1. Chọn Gói Thuê</span>
+        <i class="bi bi-chevron-right step-arrow"></i>
+        <span class="step-pill"><i class="bi bi-qr-code me-1"></i> 2. Quét Mã VietQR</span>
+        <i class="bi bi-chevron-right step-arrow"></i>
+        <span class="step-pill"><i class="bi bi-controller me-1"></i> 3. Nhận Tài Khoản</span>
     </div>
 
     <div class="row g-4">
         <!-- Cột trái: Tóm tắt Game -->
         <div class="col-lg-5">
             <div class="panel-dark p-4 h-100 d-flex flex-column">
-                <div class="rounded-3 overflow-hidden mb-3 border border-secondary border-opacity-25">
+                <div class="rounded-3 overflow-hidden mb-3 border game-preview-cover-wrapper">
                     <?php if(!empty($game['image_url']) && file_exists($game['image_url'])) { ?>
                         <img src="<?php echo htmlspecialchars($game['image_url']); ?>" alt="<?php echo htmlspecialchars($game['title']); ?>" class="w-100 object-fit-cover" style="height: 200px;">
                     <?php } else { ?>
@@ -220,7 +220,7 @@ $csrf_token = generate_csrf_token();
                     <?php } ?>
                 </div>
 
-                <h4 class="fw-bold text-white mb-2"><?php echo htmlspecialchars($game['title']); ?></h4>
+                <h4 class="fw-bold game-title-display mb-2"><?php echo htmlspecialchars($game['title']); ?></h4>
                 <div class="d-flex align-items-center gap-2 mb-3">
                     <span class="badge-platform"><?php echo htmlspecialchars($game['platform'] ?? 'PC'); ?></span>
                     <span class="badge-gaming badge-gaming-paid">Cho thuê tài khoản</span>
@@ -229,24 +229,24 @@ $csrf_token = generate_csrf_token();
                 <?php if ($preferred_account_id && $old_acc_info): ?>
                     <div class="alert alert-warning border-0 p-3 rounded-3 mb-3" style="background: rgba(245, 158, 11, 0.15);">
                         <small class="fw-bold text-warning d-block mb-1"><i class="bi bi-arrow-repeat me-1"></i> CHẾ ĐỘ THUÊ LẠI TÀI KHOẢN CŨ</small>
-                        <span class="text-white small">Bạn đang thuê lại tài khoản <strong><?php echo htmlspecialchars($old_acc_info['account_username']); ?></strong> để tiếp tục tiến trình chơi game cũ.</span>
+                        <span class="small alert-text-desc">Bạn đang thuê lại tài khoản <strong><?php echo htmlspecialchars($old_acc_info['account_username']); ?></strong> để tiếp tục tiến trình chơi game cũ.</span>
                     </div>
                 <?php endif; ?>
 
-                <div class="mt-auto p-3 rounded-3 border border-secondary border-opacity-25" style="background: #0b0d13;">
-                    <div class="d-flex justify-content-between text-secondary small mb-2">
-                        <span>Kho tài khoản:</span>
+                <div class="mt-auto p-3 rounded-3 borrow-summary-card">
+                    <div class="d-flex justify-content-between small mb-2">
+                        <span class="summary-label">Kho tài khoản:</span>
                         <strong class="<?php echo ($available_accounts > 0) ? 'text-success' : 'text-danger'; ?>">
                             <?php echo ($available_accounts > 0) ? "🟢 Sẵn sàng ($available_accounts TK)" : "🔴 Hết tài khoản"; ?>
                         </strong>
                     </div>
-                    <div class="d-flex justify-content-between text-secondary small mb-2">
-                        <span>Hình thức cấp:</span>
+                    <div class="d-flex justify-content-between small mb-2">
+                        <span class="summary-label">Hình thức cấp:</span>
                         <strong class="text-info">Tự động sau khi quét QR</strong>
                     </div>
-                    <div class="d-flex justify-content-between text-secondary small">
-                        <span>Bảo hành:</span>
-                        <strong class="text-light">1 đổi 1 suốt thời gian thuê</strong>
+                    <div class="d-flex justify-content-between small">
+                        <span class="summary-label">Bảo hành:</span>
+                        <strong class="summary-value-highlight">1 đổi 1 suốt thời gian thuê</strong>
                     </div>
                 </div>
             </div>
@@ -255,43 +255,43 @@ $csrf_token = generate_csrf_token();
         <!-- Cột phải: Form chọn gói thuê -->
         <div class="col-lg-7">
             <div class="panel-dark p-4">
-                <h4 class="fw-bold text-white mb-3">Thiết Lập Đơn Thuê Tài Khoản</h4>
+                <h4 class="fw-bold form-section-title mb-3">Thiết Lập Đơn Thuê Tài Khoản</h4>
 
                 <form method="POST" action="">
                     <input type="hidden" name="csrf_token" value="<?php echo $csrf_token; ?>">
 
                     <!-- Lựa chọn gói thuê -->
-                    <label class="form-label text-light fw-bold small text-uppercase">1. Chọn Gói Thời Hạn Thuê:</label>
+                    <label class="form-label form-step-label fw-bold small text-uppercase mb-2">1. Chọn Gói Thời Hạn Thuê:</label>
                     <div class="row g-2 mb-4">
                         <?php foreach ($packages as $index => $pkg): ?>
                             <div class="col-sm-6">
-                                <label class="p-3 rounded-3 border border-secondary border-opacity-25 d-flex flex-column justify-content-between h-100 cursor-pointer pkg-card" style="background: #0f121a;">
+                                <label class="p-3 rounded-3 d-flex flex-column justify-content-between h-100 cursor-pointer pkg-card">
                                     <div class="d-flex justify-content-between align-items-start mb-2">
                                         <input type="radio" name="package_id" value="<?php echo $pkg['package_id']; ?>" data-price="<?php echo $pkg['price']; ?>" <?php echo ($index == 0) ? 'checked' : ''; ?> class="form-check-input mt-0">
-                                        <span class="badge bg-secondary bg-opacity-25 text-light small"><?php echo htmlspecialchars($pkg['duration_type'] ?? 'days'); ?></span>
+                                        <span class="badge pkg-type-badge"><?php echo htmlspecialchars($pkg['duration_type'] ?? 'days'); ?></span>
                                     </div>
-                                    <strong class="text-white d-block mb-1"><?php echo htmlspecialchars($pkg['package_name']); ?></strong>
-                                    <div class="gaming-card-price-val fs-5 text-warning"><?php echo number_format($pkg['price'], 0, ',', '.'); ?>đ</div>
+                                    <strong class="pkg-name d-block mb-1"><?php echo htmlspecialchars($pkg['package_name']); ?></strong>
+                                    <div class="pkg-price-val"><?php echo number_format($pkg['price'], 0, ',', '.'); ?>đ</div>
                                 </label>
                             </div>
                         <?php endforeach; ?>
                     </div>
 
                     <!-- Phương thức thanh toán -->
-                    <label class="form-label text-light fw-bold small text-uppercase">2. Phương Thức Thanh Toán:</label>
-                    <div class="p-3 rounded-3 mb-4 border border-secondary border-opacity-25 d-flex align-items-center gap-3" style="background: #0b0d13;">
+                    <label class="form-label form-step-label fw-bold small text-uppercase mb-2">2. Phương Thức Thanh Toán:</label>
+                    <div class="p-3 rounded-3 mb-4 d-flex align-items-center gap-3 payment-method-card">
                         <input type="radio" name="payment_method" value="Chuyển khoản Ngân hàng (VietQR)" checked class="form-check-input">
                         <i class="bi bi-qr-code-scan fs-3 text-info"></i>
                         <div>
-                            <strong class="text-white d-block">Quét Mã VietQR (MB Bank)</strong>
-                            <small class="text-secondary">Xác nhận tự động 24/7 qua Napas, mọi ngân hàng và ví điện tử</small>
+                            <strong class="payment-method-name d-block">Quét Mã VietQR (MB Bank)</strong>
+                            <small class="payment-method-sub">Xác nhận tự động 24/7 qua Napas, mọi ngân hàng và ví điện tử</small>
                         </div>
                     </div>
 
                     <!-- Tổng thanh toán & Nút xác nhận -->
-                    <div class="p-3 rounded-3 mb-4 d-flex justify-content-between align-items-center" style="background: rgba(99, 102, 241, 0.1); border: 1px solid rgba(99, 102, 241, 0.3);">
-                        <span class="text-light fw-bold">Tổng thanh toán dự tính:</span>
-                        <h3 class="fw-bold text-warning mb-0" id="totalPriceDisplay"><?php echo number_format($packages[0]['price'], 0, ',', '.'); ?> đ</h3>
+                    <div class="p-3 rounded-3 mb-4 d-flex justify-content-between align-items-center total-summary-card">
+                        <span class="total-label fw-bold">Tổng thanh toán dự tính:</span>
+                        <h3 class="fw-bold total-price-val mb-0" id="totalPriceDisplay"><?php echo number_format($packages[0]['price'], 0, ',', '.'); ?> đ</h3>
                     </div>
 
                     <button type="submit" name="btn_borrow" class="btn btn-gaming-primary w-100 py-3 fs-5 fw-bold shadow">
