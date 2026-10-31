@@ -35,14 +35,10 @@ $game = $result->fetch_assoc();
 $is_allowed = false;
 $plain_password = "";
 
-if ($game['price_type'] == 'free') {
+if (!empty($game['status']) && $game['status'] == 'active' && strtotime($game['due_date']) > time()) {
     $is_allowed = true;
-} else {
-    if (!empty($game['status']) && $game['status'] == 'active' && strtotime($game['due_date']) > time()) {
-        $is_allowed = true;
-        if (!empty($game['account_password_encrypted'])) {
-            $plain_password = decrypt_game_password($game['account_password_encrypted']);
-        }
+    if (!empty($game['account_password_encrypted'])) {
+        $plain_password = decrypt_game_password($game['account_password_encrypted']);
     }
 }
 
@@ -80,9 +76,8 @@ if (!$is_allowed) {
                     </div>
                 </div>
 
-                <?php if ($game['price_type'] != 'free'): ?>
-                    <!-- THÔNG TIN TÀI KHOẢN CHO THUÊ -->
-                    <div class="p-4 rounded-3 mb-4 text-start" style="background: rgba(15, 17, 24, 0.9); border: 1px solid var(--border-color);">
+                <!-- THÔNG TIN TÀI KHOẢN CHO THUÊ -->
+                <div class="p-4 rounded-3 mb-4 text-start" style="background: rgba(15, 17, 24, 0.9); border: 1px solid var(--border-color);">
                         <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom border-secondary border-opacity-25">
                             <span class="small fw-bold text-info"><i class="bi bi-person-fill-lock me-1"></i> TÀI KHOẢN GAME ĐÃ CẤP CHO BẠN</span>
                             <span class="badge" style="background: rgba(255,255,255,0.06); color: #94a3b8; font-size: 0.75rem; border: 1px solid var(--border-color);">
@@ -121,7 +116,6 @@ if (!$is_allowed) {
                             <strong class="text-danger fs-6"><?php echo date('d/m/Y H:i', strtotime($game['due_date'])); ?></strong>
                         </div>
                     </div>
-                <?php endif; ?>
 
                 <!-- NÚT TẢI BỘ CÀI ĐẶT HOẶC MỞ LAUNCHER CHÍNH THỨC -->
                 <div class="mb-4">

@@ -95,7 +95,7 @@ if (isset($_POST['btn_batch_generate'])) {
         if ($target_game_id > 0) {
             $target_games[] = $target_game_id;
         } else {
-            $all_games_q = $conn->query("SELECT game_id FROM games WHERE price_type = 'paid'");
+            $all_games_q = $conn->query("SELECT game_id FROM games");
             while ($g_row = $all_games_q->fetch_assoc()) {
                 $target_games[] = intval($g_row['game_id']);
             }
@@ -128,7 +128,7 @@ if (isset($_POST['btn_batch_generate'])) {
 }
 
 // LẤY DANH SÁCH GAME ĐỂ LỌC
-$games_list = $conn->query("SELECT game_id, title FROM games WHERE price_type = 'paid' ORDER BY title ASC");
+$games_list = $conn->query("SELECT game_id, title FROM games ORDER BY title ASC");
 
 // LẤY BỘ LỌC
 $filter_game = isset($_GET['filter_game']) ? intval($_GET['filter_game']) : 0;
@@ -428,7 +428,7 @@ $csrf_token = generate_csrf_token();
                     <div class="mb-3">
                         <label class="form-label text-info small fw-bold">Chọn phạm vi game:</label>
                         <select name="batch_game_id" class="form-select form-control-gaming" required>
-                            <option value="0">⭐ TẤT CẢ GAME TRẢ PHÍ (Khuyên dùng)</option>
+                            <option value="0">⭐ TẤT CẢ GAME CHO THUÊ</option>
                             <?php 
                             if ($games_list && $games_list->num_rows > 0):
                                 $games_list->data_seek(0);

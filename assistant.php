@@ -209,10 +209,10 @@ if ($conn && !$conn->connect_error) {
         if ($gameRes && $gameRes->num_rows > 0) {
             $gameList = [];
             while ($g = $gameRes->fetch_assoc()) {
-                $pType = ($g['price_type'] === 'free') ? 'Game Miễn Phí' : 'Game Thuê Trả Phí';
+                $pType = 'Cho thuê tài khoản';
                 $priceStr = !empty($g['min_rent_price']) ? number_format($g['min_rent_price'], 0, ',', '.') . 'đ' : '5.000đ';
                 $accStatus = intval($g['available_acc'] ?? 0) > 0 ? "Sẵn sàng cấp ngay" : "Tạm hết tài khoản";
-                $gameList[] = "- **{$g['title']}** (Nền tảng: {$g['platform']} | Thể loại: {$g['cate_name']} | Phân loại: {$pType} | Giá thuê từ: {$priceStr} | Tình trạng: {$accStatus})";
+                $gameList[] = "- **{$g['title']}** (Nền tảng: {$g['platform']} | Thể loại: {$g['cate_name']} | Mô hình: {$pType} | Giá thuê từ: {$priceStr} | Tình trạng: {$accStatus})";
             }
             $realStoreFacts .= "### DANH SÁCH GAME THỰC TẾ ĐANG CÓ TẠI ANPLAY STORE:\n" . implode("\n", $gameList) . "\n\n";
         }
@@ -264,13 +264,13 @@ if (empty($realStoreFacts)) {
 - **Red Dead Redemption 2** (Nền tảng: PC | Thể loại: Thế giới mở / Cao bồi miền Tây | Phân loại: Game Thuê Trả Phí | Giá thuê từ: 15.000đ/ngày, 30.000đ/tuần, 99.000đ/tháng | Tình trạng: Sẵn sàng cấp ngay)
 - **The Witcher 3: Wild Hunt** (Nền tảng: PC | Thể loại: Nhập vai thế giới mở | Phân loại: Game Thuê Trả Phí | Giá thuê từ: 10.000đ/ngày, 25.000đ/tuần, 80.000đ/tháng | Tình trạng: Sẵn sàng cấp ngay)
 - **Stardew Valley** (Nền tảng: PC | Thể loại: Mô phỏng nông trại / Indie | Phân loại: Game Thuê Trả Phí | Giá thuê từ: 5.000đ/ngày, 15.000đ/tuần, 50.000đ/tháng | Tình trạng: Sẵn sàng cấp ngay)
-- **Counter-Strike 2** (Nền tảng: PC | Thể loại: Bắn súng chiến thuật FPS | Phân loại: Game Miễn Phí | Giá thuê: 0đ | Tình trạng: Sẵn sàng chơi ngay)
-- **PUBG: BATTLEGROUNDS** (Nền tảng: PC | Thể loại: Sinh tồn Battle Royale | Phân loại: Game Miễn Phí | Giá thuê: 0đ | Tình trạng: Sẵn sàng chơi ngay)
-- **Genshin Impact** (Nền tảng: PC / Mobile | Thể loại: Nhập vai thế giới mở anime | Phân loại: Game Miễn Phí | Giá thuê: 0đ | Tình trạng: Sẵn sàng chơi ngay)
-- **Dota 2** (Nền tảng: PC | Thể loại: MOBA chiến thuật 5v5 | Phân loại: Game Miễn Phí | Giá thuê: 0đ | Tình trạng: Sẵn sàng chơi ngay)
-- **Free Fire** (Nền tảng: Mobile (Android/iOS) | Thể loại: Bắn súng sinh tồn | Phân loại: Game Miễn Phí | Giá thuê: 0đ | Tình trạng: Sẵn sàng chơi ngay)
-- **Teamfight Tactics** (Nền tảng: PC / Mobile | Thể loại: Cờ nhân phẩm Auto Battler | Phân loại: Game Miễn Phí | Giá thuê: 0đ | Tình trạng: Sẵn sàng chơi ngay)
-- **Minecraft** (Nền tảng: PC | Thể loại: Thế giới mở sinh tồn khối vuông | Phân loại: Game Miễn Phí | Giá thuê: 0đ | Tình trạng: Sẵn sàng chơi ngay)
+- **Counter-Strike 2** (Nền tảng: PC | Thể loại: Bắn súng chiến thuật FPS | Phân loại: Cho thuê tài khoản | Giá thuê từ: 5.000đ/giờ, 15.000đ/ngày | Tình trạng: Sẵn sàng cấp ngay)
+- **PUBG: BATTLEGROUNDS** (Nền tảng: PC | Thể loại: Sinh tồn Battle Royale | Phân loại: Cho thuê tài khoản | Giá thuê từ: 5.000đ/giờ, 15.000đ/ngày | Tình trạng: Sẵn sàng cấp ngay)
+- **Genshin Impact** (Nền tảng: PC / Mobile | Thể loại: Nhập vai thế giới mở anime | Phân loại: Cho thuê tài khoản | Giá thuê từ: 5.000đ/giờ, 15.000đ/ngày | Tình trạng: Sẵn sàng cấp ngay)
+- **Dota 2** (Nền tảng: PC | Thể loại: MOBA chiến thuật 5v5 | Phân loại: Cho thuê tài khoản | Giá thuê từ: 5.000đ/giờ, 15.000đ/ngày | Tình trạng: Sẵn sàng cấp ngay)
+- **Free Fire** (Nền tảng: Mobile (Android/iOS) | Thể loại: Bắn súng sinh tồn | Phân loại: Cho thuê tài khoản | Giá thuê từ: 5.000đ/giờ, 15.000đ/ngày | Tình trạng: Sẵn sàng cấp ngay)
+- **Teamfight Tactics** (Nền tảng: PC / Mobile | Thể loại: Cờ nhân phẩm Auto Battler | Phân loại: Cho thuê tài khoản | Giá thuê từ: 5.000đ/giờ, 15.000đ/ngày | Tình trạng: Sẵn sàng cấp ngay)
+- **Minecraft** (Nền tảng: PC | Thể loại: Thế giới mở sinh tồn khối vuông | Phân loại: Cho thuê tài khoản | Giá thuê từ: 5.000đ/giờ, 15.000đ/ngày | Tình trạng: Sẵn sàng cấp ngay)
 
 ### THÔNG TIN KHÁCH HÀNG: Khách hàng hiện chưa đăng nhập. Nhắc khách đăng nhập để xem đơn thuê tại 'Thư viện của tôi'.
 

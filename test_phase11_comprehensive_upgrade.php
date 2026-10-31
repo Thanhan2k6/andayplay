@@ -37,7 +37,7 @@ assertTest("Bảng games có dữ liệu hợp lệ (>= 10 games)", $games_count
 
 $free_games = $conn->query("SELECT COUNT(*) as c FROM games WHERE price_type = 'free'")->fetch_assoc()['c'];
 $paid_games = $conn->query("SELECT COUNT(*) as c FROM games WHERE price_type = 'paid'")->fetch_assoc()['c'];
-assertTest("Phân loại game rõ ràng (Free & Paid/Rental)", $free_games > 0 && $paid_games > 0, "Free: $free_games, Paid: $paid_games");
+assertTest("Toàn bộ game đã chuyển sang mô hình cho thuê tài khoản (100% Rental Model)", $free_games == 0 && $paid_games == $games_count, "Free: $free_games, Rental: $paid_games");
 
 $pkgs_count = $conn->query("SELECT COUNT(*) as c FROM rental_packages WHERE is_active = 1")->fetch_assoc()['c'];
 assertTest("Bảng rental_packages có các gói thời hạn kích hoạt", $pkgs_count > 0, "Gói hoạt động: $pkgs_count");

@@ -16,7 +16,7 @@ function safe_count_query($conn, $sql) {
 
 // 1. THỐNG KÊ THỰC TẾ TỪ CƠ SỞ DỮ LIỆU
 $total_users = safe_count_query($conn, "SELECT COUNT(*) as c FROM users WHERE role = 0");
-$total_games = safe_count_query($conn, "SELECT COUNT(*) as c FROM games WHERE price_type = 'paid'");
+$total_games = safe_count_query($conn, "SELECT COUNT(*) as c FROM games");
 
 // Thống kê kho tài khoản
 $total_accounts = safe_count_query($conn, "SELECT COUNT(*) as c FROM game_accounts");

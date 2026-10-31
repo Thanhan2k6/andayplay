@@ -77,4 +77,40 @@ try {
 } catch (Throwable $e) {
     // Tránh gián đoạn hệ thống nếu CSDL chưa hoàn tất chạy migration
 }
+
+// =========================================================
+// AUTO-MIGRATION: ĐỒNG BỘ TOÀN BỘ GAME SANG MÔ HÌNH CHO THUÊ
+// =========================================================
+try {
+    if (isset($conn) && $conn instanceof mysqli) {
+        $check_free_games = $conn->query("SELECT 1 FROM games WHERE price_type != 'paid' OR price_type IS NULL LIMIT 1");
+        if ($check_free_games && $check_free_games->num_rows > 0) {
+            $conn->query("UPDATE games SET price_type = 'paid' WHERE price_type != 'paid' OR price_type IS NULL");
+
+            // Tạo các gói thuê mẫu cho toàn bộ game nếu chưa có
+            $conn->query("INSERT INTO rental_packages (game_id, package_name, duration_type, duration_value, price, is_active)
+                SELECT g.game_id, '1 Giờ (Trải nghiệm nhanh)', 'hours', 1, 5000, 1
+                FROM games g
+                WHERE NOT EXISTS (SELECT 1 FROM rental_packages rp WHERE rp.game_id = g.game_id AND rp.duration_type = 'hours' AND rp.duration_value = 1)");
+
+            $conn->query("INSERT INTO rental_packages (game_id, package_name, duration_type, duration_value, price, is_active)
+                SELECT g.game_id, '1 Ngày (24 Giờ)', 'days', 1, 15000, 1
+                FROM games g
+                WHERE NOT EXISTS (SELECT 1 FROM rental_packages rp WHERE rp.game_id = g.game_id AND rp.duration_type = 'days' AND rp.duration_value = 1)");
+
+            $conn->query("INSERT INTO rental_packages (game_id, package_name, duration_type, duration_value, price, is_active)
+                SELECT g.game_id, '7 Ngày (1 Tuần)', 'days', 7, 30000, 1
+                FROM games g
+                WHERE NOT EXISTS (SELECT 1 FROM rental_packages rp WHERE rp.game_id = g.game_id AND rp.duration_type = 'days' AND rp.duration_value = 7)");
+
+            $conn->query("INSERT INTO rental_packages (game_id, package_name, duration_type, duration_value, price, is_active)
+                SELECT g.game_id, '30 Ngày (1 Tháng)', 'days', 30, 99000, 1
+                FROM games g
+                WHERE NOT EXISTS (SELECT 1 FROM rental_packages rp WHERE rp.game_id = g.game_id AND rp.duration_type = 'days' AND rp.duration_value = 30)");
+
+            // Đồng bộ số lượng tồn kho theo số tài khoản khả dụng thực tế
+            $conn->query("UPDATE games g SET quantity = (SELECT COUNT(*) FROM game_accounts ga WHERE ga.game_id = g.game_id AND ga.status = 'AVAILABLE')");
+        }
+    }
+} catch (Throwable $e) {}
 ?>

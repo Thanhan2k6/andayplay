@@ -39,7 +39,7 @@ if ($is_already_rented) {
 
 $game = null;
 try {
-    $result = $conn->query("SELECT * FROM games WHERE game_id = $game_id AND price_type = 'paid'");
+    $result = $conn->query("SELECT * FROM games WHERE game_id = $game_id");
     if ($result && $result->num_rows > 0) {
         $game = $result->fetch_assoc();
     }
@@ -130,7 +130,10 @@ if (isset($_POST['btn_borrow'])) {
         $total_cost = floatval($selected_pkg['price']);
 
         $can_proceed = true;
-        if ($preferred_account_id) {
+        if (!$preferred_account_id && $available_accounts <= 0) {
+            $can_proceed = false;
+            echo "<script>alert('Rất tiếc, tựa game này hiện đang tạm hết tài khoản khả dụng trong kho!');</script>";
+        } elseif ($preferred_account_id) {
             if ($old_acc_info && !in_array($old_acc_info['status'], ['AVAILABLE', 'EXPIRED'])) {
                 $can_proceed = false;
                 echo "<script>alert('Tài khoản cũ hiện không khả dụng (đang có người thuê hoặc đang bảo trì)!');</script>";
@@ -294,9 +297,19 @@ $csrf_token = generate_csrf_token();
                         <h3 class="fw-bold total-price-val mb-0" id="totalPriceDisplay"><?php echo number_format($packages[0]['price'], 0, ',', '.'); ?> đ</h3>
                     </div>
 
-                    <button type="submit" name="btn_borrow" class="btn btn-gaming-primary w-100 py-3 fs-5 fw-bold shadow">
-                        <i class="bi bi-arrow-right-circle me-1"></i> TIẾP TỤC ĐẾN BƯỚC QUÉT MÃ QR
-                    </button>
+                    <?php if ($available_accounts > 0 || $preferred_account_id): ?>
+                        <button type="submit" name="btn_borrow" class="btn btn-gaming-primary w-100 py-3 fs-5 fw-bold shadow">
+                            <i class="bi bi-arrow-right-circle me-1"></i> TIẾP TỤC ĐẾN BƯỚC QUÉT MÃ QR
+                        </button>
+                    <?php else: ?>
+                        <div class="alert alert-danger p-3 rounded-3 mb-3 text-center border-0 shadow-sm" style="background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.3) !important;">
+                            <i class="bi bi-exclamation-triangle-fill text-danger me-1"></i>
+                            <strong>Tạm Hết Tài Khoản:</strong> Hiện kho tài khoản của tựa game này đang hết. Vui lòng quay lại sau!
+                        </div>
+                        <button type="button" class="btn btn-secondary w-100 py-3 fs-5 fw-bold" disabled>
+                            <i class="bi bi-x-circle-fill me-1"></i> TẠM HẾT TÀI KHOẢN (KHÔNG THỂ THUÊ)
+                        </button>
+                    <?php endif; ?>
                 </form>
             </div>
         </div>

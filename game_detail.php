@@ -134,16 +134,11 @@ if (empty($packages) && ($game['price_type'] ?? 'paid') == 'paid') {
                         <span class="badge-platform px-3 py-2 fs-6">
                             <?php echo (($game['platform'] ?? 'PC') == 'PC') ? '<i class="bi bi-display me-1"></i>PC Game' : '<i class="bi bi-phone me-1"></i>Mobile Game'; ?>
                         </span>
-                        <?php if (($game['price_type'] ?? '') == 'free'): ?>
-                            <span class="badge-gaming badge-gaming-free px-3 py-2 fs-6">Miễn Phí</span>
-                        <?php else: ?>
-                            <span class="badge-gaming badge-gaming-paid px-3 py-2 fs-6">Tài Khoản Thuê</span>
-                        <?php endif; ?>
+                        <span class="badge-gaming badge-gaming-paid px-3 py-2 fs-6">Cho Thuê Tài Khoản</span>
                     </div>
                 </div>
 
                 <!-- Tình trạng kho tài khoản -->
-                <?php if (($game['price_type'] ?? '') != 'free'): ?>
                 <div class="mt-3 p-3 rounded-3 bg-dark border border-secondary border-opacity-25 d-flex justify-content-between align-items-center">
                     <span class="text-secondary small fw-bold"><i class="bi bi-box-seam me-1"></i> Trạng thái kho:</span>
                     <?php if ($available_accounts > 0): ?>
@@ -156,7 +151,6 @@ if (empty($packages) && ($game['price_type'] ?? 'paid') == 'paid') {
                         </span>
                     <?php endif; ?>
                 </div>
-                <?php endif; ?>
             </div>
             
             <!-- Cột 2: Thông tin chi tiết & Gói giá -->
@@ -186,38 +180,28 @@ if (empty($packages) && ($game['price_type'] ?? 'paid') == 'paid') {
                 <?php endif; ?>
 
                 <!-- BẢNG BÁO GIÁ CÁC GÓI THUÊ -->
-                <?php if (($game['price_type'] ?? '') != 'free'): ?>
-                    <div class="my-3 p-3 rounded-4" style="background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border-subtle);">
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <span class="fw-bold text-white small text-uppercase tracking-wider">
-                                <i class="bi bi-clock-history text-warning me-1"></i> Bảng Giá Gói Thuê Theo Thời Gian
-                            </span>
-                            <span class="text-success small fw-bold"><i class="bi bi-check-circle me-1"></i> Bảo hành trọn thời hạn</span>
-                        </div>
-                        <div class="row g-2">
-                            <?php foreach ($packages as $idx => $pkg): ?>
-                                <div class="col-sm-4 col-6">
-                                    <div class="p-3 rounded-3 text-center border h-100 d-flex flex-column justify-content-center pkg-card">
-                                        <small class="summary-label d-block fw-bold mb-1" style="font-size: 0.78rem;"><?php echo htmlspecialchars($pkg['package_name']); ?></small>
-                                        <div class="pkg-price-val fs-5"><?php echo number_format($pkg['price'], 0, ',', '.'); ?>đ</div>
-                                    </div>
-                                </div>
-                            <?php endforeach; ?>
-                        </div>
+                <div class="my-3 p-3 rounded-4" style="background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border-subtle);">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <span class="fw-bold text-white small text-uppercase tracking-wider">
+                            <i class="bi bi-clock-history text-warning me-1"></i> Bảng Giá Gói Thuê Theo Thời Gian
+                        </span>
+                        <span class="text-success small fw-bold"><i class="bi bi-check-circle me-1"></i> Bảo hành trọn thời hạn</span>
                     </div>
-                <?php endif; ?>
+                    <div class="row g-2">
+                        <?php foreach ($packages as $idx => $pkg): ?>
+                            <div class="col-sm-4 col-6">
+                                <div class="p-3 rounded-3 text-center border h-100 d-flex flex-column justify-content-center pkg-card">
+                                    <small class="summary-label d-block fw-bold mb-1" style="font-size: 0.78rem;"><?php echo htmlspecialchars($pkg['package_name']); ?></small>
+                                    <div class="pkg-price-val fs-5"><?php echo number_format($pkg['price'], 0, ',', '.'); ?>đ</div>
+                                </div>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
 
                 <!-- KHU VỰC NÚT THUÊ CHÍNH -->
                 <div class="mt-4 pt-3 border-top border-white border-opacity-10">
-                    <?php if (($game['price_type'] ?? '') == 'free'): ?>
-                        <div class="p-3 rounded-3 mb-3" style="background: rgba(6, 182, 212, 0.1); border: 1px solid rgba(6, 182, 212, 0.3);">
-                            <span class="text-info fw-bold"><i class="bi bi-gift-fill me-1"></i> Trò chơi này được phát hành hoàn toàn miễn phí.</span>
-                        </div>
-                        <?php $dlink = !empty($game['download_link']) ? $game['download_link'] : '#'; ?>
-                        <a href="<?php echo $dlink; ?>" target="_blank" class="btn btn-gaming-cyan w-100 py-3 fs-5 fw-bold">
-                            <i class="bi bi-cloud-arrow-down-fill me-2 fs-4"></i> TẢI XUỐNG BỘ CÀI CHÍNH THỨC
-                        </a>
-                    <?php elseif ($is_rented): ?>
+                    <?php if ($is_rented): ?>
                         <div class="alert alert-success d-flex flex-column flex-sm-row justify-content-between align-items-center gap-3 p-3 rounded-3 mb-3 border-0 shadow" style="background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.4) !important;">
                             <div>
                                 <strong class="fs-6 text-white"><i class="bi bi-check-circle-fill text-success me-2 fs-5"></i> Bạn đang thuê tài khoản trò chơi này!</strong>

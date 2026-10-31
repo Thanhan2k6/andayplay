@@ -30,8 +30,8 @@ if(isset($_POST['btn_update'])) {
         $description = $conn->real_escape_string($_POST['description']);
         $long_description = $conn->real_escape_string($_POST['long_description']);
         $system_req = $conn->real_escape_string($_POST['system_req']);
-        $price_type = isset($_POST['price_type']) ? $_POST['price_type'] : 'paid';
-        $download_link = ($price_type == 'free') ? $conn->real_escape_string($_POST['download_link']) : '';
+        $price_type = 'paid';
+        $download_link = '';
         
         $image_url = $game['image_url'];
 
@@ -59,13 +59,34 @@ if(isset($_POST['btn_update'])) {
                 WHERE game_id=$game_id";
 
         if($conn->query($sql) === TRUE) {
-            // Cập nhật giá các gói thời hạn thuê nếu là game trả phí
-            if ($price_type == 'paid' && isset($_POST['pkg_price']) && is_array($_POST['pkg_price'])) {
+            // Cập nhật giá các gói thời hạn thuê hiện có
+            if (isset($_POST['pkg_price']) && is_array($_POST['pkg_price'])) {
                 foreach ($_POST['pkg_price'] as $pkg_id => $pkg_val) {
                     $pkg_id = intval($pkg_id);
                     $pkg_val = floatval($pkg_val);
                     $conn->query("UPDATE rental_packages SET price = $pkg_val WHERE package_id = $pkg_id AND game_id = $game_id");
                 }
+            }
+
+            // Tạo các gói mới nếu trước đó game chưa có gói
+            if (isset($_POST['new_pkg_1h']) || isset($_POST['new_pkg_1d'])) {
+                $p1 = floatval($_POST['new_pkg_1h'] ?? 5000);
+                $p2 = floatval($_POST['new_pkg_1d'] ?? 15000);
+                $p3 = floatval($_POST['new_pkg_7d'] ?? 30000);
+                $p4 = floatval($_POST['new_pkg_30d'] ?? 99000);
+
+                $conn->query("INSERT INTO rental_packages (game_id, package_name, duration_type, duration_value, price, is_active)
+                    SELECT $game_id, '1 Giờ (Trải nghiệm nhanh)', 'hours', 1, $p1, 1
+                    WHERE NOT EXISTS (SELECT 1 FROM rental_packages WHERE game_id = $game_id AND duration_type = 'hours' AND duration_value = 1)");
+                $conn->query("INSERT INTO rental_packages (game_id, package_name, duration_type, duration_value, price, is_active)
+                    SELECT $game_id, '1 Ngày (24 Giờ)', 'days', 1, $p2, 1
+                    WHERE NOT EXISTS (SELECT 1 FROM rental_packages WHERE game_id = $game_id AND duration_type = 'days' AND duration_value = 1)");
+                $conn->query("INSERT INTO rental_packages (game_id, package_name, duration_type, duration_value, price, is_active)
+                    SELECT $game_id, '7 Ngày (1 Tuần)', 'days', 7, $p3, 1
+                    WHERE NOT EXISTS (SELECT 1 FROM rental_packages WHERE game_id = $game_id AND duration_type = 'days' AND duration_value = 7)");
+                $conn->query("INSERT INTO rental_packages (game_id, package_name, duration_type, duration_value, price, is_active)
+                    SELECT $game_id, '30 Ngày (1 Tháng)', 'days', 30, $p4, 1
+                    WHERE NOT EXISTS (SELECT 1 FROM rental_packages WHERE game_id = $game_id AND duration_type = 'days' AND duration_value = 30)");
             }
 
             // Đồng bộ lại tồn kho
@@ -154,10 +175,8 @@ $csrf_token = generate_csrf_token();
 
                     <div class="col-md-6">
                         <label class="form-label text-light small fw-bold">Mô Hình Kinh Doanh</label>
-                        <select name="price_type" id="edit_price_type" class="form-select form-control-gaming" onchange="toggleEditPricing()">
-                            <option value="paid" <?php echo ($current_price_type == 'paid') ? 'selected' : ''; ?>>💎 Cho thuê tài khoản có phí</option>
-                            <option value="free" <?php echo ($current_price_type == 'free') ? 'selected' : ''; ?>>🎁 Game miễn phí</option>
-                        </select>
+                        <input type="text" class="form-control form-control-gaming text-success fw-bold" value="💎 Cho thuê tài khoản game bản quyền" readonly>
+                        <input type="hidden" name="price_type" value="paid">
                     </div>
 
                     <div class="col-md-6">
@@ -174,7 +193,7 @@ $csrf_token = generate_csrf_token();
             </div>
 
             <!-- Section 2: Gói Giá Thuê -->
-            <div class="mb-5 <?php echo ($current_price_type == 'free') ? 'd-none' : ''; ?>" id="edit_pricing_section">
+            <div class="mb-5" id="edit_pricing_section">
                 <h5 class="fw-bold text-warning mb-3 pb-2 border-bottom border-secondary border-opacity-25">
                     <i class="bi bi-tag-fill me-1"></i> 2. Giá Các Gói Cho Thuê Tài Khoản
                 </h5>
@@ -198,23 +217,48 @@ $csrf_token = generate_csrf_token();
                         endwhile;
                     else: 
                     ?>
-                        <div class="col-12">
+                        <div class="col-12 mb-2">
                             <div class="alert text-white" style="background: rgba(245, 158, 11, 0.15); border: 1px solid #f59e0b;">
-                                <i class="bi bi-info-circle me-1"></i> Tựa game này chưa có bảng giá thuê cụ thể. Hãy thêm các gói thuê vào database hoặc lưu lại để tạo mặc định.
+                                <i class="bi bi-info-circle me-1"></i> Tựa game này chưa có bảng giá thuê cụ thể. Bạn hãy thiết lập giá cho các gói thời hạn bên dưới để lưu vào hệ thống:
+                            </div>
+                        </div>
+                        <div class="col-sm-6 col-md-3">
+                            <div class="p-3 rounded-3" style="background: rgba(255,255,255,0.02); border: 1px solid var(--border-color);">
+                                <label class="form-label text-secondary small fw-bold mb-1">1 Giờ (Trải nghiệm nhanh)</label>
+                                <div class="input-group">
+                                    <input type="number" name="new_pkg_1h" class="form-control form-control-gaming text-white" value="5000" step="1000">
+                                    <span class="input-group-text bg-dark border-secondary text-secondary">đ</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-sm-6 col-md-3">
+                            <div class="p-3 rounded-3" style="background: rgba(255,255,255,0.02); border: 1px solid var(--border-color);">
+                                <label class="form-label text-secondary small fw-bold mb-1">1 Ngày (24 Giờ)</label>
+                                <div class="input-group">
+                                    <input type="number" name="new_pkg_1d" class="form-control form-control-gaming text-white" value="15000" step="1000">
+                                    <span class="input-group-text bg-dark border-secondary text-secondary">đ</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-sm-6 col-md-3">
+                            <div class="p-3 rounded-3" style="background: rgba(255,255,255,0.02); border: 1px solid var(--border-color);">
+                                <label class="form-label text-secondary small fw-bold mb-1">7 Ngày (1 Tuần)</label>
+                                <div class="input-group">
+                                    <input type="number" name="new_pkg_7d" class="form-control form-control-gaming text-white" value="30000" step="1000">
+                                    <span class="input-group-text bg-dark border-secondary text-secondary">đ</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-sm-6 col-md-3">
+                            <div class="p-3 rounded-3" style="background: rgba(255,255,255,0.02); border: 1px solid var(--border-color);">
+                                <label class="form-label text-secondary small fw-bold mb-1">30 Ngày (1 Tháng)</label>
+                                <div class="input-group">
+                                    <input type="number" name="new_pkg_30d" class="form-control form-control-gaming text-white" value="99000" step="1000">
+                                    <span class="input-group-text bg-dark border-secondary text-secondary">đ</span>
+                                </div>
                             </div>
                         </div>
                     <?php endif; ?>
-                </div>
-            </div>
-
-            <!-- Link Tải (nếu game miễn phí) -->
-            <div class="mb-5 <?php echo ($current_price_type != 'free') ? 'd-none' : ''; ?>" id="edit_dl_section">
-                <h5 class="fw-bold text-info mb-3 pb-2 border-bottom border-secondary border-opacity-25">
-                    <i class="bi bi-cloud-arrow-down me-1"></i> Link Tải Bộ Cài Miễn Phí
-                </h5>
-                <div>
-                    <label class="form-label text-light small fw-bold">Đường dẫn tải game</label>
-                    <input type="url" name="download_link" class="form-control form-control-gaming" value="<?php echo htmlspecialchars($current_download_link); ?>">
                 </div>
             </div>
 
@@ -249,20 +293,5 @@ $csrf_token = generate_csrf_token();
         </form>
     </div>
 </div>
-
-<script>
-function toggleEditPricing() {
-    var select = document.getElementById('edit_price_type');
-    var pricingSec = document.getElementById('edit_pricing_section');
-    var dlSec = document.getElementById('edit_dl_section');
-    if (select.value === 'free') {
-        pricingSec.classList.add('d-none');
-        dlSec.classList.remove('d-none');
-    } else {
-        pricingSec.classList.remove('d-none');
-        dlSec.classList.add('d-none');
-    }
-}
-</script>
 
 <?php require_once __DIR__ . '/includes/admin_footer.php'; ?>

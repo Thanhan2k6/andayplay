@@ -14,8 +14,8 @@ if(isset($_POST['btn_add'])) {
         $short_desc = $conn->real_escape_string($_POST['short_description']); 
         $long_desc = $conn->real_escape_string($_POST['long_description']); 
         $system_req = $conn->real_escape_string($_POST['system_req']);
-        $price_type = $conn->real_escape_string($_POST['price_type']);
-        $download_link = ($price_type == 'free') ? $conn->real_escape_string($_POST['download_link']) : '';
+        $price_type = 'paid';
+        $download_link = '';
         
         $sql_insert = "INSERT INTO games (title, category_id, platform, description, long_description, system_req, total_quantity, available_quantity, price_type, download_link, image_url) 
                 VALUES ('$title', $category_id, '$platform', '$short_desc', '$long_desc', '$system_req', 0, 0, '$price_type', '$download_link', '')";
@@ -119,9 +119,8 @@ $csrf_token = generate_csrf_token();
                     </div>
                     <div class="col-md-6">
                         <label class="form-label text-light small fw-bold">Mô Hình Kinh Doanh</label>
-                        <select name="price_type" id="price_type_select" class="form-select form-control-gaming" onchange="togglePricingSection()">
-                            <option value="paid" selected>💎 Cho thuê tài khoản có phí (Gói giờ/ngày/tháng)</option>
-                            <option value="free">🎁 Game miễn phí (Cung cấp link tải trực tiếp)</option>
+                        <select name="price_type" id="price_type_select" class="form-select form-control-gaming">
+                            <option value="paid" selected>💎 Cho thuê tài khoản game bản quyền</option>
                         </select>
                     </div>
                     <div class="col-md-6">
@@ -176,17 +175,6 @@ $csrf_token = generate_csrf_token();
                 </div>
             </div>
 
-            <!-- Link Tải (nếu game miễn phí) -->
-            <div class="mb-5 d-none" id="download_link_section">
-                <h5 class="fw-bold text-info mb-3 pb-2 border-bottom border-secondary border-opacity-25">
-                    <i class="bi bi-cloud-arrow-down me-1"></i> Link Tải Bộ Cài Miễn Phí
-                </h5>
-                <div>
-                    <label class="form-label text-light small fw-bold">Đường dẫn tải game</label>
-                    <input type="url" name="download_link" class="form-control form-control-gaming" placeholder="https://store.steampowered.com/app/...">
-                </div>
-            </div>
-
             <!-- Section 3: Mô tả & Cấu hình -->
             <div class="mb-4">
                 <h5 class="fw-bold text-success mb-3 pb-2 border-bottom border-secondary border-opacity-25">
@@ -218,20 +206,5 @@ $csrf_token = generate_csrf_token();
         </form>
     </div>
 </div>
-
-<script>
-function togglePricingSection() {
-    var select = document.getElementById('price_type_select');
-    var pricingSec = document.getElementById('pricing_section');
-    var dlSec = document.getElementById('download_link_section');
-    if (select.value === 'free') {
-        pricingSec.classList.add('d-none');
-        dlSec.classList.remove('d-none');
-    } else {
-        pricingSec.classList.remove('d-none');
-        dlSec.classList.add('d-none');
-    }
-}
-</script>
 
 <?php require_once __DIR__ . '/includes/admin_footer.php'; ?>

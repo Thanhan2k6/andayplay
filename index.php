@@ -17,10 +17,22 @@ if (isset($_SESSION['user_id'])) {
 $filter_conditions = [];
 $category_title = "TẤT CẢ TỰA GAME CHO THUÊ"; 
 
-if (isset($_GET['type']) && in_array($_GET['type'], ['free', 'paid'])) {
+if (isset($_GET['stock']) && in_array($_GET['stock'], ['available', 'out'])) {
+    $stock_filter = $_GET['stock'];
+    if ($stock_filter === 'available') {
+        $filter_conditions[] = "(SELECT COUNT(*) FROM game_accounts ga WHERE ga.game_id = g.game_id AND ga.status = 'AVAILABLE') > 0";
+        $category_title .= " (Còn Tài Khoản)";
+    } else {
+        $filter_conditions[] = "(SELECT COUNT(*) FROM game_accounts ga WHERE ga.game_id = g.game_id AND ga.status = 'AVAILABLE') = 0";
+        $category_title .= " (Tạm Hết Tài Khoản)";
+    }
+} elseif (isset($_GET['type']) && in_array($_GET['type'], ['free', 'paid'])) {
     $price_type = $conn->real_escape_string($_GET['type']);
-    $filter_conditions[] = "g.price_type = '$price_type'";
-    $category_title = ($price_type === 'free') ? "DANH MỤC GAME MIỄN PHÍ" : "GAME BẢN QUYỀN CHO THUÊ";
+    if ($price_type === 'free') {
+        $filter_conditions[] = "1=1";
+    } else {
+        $filter_conditions[] = "g.price_type = 'paid'";
+    }
 }
 
 if (isset($_GET['category']) && !empty($_GET['category'])) {
@@ -189,21 +201,21 @@ if (!$result) {
 
     <!-- Thanh công cụ lọc & sắp xếp -->
     <div class="d-flex align-items-center flex-wrap gap-2 w-100 w-lg-auto justify-content-start justify-content-lg-end">
-        <!-- Lọc Mô hình (Free / Thuê) -->
+        <!-- Lọc Tình trạng Kho -->
         <form method="GET" action="index.php" class="d-flex align-items-center gap-1">
             <?php if(isset($_GET['category'])): ?><input type="hidden" name="category" value="<?php echo intval($_GET['category']); ?>"><?php endif; ?>
             <?php if(isset($_GET['platform'])): ?><input type="hidden" name="platform" value="<?php echo htmlspecialchars($_GET['platform']); ?>"><?php endif; ?>
             <?php if(isset($_GET['sort'])): ?><input type="hidden" name="sort" value="<?php echo htmlspecialchars($_GET['sort']); ?>"><?php endif; ?>
-            <select name="type" class="form-select form-select-sm py-2 px-3 border-secondary" onchange="this.form.submit()" style="min-width: 140px;">
-                <option value="">🎯 Tất cả mô hình</option>
-                <option value="paid" <?php echo (isset($_GET['type']) && $_GET['type']=='paid')?'selected':''; ?>>🎮 Game Cho Thuê</option>
-                <option value="free" <?php echo (isset($_GET['type']) && $_GET['type']=='free')?'selected':''; ?>>🎁 Game Miễn Phí</option>
+            <select name="stock" class="form-select form-select-sm py-2 px-3 border-secondary" onchange="this.form.submit()" style="min-width: 145px;">
+                <option value="">🎯 Tất cả kho game</option>
+                <option value="available" <?php echo (isset($_GET['stock']) && $_GET['stock']=='available')?'selected':''; ?>>🟢 Còn tài khoản sẵn</option>
+                <option value="out" <?php echo (isset($_GET['stock']) && $_GET['stock']=='out')?'selected':''; ?>>🔴 Tạm hết tài khoản</option>
             </select>
         </form>
 
         <!-- Lọc Nền tảng -->
         <form method="GET" action="index.php" class="d-flex align-items-center gap-1">
-            <?php if(isset($_GET['type'])): ?><input type="hidden" name="type" value="<?php echo htmlspecialchars($_GET['type']); ?>"><?php endif; ?>
+            <?php if(isset($_GET['stock'])): ?><input type="hidden" name="stock" value="<?php echo htmlspecialchars($_GET['stock']); ?>"><?php endif; ?>
             <?php if(isset($_GET['category'])): ?><input type="hidden" name="category" value="<?php echo intval($_GET['category']); ?>"><?php endif; ?>
             <?php if(isset($_GET['sort'])): ?><input type="hidden" name="sort" value="<?php echo htmlspecialchars($_GET['sort']); ?>"><?php endif; ?>
             <select name="platform" class="form-select form-select-sm py-2 px-3 border-secondary" onchange="this.form.submit()" style="min-width: 120px;">
@@ -215,7 +227,7 @@ if (!$result) {
 
         <!-- Sắp xếp -->
         <form method="GET" action="index.php" class="d-flex align-items-center gap-1">
-            <?php if(isset($_GET['type'])): ?><input type="hidden" name="type" value="<?php echo htmlspecialchars($_GET['type']); ?>"><?php endif; ?>
+            <?php if(isset($_GET['stock'])): ?><input type="hidden" name="stock" value="<?php echo htmlspecialchars($_GET['stock']); ?>"><?php endif; ?>
             <?php if(isset($_GET['category'])): ?><input type="hidden" name="category" value="<?php echo intval($_GET['category']); ?>"><?php endif; ?>
             <?php if(isset($_GET['platform'])): ?><input type="hidden" name="platform" value="<?php echo htmlspecialchars($_GET['platform']); ?>"><?php endif; ?>
             <select name="sort" class="form-select form-select-sm py-2 px-3 border-secondary" onchange="this.form.submit()" style="min-width: 130px;">
@@ -262,23 +274,17 @@ if (!$result) {
                     <span class="badge-platform">
                         <?php echo ($game['platform'] == 'PC') ? '<i class="bi bi-display me-1"></i>PC' : '<i class="bi bi-phone me-1"></i>Mobile'; ?>
                     </span>
-                    <?php if ($game['price_type'] == 'free'): ?>
-                        <span class="badge-gaming badge-gaming-free">Miễn Phí</span>
-                    <?php else: ?>
-                        <span class="badge-gaming badge-gaming-paid">Cho Thuê</span>
-                    <?php endif; ?>
+                    <span class="badge-gaming badge-gaming-paid">Cho Thuê</span>
                 </div>
 
                 <!-- Tình trạng kho góc trên bên phải -->
                 <div class="position-absolute top-0 end-0 m-3" style="z-index: 5;">
-                    <?php if ($game['price_type'] != 'free'): ?>
-                        <?php if ($is_user_renting): ?>
-                            <span class="badge-gaming badge-gaming-avail"><i class="bi bi-check-circle-fill"></i> Đang Thuê</span>
-                        <?php elseif ($avail_acc > 0): ?>
-                            <span class="badge-gaming badge-gaming-avail"><i class="bi bi-dot fs-5"></i>Còn <?php echo $avail_acc; ?> TK</span>
-                        <?php else: ?>
-                            <span class="badge-gaming badge-gaming-out"><i class="bi bi-x-circle-fill"></i>Hết TK</span>
-                        <?php endif; ?>
+                    <?php if ($is_user_renting): ?>
+                        <span class="badge-gaming badge-gaming-avail"><i class="bi bi-check-circle-fill"></i> Đang Thuê</span>
+                    <?php elseif ($avail_acc > 0): ?>
+                        <span class="badge-gaming badge-gaming-avail"><i class="bi bi-dot fs-5"></i>Còn <?php echo $avail_acc; ?> TK</span>
+                    <?php else: ?>
+                        <span class="badge-gaming badge-gaming-out"><i class="bi bi-x-circle-fill"></i>Hết TK</span>
                     <?php endif; ?>
                 </div>
             </a>
@@ -301,30 +307,30 @@ if (!$result) {
                 <!-- Phần Giá & Nút hành động đáy card -->
                 <div class="gaming-card-footer">
                     <div>
-                        <?php if ($game['price_type'] == 'free'): ?>
-                            <span class="gaming-card-price-label">Hình thức</span>
-                            <span class="gaming-card-price-val text-info">FREE</span>
-                        <?php else: ?>
+                        <?php if ($min_price > 0): ?>
                             <span class="gaming-card-price-label">Giá thuê từ</span>
                             <span class="gaming-card-price-val text-warning fw-bold"><?php echo number_format($min_price, 0, ',', '.'); ?>đ<small class="text-secondary fw-normal ms-1" style="font-size: 0.72rem; -webkit-text-fill-color: #94a3b8;">/giờ</small></span>
+                        <?php else: ?>
+                            <span class="gaming-card-price-label">Giá thuê</span>
+                            <span class="badge bg-warning bg-opacity-20 text-warning" style="font-size: 0.75rem;">Chưa cấu hình</span>
                         <?php endif; ?>
                     </div>
 
                     <div>
-                        <?php if ($game['price_type'] == 'free'): ?>
-                            <a href="<?php echo $target_url; ?>" class="btn btn-sm btn-gaming-secondary py-1 px-3">Chi tiết</a>
+                        <?php if ($is_user_renting): ?>
+                            <a href="my_library.php" class="btn btn-sm btn-success fw-bold py-1 px-3">
+                                <i class="bi bi-play-fill me-1"></i> Vào Chơi
+                            </a>
+                        <?php elseif ($avail_acc > 0 && $min_price > 0): ?>
+                            <a href="borrow_process.php?game_id=<?php echo $game['game_id']; ?>" class="btn btn-sm btn-gaming-primary py-1 px-3">
+                                <i class="bi bi-lightning-charge-fill me-1"></i> Thuê Ngay
+                            </a>
+                        <?php elseif ($avail_acc == 0): ?>
+                            <a href="<?php echo $target_url; ?>" class="btn btn-sm btn-outline-danger py-1 px-2 text-nowrap" style="font-size: 0.78rem;">
+                                Hết TK (Xem)
+                            </a>
                         <?php else: ?>
-                            <?php if ($is_user_renting): ?>
-                                <a href="my_library.php" class="btn btn-sm btn-success fw-bold py-1 px-3">
-                                    <i class="bi bi-play-fill me-1"></i> Vào Chơi
-                                </a>
-                            <?php elseif ($avail_acc > 0): ?>
-                                <a href="borrow_process.php?game_id=<?php echo $game['game_id']; ?>" class="btn btn-sm btn-gaming-primary py-1 px-3">
-                                    <i class="bi bi-lightning-charge-fill me-1"></i> Thuê Ngay
-                                </a>
-                            <?php else: ?>
-                                <a href="<?php echo $target_url; ?>" class="btn btn-sm btn-gaming-secondary py-1 px-3 text-muted">Xem Chi Tiết</a>
-                            <?php endif; ?>
+                            <a href="<?php echo $target_url; ?>" class="btn btn-sm btn-gaming-secondary py-1 px-3 text-muted">Xem Chi Tiết</a>
                         <?php endif; ?>
                     </div>
                 </div>
