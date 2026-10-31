@@ -57,6 +57,17 @@ try {
     }
 } catch (Throwable $e) {}
 $chart_rev_js = implode(',', $chart_revenue);
+
+// 2. NHẬT KÝ TIẾN TRÌNH CRON TỰ ĐỘNG
+$last_cron_log = null;
+$recent_cron_logs = [];
+try {
+    $cron_res = $conn->query("SELECT * FROM cron_execution_logs ORDER BY id DESC LIMIT 10");
+    if ($cron_res && $cron_res->num_rows > 0) {
+        $recent_cron_logs = $cron_res->fetch_all(MYSQLI_ASSOC);
+        $last_cron_log = $recent_cron_logs[0] ?? null;
+    }
+} catch (Throwable $e) {}
 ?>
 
 <div class="container-fluid px-lg-5 py-4 my-2 text-white">
@@ -72,7 +83,7 @@ $chart_rev_js = implode(',', $chart_revenue);
             <h2 class="fw-extrabold text-white mb-0">Trung Tâm Quản Trị & Báo Cáo Doanh Thu</h2>
         </div>
         <div class="d-flex gap-2">
-            <a href="cron_process_expirations.php?secret_token=ANPLAY_CRON_2026" class="btn btn-gaming-secondary btn-sm d-flex align-items-center">
+            <a href="cron_process_expirations.php?secret_token=ANPLAY_CRON_SEC_9b8e21a7df4e083c6f41" target="_blank" class="btn btn-gaming-secondary btn-sm d-flex align-items-center" title="Xem bảng điều khiển Cron Worker">
                 <i class="bi bi-arrow-repeat me-1 text-info"></i> Quét Đơn Hết Hạn
             </a>
             <button class="btn btn-gaming-secondary btn-sm d-flex align-items-center" onclick="window.print()">
@@ -145,6 +156,47 @@ $chart_rev_js = implode(',', $chart_revenue);
                     <div class="p-3 rounded-3" style="background: rgba(239, 68, 68, 0.15); color: #ef4444;">
                         <i class="bi bi-exclamation-octagon fs-3"></i>
                     </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CRON AUTOMATION & EXPIRATION MONITOR WIDGET -->
+    <div class="p-4 rounded-4 mb-4 position-relative overflow-hidden" style="background: linear-gradient(135deg, rgba(30, 27, 75, 0.6) 0%, rgba(15, 23, 42, 0.8) 100%); border: 1px solid rgba(99, 102, 241, 0.35);">
+        <div class="row align-items-center g-3">
+            <div class="col-lg-7">
+                <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
+                    <span class="badge" style="background: rgba(16,185,129,0.18); color: #10b981; border: 1px solid rgba(16,185,129,0.35); font-weight: 700;">
+                        <span class="status-dot d-inline-block rounded-circle me-1" style="width: 8px; height: 8px; background: #10b981; box-shadow: 0 0 8px #10b981;"></span>
+                        CRON WORKER: ĐANG CHẠY TỰ ĐỘNG
+                    </span>
+                    <span class="text-secondary small">
+                        <?php if ($last_cron_log): ?>
+                            Chạy gần nhất: <strong class="text-info"><?php echo date('H:i:s d/m/Y', strtotime($last_cron_log['start_time'])); ?></strong> 
+                            <span class="badge bg-secondary bg-opacity-25 text-light"><?php echo $last_cron_log['duration_ms']; ?>ms</span>
+                        <?php else: ?>
+                            <span class="text-warning">Chưa có nhật ký ghi nhận</span>
+                        <?php endif; ?>
+                    </span>
+                </div>
+                <h5 class="fw-bold text-white mb-1">
+                    <i class="bi bi-shield-check text-info me-1"></i> Tự Động Quét, Thu Hồi Kho & Cảnh Báo Đơn Thuê Hết Hạn
+                </h5>
+                <p class="text-secondary small mb-0">
+                    Thu hồi quyền xem mật khẩu tức thì khi hết hạn, tái cấp kho <span class="badge bg-success bg-opacity-25 text-success">AVAILABLE</span>, gửi 3 mốc cảnh báo (24h, 1h, 15 phút) và tự nhận diện đơn gia hạn hợp lệ.
+                </p>
+            </div>
+            <div class="col-lg-5 text-lg-end">
+                <div class="d-flex flex-wrap gap-2 justify-content-lg-end align-items-center">
+                    <button type="button" class="btn btn-gaming-primary btn-sm px-3 py-2" id="btn-quick-cron-scan" onclick="runQuickCronScan(this)">
+                        <i class="bi bi-lightning-charge-fill me-1"></i> Quét Hết Hạn Ngay
+                    </button>
+                    <button type="button" class="btn btn-gaming-secondary btn-sm px-3 py-2" data-bs-toggle="modal" data-bs-target="#modalCronLogs">
+                        <i class="bi bi-clock-history me-1"></i> Xem Nhật Ký (<?php echo count($recent_cron_logs); ?>)
+                    </button>
+                    <button type="button" class="btn btn-outline-info btn-sm px-3 py-2" data-bs-toggle="modal" data-bs-target="#modalCronConfig">
+                        <i class="bi bi-gear-wide-connected me-1"></i> Cấu Hình Web-Cron
+                    </button>
                 </div>
             </div>
         </div>
@@ -290,6 +342,187 @@ document.addEventListener("DOMContentLoaded", function() {
         }
     });
 });
+
+// Hàm gọi Quét Hết Hạn Ngay tức thì bằng AJAX
+function runQuickCronScan(btn) {
+    if (!btn) return;
+    const originalHtml = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status"></span> Đang quét...';
+
+    fetch('cron_process_expirations.php?format=json')
+        .then(response => {
+            if (!response.ok) {
+                if (response.status === 429) {
+                    throw new Error('Tiến trình Cron khác đang hoạt động. Vui lòng thử lại sau 30 giây.');
+                }
+                throw new Error('Máy chủ phản hồi mã lỗi HTTP ' + response.status);
+            }
+            return response.json();
+        })
+        .then(data => {
+            btn.innerHTML = '<i class="bi bi-check-lg me-1"></i> Thành công!';
+            btn.classList.remove('btn-gaming-primary');
+            btn.classList.add('btn-success');
+
+            const s = data.summary || {};
+            const warns = (s.warnings_sent ? s.warnings_sent.total : 0);
+            const msg = `✅ Quét hoàn tất trong ${data.duration_ms}ms!\n\n` +
+                        `• Tổng đơn kiểm tra: ${s.scanned_total || 0}\n` +
+                        `• Đơn hết hạn thu hồi: ${s.expired_revoked || 0}\n` +
+                        `• Cảnh báo đã gửi: ${warns}\n` +
+                        `• Đơn gia hạn duy trì: ${s.extensions_kept || 0}\n` +
+                        `• Lỗi phát sinh: ${s.errors || 0}`;
+            alert(msg);
+            setTimeout(() => { window.location.reload(); }, 800);
+        })
+        .catch(err => {
+            alert('⚠️ Lỗi khi chạy quét tự động: ' + err.message);
+            btn.disabled = false;
+            btn.innerHTML = originalHtml;
+        });
+}
+
+function copyCronUrl(btn) {
+    const input = document.getElementById('cronUrlInput');
+    if (!input) return;
+    input.select();
+    navigator.clipboard.writeText(input.value).then(() => {
+        const orig = btn.innerHTML;
+        btn.innerHTML = '<i class="bi bi-check-lg me-1"></i> Đã sao chép!';
+        btn.classList.remove('btn-gaming-secondary');
+        btn.classList.add('btn-success');
+        setTimeout(() => {
+            btn.innerHTML = orig;
+            btn.classList.remove('btn-success');
+            btn.classList.add('btn-gaming-secondary');
+        }, 2000);
+    });
+}
 </script>
+
+<!-- MODAL: NHẬT KÝ CRON WORKER -->
+<div class="modal fade" id="modalCronLogs" tabindex="-1" aria-labelledby="modalCronLogsLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content text-white" style="background: var(--bg-card); border: 1px solid var(--border-color);">
+            <div class="modal-header border-bottom border-secondary border-opacity-25">
+                <h5 class="modal-title fw-bold" id="modalCronLogsLabel">
+                    <i class="bi bi-clock-history text-info me-2"></i> Lịch Sử Quét Cron Gần Nhất
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <?php if (empty($recent_cron_logs)): ?>
+                    <div class="text-center py-5 text-secondary">
+                        <i class="bi bi-inbox fs-1 d-block mb-2 text-muted"></i>
+                        Chưa có bản ghi nhật ký quét Cron nào trong cơ sở dữ liệu.
+                    </div>
+                <?php else: ?>
+                    <div class="table-responsive">
+                        <table class="table table-dark table-hover align-middle mb-0" style="background: transparent;">
+                            <thead>
+                                <tr class="text-secondary small text-uppercase">
+                                    <th>#ID</th>
+                                    <th>Thời Điểm</th>
+                                    <th>Nguồn Kích Hoạt</th>
+                                    <th>Thời Lượng</th>
+                                    <th>Quét</th>
+                                    <th>Thu Hồi</th>
+                                    <th>Cảnh Báo</th>
+                                    <th>Gia Hạn</th>
+                                    <th>Trạng Thái</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php foreach ($recent_cron_logs as $log): 
+                                    $st = $log['status'];
+                                    $badge_class = ($st === 'success') ? 'bg-success bg-opacity-25 text-success' : (($st === 'warning') ? 'bg-warning bg-opacity-25 text-warning' : 'bg-danger bg-opacity-25 text-danger');
+                                ?>
+                                    <tr>
+                                        <td class="font-monospace text-secondary">#<?php echo $log['id']; ?></td>
+                                        <td class="fw-semibold text-light"><?php echo date('H:i:s d/m/Y', strtotime($log['start_time'])); ?></td>
+                                        <td>
+                                            <span class="badge" style="background: rgba(255,255,255,0.06); color: #cbd5e1;">
+                                                <?php echo htmlspecialchars($log['triggered_by']); ?>
+                                            </span>
+                                        </td>
+                                        <td class="font-monospace text-info"><?php echo $log['duration_ms']; ?>ms</td>
+                                        <td class="fw-bold"><?php echo $log['scanned_count']; ?></td>
+                                        <td class="text-danger fw-bold"><?php echo $log['expired_count']; ?></td>
+                                        <td class="text-warning fw-bold"><?php echo $log['warned_count']; ?></td>
+                                        <td class="text-success fw-bold"><?php echo $log['extended_count']; ?></td>
+                                        <td>
+                                            <span class="badge <?php echo $badge_class; ?> text-uppercase">
+                                                <?php echo $st; ?>
+                                            </span>
+                                        </td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                <?php endif; ?>
+            </div>
+            <div class="modal-footer border-top border-secondary border-opacity-25">
+                <button type="button" class="btn btn-gaming-secondary" data-bs-dismiss="modal">Đóng</button>
+                <a href="cron_process_expirations.php?secret_token=ANPLAY_CRON_SEC_9b8e21a7df4e083c6f41" target="_blank" class="btn btn-gaming-primary">
+                    <i class="bi bi-box-arrow-up-right me-1"></i> Mở Bảng Console Đầy Đủ
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL: HƯỚNG DẪN CẤU HÌNH WEB-CRON 24/7 -->
+<div class="modal fade" id="modalCronConfig" tabindex="-1" aria-labelledby="modalCronConfigLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content text-white" style="background: var(--bg-card); border: 1px solid var(--border-color);">
+            <div class="modal-header border-bottom border-secondary border-opacity-25">
+                <h5 class="modal-title fw-bold" id="modalCronConfigLabel">
+                    <i class="bi bi-gear-wide-connected text-info me-2"></i> Thiết Lập Tự Động Quét Hết Hạn 24/7 (Web-Cron)
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div class="alert alert-info bg-info bg-opacity-10 border-info border-opacity-25 text-light mb-4">
+                    <i class="bi bi-info-circle-fill text-info me-2"></i>
+                    <strong>Môi trường Hosting InfinityFree:</strong> Máy chủ không mở cổng SSH terminal định kỳ vĩnh viễn. Để hệ thống tự động quét mỗi 1 đến 5 phút mà không cần người dùng truy cập, giải pháp chuẩn công nghiệp là sử dụng <strong>External Web-Cron</strong> (như cron-job.org hoặc UptimeRobot).
+                </div>
+
+                <h6 class="fw-bold text-white mb-2">1. Đường Dẫn Web-Cron Bảo Mật Của Bạn:</h6>
+                <div class="input-group mb-4">
+                    <input type="text" id="cronUrlInput" class="form-control form-control-gaming text-warning font-monospace" readonly
+                           value="https://anplaystore.free.nf/cron_process_expirations.php?secret_token=ANPLAY_CRON_SEC_9b8e21a7df4e083c6f41&format=json">
+                    <button class="btn btn-gaming-secondary" type="button" onclick="copyCronUrl(this)">
+                        <i class="bi bi-clipboard me-1"></i> Sao chép URL
+                    </button>
+                </div>
+
+                <h6 class="fw-bold text-white mb-2">2. Hướng Dẫn Cấu Hình Trên cron-job.org (Miễn Phí):</h6>
+                <ol class="text-secondary small mb-3 ps-3" style="line-height: 1.8;">
+                    <li>Truy cập <a href="https://cron-job.org" target="_blank" class="text-info fw-bold">cron-job.org</a> và đăng ký một tài khoản miễn phí.</li>
+                    <li>Vào mục <strong>Cronjobs</strong> &rarr; Chọn <strong>Create Cronjob</strong>.</li>
+                    <li>Dán URL ở trên vào ô <strong>URL</strong>.</li>
+                    <li>Đặt <strong>Schedule / Execution interval</strong>: Chọn <code>Every 1 minute</code> hoặc <code>Every 5 minutes</code>.</li>
+                    <li>Phương thức Request: Chọn <strong>GET</strong>.</li>
+                    <li>Nhấn <strong>Create</strong> để kích hoạt. Kể từ lúc này, hệ thống sẽ tự động quét, cảnh báo và thu hồi tài khoản đúng thời gian thực 24/7!</li>
+                </ol>
+
+                <div class="p-3 rounded-3" style="background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.25);">
+                    <div class="d-flex align-items-center gap-2 text-success small fw-bold">
+                        <i class="bi bi-shield-check fs-5"></i>
+                        <span>Lớp bảo vệ dự phòng bổ sung:</span>
+                    </div>
+                    <p class="text-secondary small mb-0 mt-1">
+                        ANPLAY STORE đã tích hợp sẵn cơ chế <em>Inline Auto-Check</em> trong <code>connect.php</code>. Khi có bất kỳ lượt truy cập nào trên website, các đơn đã quá hạn sẽ tự động được thu hồi ngay cả khi dịch vụ Web-Cron bên ngoài gặp sự cố tạm thời.
+                    </p>
+                </div>
+            </div>
+            <div class="modal-footer border-top border-secondary border-opacity-25">
+                <button type="button" class="btn btn-gaming-secondary" data-bs-dismiss="modal">Đã Hiểu</button>
+            </div>
+        </div>
+    </div>
+</div>
 
 <?php require_once __DIR__ . '/includes/admin_footer.php'; ?>

@@ -12,6 +12,15 @@ if (!defined('APP_SECURITY_KEY')) {
     }
 }
 
+if (!defined('ANPLAY_CRON_SECRET')) {
+    $env_cron = getenv('ANPLAY_CRON_SECRET');
+    define('ANPLAY_CRON_SECRET', !empty($env_cron) ? $env_cron : 'ANPLAY_CRON_SEC_9b8e21a7df4e083c6f41');
+}
+
+if (!defined('ANPLAY_LEGACY_CRON_SECRET')) {
+    define('ANPLAY_LEGACY_CRON_SECRET', 'ANPLAY_CRON_2026');
+}
+
 /**
  * Mã hóa mật khẩu tài khoản game bằng OpenSSL AES-256-CBC
  */

@@ -104,7 +104,7 @@ if (!$result) {
             <p class="text-secondary small mb-0">Theo dõi lịch sử đơn, tiến độ hạn thuê, doanh thu, thanh toán VietQR và xử lý thu hồi sớm</p>
         </div>
         <div class="d-flex gap-2">
-            <a href="cron_process_expirations.php?secret_token=ANPLAY_CRON_2026" class="btn btn-gaming-secondary d-flex align-items-center">
+            <a href="cron_process_expirations.php?secret_token=ANPLAY_CRON_SEC_9b8e21a7df4e083c6f41" class="btn btn-gaming-secondary d-flex align-items-center" target="_blank" title="Kích hoạt quét và thu hồi đơn hết hạn">
                 <i class="bi bi-arrow-clockwise me-1 text-info"></i> Quét Hết Hạn Ngay
             </a>
             <a href="admin_accounts.php" class="btn btn-gaming-primary d-flex align-items-center">
