@@ -346,6 +346,16 @@ require_once __DIR__ . '/includes/header.php';
                                     </button>
                                 </div>
                             </div>
+
+                            <!-- Nút kiểm tra quyền đổi mật khẩu & kiểm tra lưu game (Save Game) -->
+                            <div class="d-flex flex-wrap gap-2 mt-2 pt-2 border-top border-secondary border-opacity-25">
+                                <button type="button" class="btn btn-sm btn-outline-warning py-1 px-2 d-inline-flex align-items-center" data-bs-toggle="modal" data-bs-target="#passPolicyModal_<?php echo $row['borrow_id']; ?>" style="font-size: 0.72rem;" title="Xem chính sách và quyền đổi mật khẩu tài khoản">
+                                    <i class="bi bi-shield-lock me-1"></i> Quyền đổi mật khẩu
+                                </button>
+                                <button type="button" class="btn btn-sm btn-outline-info py-1 px-2 d-inline-flex align-items-center" data-bs-toggle="modal" data-bs-target="#saveGameModal_<?php echo $row['borrow_id']; ?>" style="font-size: 0.72rem;" title="Xem trạng thái và hướng dẫn lưu tiến trình game">
+                                    <i class="bi bi-cloud-check me-1"></i> Save Game & Tiến trình
+                                </button>
+                            </div>
                         <?php else: ?>
                             <div class="text-center py-2">
                                 <i class="bi bi-lock-fill text-danger d-block mb-1 fs-5"></i>
@@ -506,6 +516,84 @@ require_once __DIR__ . '/includes/header.php';
                             </button>
                         </div>
                     </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- MODAL: CHÍNH SÁCH & QUYỀN ĐỔI MẬT KHẨU TÀI KHOẢN -->
+        <div class="modal fade" id="passPolicyModal_<?php echo $row['borrow_id']; ?>" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content modal-gaming shadow-lg text-white" style="background: var(--bg-card); border: 1px solid var(--border-color);">
+                    <div class="modal-header border-secondary border-opacity-25">
+                        <h5 class="modal-title fw-bold text-warning d-flex align-items-center">
+                            <i class="bi bi-shield-lock-fill me-2 fs-5"></i> Chính Sách Mật Khẩu Tài Khoản Game
+                        </h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body p-4">
+                        <div class="p-3 rounded-3 mb-3" style="background: rgba(239, 68, 68, 0.12); border: 1px solid rgba(239, 68, 68, 0.3);">
+                            <div class="d-flex align-items-center gap-2 mb-1">
+                                <span class="badge bg-danger text-white"><i class="bi bi-slash-circle me-1"></i> KHÔNG ĐƯỢC PHÉP ĐỔI MẬT KHẨU</span>
+                            </div>
+                            <small class="text-danger fw-semibold">
+                                Tài khoản game <strong><?php echo htmlspecialchars($row['account_username'] ?? 'cho thuê'); ?></strong> thuộc quyền sở hữu độc quyền của ANPLAY STORE.
+                            </small>
+                        </div>
+
+                        <h6 class="fw-bold text-light mb-2">Quy định và giới hạn bảo mật:</h6>
+                        <ul class="text-secondary small mb-3 ps-3" style="line-height: 1.7;">
+                            <li><strong>Chính sách thuê chia sẻ:</strong> Tài khoản được cấp quyền đăng nhập trong thời gian thuê. Khách hàng <em>không được phép tự ý thay đổi mật khẩu, email hoặc thêm Steam Guard cá nhân</em>.</li>
+                            <li><strong>Phát hiện vi phạm:</strong> Bất kỳ hành vi đổi mật khẩu nào sẽ bị hệ thống quét tự động phát hiện, khóa quyền truy cập ngay lập tức và hủy bỏ bảo hành.</li>
+                            <li><strong>Nếu gặp lỗi sai mật khẩu:</strong> ANPLAY STORE áp dụng chính sách <strong>Bảo hành 1 Đổi 1</strong>. Nếu tài khoản bị sai pass hoặc bị đăng xuất, vui lòng bấm nút bên dưới để kỹ thuật viên cấp pass mới hoặc đổi tài khoản khác cho bạn trong 1 - 3 phút.</li>
+                        </ul>
+                    </div>
+                    <div class="modal-footer border-secondary border-opacity-25">
+                        <button type="button" class="btn btn-gaming-secondary" data-bs-dismiss="modal">Đã Hiểu</button>
+                        <button type="button" class="btn btn-danger" data-bs-dismiss="modal" data-bs-toggle="modal" data-bs-target="#reportModal_<?php echo $row['borrow_id']; ?>">
+                            <i class="bi bi-flag-fill me-1"></i> Báo Lỗi Cần Đổi Mật Khẩu
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- MODAL: KIỂM TRA LƯU TIẾN TRÌNH (SAVE GAME) & TIẾP TỤC CHƠI -->
+        <div class="modal fade" id="saveGameModal_<?php echo $row['borrow_id']; ?>" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content modal-gaming shadow-lg text-white" style="background: var(--bg-card); border: 1px solid var(--border-color);">
+                    <div class="modal-header border-secondary border-opacity-25">
+                        <h5 class="modal-title fw-bold text-info d-flex align-items-center">
+                            <i class="bi bi-cloud-check-fill me-2 fs-5"></i> Lưu Tiến Trình Game (Save Game)
+                        </h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body p-4">
+                        <div class="p-3 rounded-3 mb-3" style="background: rgba(16, 185, 129, 0.12); border: 1px solid rgba(16, 185, 129, 0.3);">
+                            <div class="d-flex align-items-center gap-2 mb-1">
+                                <span class="badge bg-success text-white"><i class="bi bi-check-circle-fill me-1"></i> SAVE GAME: HOẠT ĐỘNG HOÀN HẢO</span>
+                            </div>
+                            <small class="text-success fw-semibold">
+                                Tựa game <strong><?php echo htmlspecialchars($row['title']); ?></strong> hỗ trợ đầy đủ tính năng lưu tiến trình chơi qua Steam Cloud & máy tính cá nhân.
+                            </small>
+                        </div>
+
+                        <h6 class="fw-bold text-light mb-2">Cách thức lưu và tiếp tục chơi:</h6>
+                        <ul class="text-secondary small mb-3 ps-3" style="line-height: 1.7;">
+                            <li><strong>Cloud Save tự động:</strong> Khi bạn chơi, tiến trình sẽ được nền tảng (Steam/Epic) tự động lưu đồng bộ với tài khoản <code><?php echo htmlspecialchars($row['account_username'] ?? ''); ?></code>.</li>
+                            <li><strong>Local Save dự phòng:</strong> File save vật lý được lưu trong máy bạn tại <code>%USERPROFILE%\Documents</code> hoặc <code>AppData</code>. Bạn hoàn toàn có thể backup file này bất cứ lúc nào.</li>
+                            <li><strong>Để giữ Save khi hết hạn:</strong> Chọn <strong>"Thuê lại tài khoản cũ (Giữ Save)"</strong> để hệ thống cấp lại chính xác tài khoản này, bạn sẽ tiếp tục đúng màn chơi cũ mà không sợ mất file.</li>
+                        </ul>
+
+                        <div class="p-2 rounded-3" style="background: rgba(255,255,255,0.03); border: 1px dashed var(--border-color); font-size: 0.8rem; color: #94a3b8;">
+                            <i class="bi bi-info-circle text-info me-1"></i> Giới hạn kỹ thuật: Trò chơi chạy trực tiếp qua Launcher trên máy bạn, website ANPLAY STORE không can thiệp vào bộ nhớ máy tính để bảo đảm tính an toàn bảo mật.
+                        </div>
+                    </div>
+                    <div class="modal-footer border-secondary border-opacity-25">
+                        <button type="button" class="btn btn-gaming-secondary" data-bs-dismiss="modal">Đóng</button>
+                        <a href="download_game.php?id=<?php echo $row['game_id']; ?>" class="btn btn-gaming-primary">
+                            <i class="bi bi-controller me-1"></i> Chơi Game Ngay
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>

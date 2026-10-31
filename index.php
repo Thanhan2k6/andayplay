@@ -50,10 +50,10 @@ if (isset($_GET['platform']) && !empty($_GET['platform'])) {
     $category_title .= " (" . htmlspecialchars($platform) . ")";
 }
 
-if (isset($_GET['search']) && !empty($_GET['search'])) {
-    $search_text = $conn->real_escape_string($_GET['search']);
-    $filter_conditions[] = "g.title LIKE '%$search_text%'";
-    $category_title = "Kết quả tìm kiếm cho: \"" . htmlspecialchars($search_text) . "\"";
+if (isset($_GET['search']) && trim($_GET['search']) !== '') {
+    $search_text = $conn->real_escape_string(trim($_GET['search']));
+    $filter_conditions[] = "(g.title LIKE '%$search_text%' OR g.description LIKE '%$search_text%' OR c.cate_name LIKE '%$search_text%' OR g.platform LIKE '%$search_text%')";
+    $category_title = "Kết quả tìm kiếm cho: \"" . htmlspecialchars(trim($_GET['search'])) . "\"";
 }
 
 $where_clause = "";
@@ -201,8 +201,23 @@ if (!$result) {
 
     <!-- Thanh công cụ lọc & sắp xếp -->
     <div class="d-flex align-items-center flex-wrap gap-2 w-100 w-lg-auto justify-content-start justify-content-lg-end">
+        <!-- Tìm kiếm Game Trực Tiếp Tại Danh Sách (Search for a Game) -->
+        <form method="GET" action="index.php" class="d-flex align-items-center gap-1" id="catalogSearchForm">
+            <?php if(isset($_GET['stock'])): ?><input type="hidden" name="stock" value="<?php echo htmlspecialchars($_GET['stock']); ?>"><?php endif; ?>
+            <?php if(isset($_GET['category'])): ?><input type="hidden" name="category" value="<?php echo intval($_GET['category']); ?>"><?php endif; ?>
+            <?php if(isset($_GET['platform'])): ?><input type="hidden" name="platform" value="<?php echo htmlspecialchars($_GET['platform']); ?>"><?php endif; ?>
+            <?php if(isset($_GET['sort'])): ?><input type="hidden" name="sort" value="<?php echo htmlspecialchars($_GET['sort']); ?>"><?php endif; ?>
+            <div class="input-group input-group-sm">
+                <input type="text" name="search" id="catalogSearchInput" class="form-control form-control-sm border-secondary search-catalog-input" placeholder="Tìm kiếm tựa game..." value="<?php echo isset($_GET['search']) ? htmlspecialchars(trim($_GET['search'])) : ''; ?>" autocomplete="off" style="min-width: 170px;">
+                <button type="submit" class="btn btn-sm btn-gaming-primary" id="btnCatalogSearch" title="Nhấn để tìm kiếm tựa game">
+                    <i class="bi bi-search me-1"></i> Tìm
+                </button>
+            </div>
+        </form>
+
         <!-- Lọc Tình trạng Kho -->
         <form method="GET" action="index.php" class="d-flex align-items-center gap-1">
+            <?php if(isset($_GET['search'])): ?><input type="hidden" name="search" value="<?php echo htmlspecialchars($_GET['search']); ?>"><?php endif; ?>
             <?php if(isset($_GET['category'])): ?><input type="hidden" name="category" value="<?php echo intval($_GET['category']); ?>"><?php endif; ?>
             <?php if(isset($_GET['platform'])): ?><input type="hidden" name="platform" value="<?php echo htmlspecialchars($_GET['platform']); ?>"><?php endif; ?>
             <?php if(isset($_GET['sort'])): ?><input type="hidden" name="sort" value="<?php echo htmlspecialchars($_GET['sort']); ?>"><?php endif; ?>
@@ -215,6 +230,7 @@ if (!$result) {
 
         <!-- Lọc Nền tảng -->
         <form method="GET" action="index.php" class="d-flex align-items-center gap-1">
+            <?php if(isset($_GET['search'])): ?><input type="hidden" name="search" value="<?php echo htmlspecialchars($_GET['search']); ?>"><?php endif; ?>
             <?php if(isset($_GET['stock'])): ?><input type="hidden" name="stock" value="<?php echo htmlspecialchars($_GET['stock']); ?>"><?php endif; ?>
             <?php if(isset($_GET['category'])): ?><input type="hidden" name="category" value="<?php echo intval($_GET['category']); ?>"><?php endif; ?>
             <?php if(isset($_GET['sort'])): ?><input type="hidden" name="sort" value="<?php echo htmlspecialchars($_GET['sort']); ?>"><?php endif; ?>
@@ -227,6 +243,7 @@ if (!$result) {
 
         <!-- Sắp xếp -->
         <form method="GET" action="index.php" class="d-flex align-items-center gap-1">
+            <?php if(isset($_GET['search'])): ?><input type="hidden" name="search" value="<?php echo htmlspecialchars($_GET['search']); ?>"><?php endif; ?>
             <?php if(isset($_GET['stock'])): ?><input type="hidden" name="stock" value="<?php echo htmlspecialchars($_GET['stock']); ?>"><?php endif; ?>
             <?php if(isset($_GET['category'])): ?><input type="hidden" name="category" value="<?php echo intval($_GET['category']); ?>"><?php endif; ?>
             <?php if(isset($_GET['platform'])): ?><input type="hidden" name="platform" value="<?php echo htmlspecialchars($_GET['platform']); ?>"><?php endif; ?>
@@ -238,7 +255,7 @@ if (!$result) {
         </form>
 
         <?php if(!empty($_GET['type']) || !empty($_GET['category']) || !empty($_GET['platform']) || !empty($_GET['sort']) || !empty($_GET['search'])): ?>
-            <a href="index.php" class="btn btn-sm btn-outline-danger px-3 py-2">
+            <a href="index.php" class="btn btn-sm btn-outline-danger px-3 py-2" title="Xóa toàn bộ bộ lọc và từ khóa tìm kiếm">
                 <i class="bi bi-x-circle me-1"></i> Xóa Lọc
             </a>
         <?php endif; ?>
@@ -404,41 +421,92 @@ if (!$result) {
 
             <div class="col-lg-7">
                 <div class="accordion accordion-flush" id="faqAccordion">
-                    <div class="accordion-item bg-transparent border-secondary border-opacity-25 mb-2">
-                        <h2 class="accordion-header">
-                            <button class="accordion-button collapsed bg-transparent text-white fw-bold shadow-none" type="button" data-bs-toggle="collapse" data-bs-target="#faq1">
-                                🎮 Tôi có thể lưu game (Save Game) và chơi tiếp không?
+                    <!-- FAQ 1: Lưu Game & Chơi Tiếp -->
+                    <div class="accordion-item bg-transparent border-secondary border-opacity-25 mb-3" style="border-radius: 12px; overflow: hidden; border: 1px solid var(--border-color);">
+                        <h2 class="accordion-header" id="headingFaq1">
+                            <button class="accordion-button collapsed bg-transparent fw-bold shadow-none py-3 px-3" type="button" data-bs-toggle="collapse" data-bs-target="#faq1" aria-expanded="false" aria-controls="faq1" style="color: var(--text-heading) !important; font-size: 1rem;">
+                                <i class="bi bi-cloud-arrow-down text-info me-2 fs-5"></i> 🎮 Tôi có thể lưu game (Save Game) và chơi tiếp không?
                             </button>
                         </h2>
-                        <div id="faq1" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
-                            <div class="accordion-body text-secondary small pt-0">
-                                Hoàn toàn được! Các game trên Steam/EA/Epic đều tự động lưu file save trên đám mây (Cloud Save) hoặc trên máy tính của bạn. Khi bạn gia hạn hoặc thuê lại tài khoản đó, bạn vẫn có thể chơi tiếp tục mà không lo mất dữ liệu.
+                        <div id="faq1" class="accordion-collapse collapse" aria-labelledby="headingFaq1" data-bs-parent="#faqAccordion">
+                            <div class="accordion-body text-secondary small pt-1 pb-3 px-3">
+                                <div class="d-flex flex-wrap gap-2 mb-2">
+                                    <span class="badge" style="background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3);">
+                                        <i class="bi bi-check-circle-fill me-1"></i> 100% Game Hỗ Trợ Save Tiến Trình
+                                    </span>
+                                    <span class="badge" style="background: rgba(99, 102, 241, 0.15); color: #818cf8; border: 1px solid rgba(99, 102, 241, 0.3);">
+                                        <i class="bi bi-steam me-1"></i> Steam Cloud & Local AppData
+                                    </span>
+                                </div>
+                                <p class="mb-2 text-light" style="line-height: 1.6;">
+                                    <strong>Hoàn toàn được!</strong> Các tựa game bản quyền trên Steam, EA, Epic Games đều tự động kích hoạt tính năng lưu tiến trình màn chơi:
+                                </p>
+                                <ul class="mb-3 ps-3 text-secondary" style="line-height: 1.7;">
+                                    <li><strong>Đồng bộ đám mây (Cloud Save):</strong> Tiến trình game được máy chủ bản quyền lưu tự động gắn liền với tài khoản game bạn thuê.</li>
+                                    <li><strong>Lưu cục bộ an toàn:</strong> Bản sao lưu file save được lưu ngay trên máy tính của bạn (tại <code>%USERPROFILE%\Documents</code> hoặc <code>Saved Games</code>).</li>
+                                    <li><strong>Tiếp tục chơi sau khi gia hạn hoặc thuê lại:</strong> Khi hết giờ, bạn chỉ cần bấm <strong>"Gia hạn"</strong> hoặc chọn <strong>"Thuê lại tài khoản cũ (Giữ Save)"</strong> tại Thư viện, toàn bộ cấp độ, vật phẩm và màn chơi của bạn được giữ trọn vẹn 100%!</li>
+                                </ul>
+                                <div class="p-2 rounded-3 mb-2" style="background: rgba(255,255,255,0.03); border: 1px dashed var(--border-color); font-size: 0.8rem;">
+                                    <i class="bi bi-info-circle-fill text-info me-1"></i> <em>Lưu ý kỹ thuật:</em> Do game chạy qua Client chính thức trên máy tính của bạn, ANPLAY STORE không can thiệp vào bộ nhớ phần cứng cá nhân nhằm đảm bảo tính bảo mật và riêng tư cao nhất.
+                                </div>
+                                <a href="my_library.php" class="btn btn-sm btn-gaming-secondary py-1 px-3 text-decoration-none">
+                                    <i class="bi bi-controller me-1 text-primary"></i> Đến Thư Viện Của Tôi Kiểm Tra Tiến Trình
+                                </a>
                             </div>
                         </div>
                     </div>
 
-                    <div class="accordion-item bg-transparent border-secondary border-opacity-25 mb-2">
-                        <h2 class="accordion-header">
-                            <button class="accordion-button collapsed bg-transparent text-white fw-bold shadow-none" type="button" data-bs-toggle="collapse" data-bs-target="#faq2">
-                                🔒 Tôi có được phép đổi mật khẩu tài khoản game không?
+                    <!-- FAQ 2: Quyền Đổi Mật Khẩu -->
+                    <div class="accordion-item bg-transparent border-secondary border-opacity-25 mb-3" style="border-radius: 12px; overflow: hidden; border: 1px solid var(--border-color);">
+                        <h2 class="accordion-header" id="headingFaq2">
+                            <button class="accordion-button collapsed bg-transparent fw-bold shadow-none py-3 px-3" type="button" data-bs-toggle="collapse" data-bs-target="#faq2" aria-expanded="false" aria-controls="faq2" style="color: var(--text-heading) !important; font-size: 1rem;">
+                                <i class="bi bi-shield-lock text-warning me-2 fs-5"></i> 🔒 Tôi có được phép đổi mật khẩu tài khoản game không?
                             </button>
                         </h2>
-                        <div id="faq2" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
-                            <div class="accordion-body text-secondary small pt-0">
-                                <strong>Tuyệt đối không!</strong> Tài khoản game thuộc quyền sở hữu của ANPLAY STORE. Việc cố tình đổi mật khẩu, đổi email hoặc dùng phần mềm gian lận (cheat/hack) sẽ khiến tài khoản bị khóa vĩnh viễn và không được hoàn tiền.
+                        <div id="faq2" class="accordion-collapse collapse" aria-labelledby="headingFaq2" data-bs-parent="#faqAccordion">
+                            <div class="accordion-body text-secondary small pt-1 pb-3 px-3">
+                                <div class="d-flex flex-wrap gap-2 mb-2">
+                                    <span class="badge" style="background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3);">
+                                        <i class="bi bi-slash-circle-fill me-1"></i> Chính Sách: Nghiêm Cấm Tự Ý Đổi Mật Khẩu
+                                    </span>
+                                    <span class="badge" style="background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3);">
+                                        <i class="bi bi-shield-check me-1"></i> Bảo Hành Đổi Trả 1 Đổi 1
+                                    </span>
+                                </div>
+                                <p class="mb-2 text-light" style="line-height: 1.6;">
+                                    <strong class="text-danger">Tuyệt đối không!</strong> Tài khoản game thuộc quyền sở hữu bản quyền của hệ thống ANPLAY STORE được cung cấp theo hình thức cho thuê thời hạn:
+                                </p>
+                                <ul class="mb-3 ps-3 text-secondary" style="line-height: 1.7;">
+                                    <li><strong>Lý do an toàn hệ thống:</strong> Việc tự ý thay đổi mật khẩu, đổi email đăng ký hoặc kích hoạt bảo mật gia đình sẽ vi phạm nghiêm trọng Điều khoản dịch vụ và kích hoạt cơ chế khóa tài khoản vĩnh viễn.</li>
+                                    <li><strong>Quy trình khi gặp lỗi mật khẩu:</strong> Nếu bạn đăng nhập gặp thông báo sai mật khẩu hoặc vướng mã xác thực Steam Guard, hãy nhấn nút <strong>[Báo lỗi tài khoản]</strong> ngay trên giao diện Thư viện. Kỹ thuật viên ANPLAY STORE sẽ kiểm tra và cấp mật khẩu mới hoặc đổi tài khoản 1 đổi 1 ngay lập tức.</li>
+                                    <li><strong>Phân biệt mật khẩu:</strong> Bạn có toàn quyền tự do đổi mật khẩu tài khoản website ANPLAY STORE của mình tại trang <em>Hồ sơ & Bảo mật</em>, nhưng không được can thiệp vào tài khoản game được cấp.</li>
+                                </ul>
+                                <a href="support.php" class="btn btn-sm btn-outline-danger py-1 px-3 text-decoration-none">
+                                    <i class="bi bi-headset me-1"></i> Yêu Cầu Kỹ Thuật Viên Hỗ Trợ Đổi Tài Khoản
+                                </a>
                             </div>
                         </div>
                     </div>
 
-                    <div class="accordion-item bg-transparent border-secondary border-opacity-25">
-                        <h2 class="accordion-header">
-                            <button class="accordion-button collapsed bg-transparent text-white fw-bold shadow-none" type="button" data-bs-toggle="collapse" data-bs-target="#faq3">
-                                ⏱️ Khi hết giờ thuê, chuyện gì sẽ xảy ra?
+                    <!-- FAQ 3: Hết Giờ Thuê -->
+                    <div class="accordion-item bg-transparent border-secondary border-opacity-25" style="border-radius: 12px; overflow: hidden; border: 1px solid var(--border-color);">
+                        <h2 class="accordion-header" id="headingFaq3">
+                            <button class="accordion-button collapsed bg-transparent fw-bold shadow-none py-3 px-3" type="button" data-bs-toggle="collapse" data-bs-target="#faq3" aria-expanded="false" aria-controls="faq3" style="color: var(--text-heading) !important; font-size: 1rem;">
+                                <i class="bi bi-clock-history text-success me-2 fs-5"></i> ⏱️ Khi hết giờ thuê, chuyện gì sẽ xảy ra?
                             </button>
                         </h2>
-                        <div id="faq3" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
-                            <div class="accordion-body text-secondary small pt-0">
-                                Khi hết thời hạn, hệ thống sẽ tự động thu hồi quyền sử dụng tài khoản. Bạn có thể bấm nút <strong>Gia hạn</strong> trước khi hết giờ hoặc chọn <strong>Thuê lại tài khoản cũ</strong> trong Thư viện bất cứ lúc nào.
+                        <div id="faq3" class="accordion-collapse collapse" aria-labelledby="headingFaq3" data-bs-parent="#faqAccordion">
+                            <div class="accordion-body text-secondary small pt-1 pb-3 px-3">
+                                <p class="mb-2 text-light" style="line-height: 1.6;">
+                                    Khi hết thời hạn thuê, hệ thống tự động khóa hiển thị mật khẩu trên website để hoàn tất phiên thuê:
+                                </p>
+                                <ul class="mb-3 ps-3 text-secondary" style="line-height: 1.7;">
+                                    <li>Bạn sẽ nhận được thông báo trước <strong>24 giờ, 1 giờ và 15 phút</strong> để chủ động gia hạn.</li>
+                                    <li>Nếu chưa hoàn thành game, bạn chỉ cần bấm nút <strong>"Gia hạn"</strong> trước khi hết giờ hoặc bấm <strong>"Thuê lại tài khoản cũ"</strong> bất kỳ lúc nào để giữ nguyên toàn bộ file Save.</li>
+                                </ul>
+                                <a href="my_library.php" class="btn btn-sm btn-gaming-secondary py-1 px-3 text-decoration-none">
+                                    <i class="bi bi-arrow-repeat me-1 text-info"></i> Xem Lịch Sử & Gia Hạn Đơn Thuê
+                                </a>
                             </div>
                         </div>
                     </div>
@@ -447,5 +515,43 @@ if (!$result) {
         </div>
     </div>
 </section>
+
+<!-- SCRIPT BẢO ĐẢM TƯƠNG TÁC CLICK FAQ ACCORDION HOẠT ĐỘNG 100% -->
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const faqButtons = document.querySelectorAll('#faqAccordion .accordion-button');
+    faqButtons.forEach(function(btn) {
+        btn.addEventListener('click', function(e) {
+            const targetSelector = this.getAttribute('data-bs-target');
+            if (!targetSelector) return;
+            const targetEl = document.querySelector(targetSelector);
+            if (!targetEl) return;
+
+            // Nếu bootstrap JS chưa bắt event hoặc bị trễ, kích hoạt thủ công
+            const isShown = targetEl.classList.contains('show');
+            document.querySelectorAll('#faqAccordion .accordion-collapse').forEach(function(col) {
+                if (col !== targetEl) {
+                    col.classList.remove('show');
+                    const otherBtn = document.querySelector(`[data-bs-target="#${col.id}"]`);
+                    if (otherBtn) {
+                        otherBtn.classList.add('collapsed');
+                        otherBtn.setAttribute('aria-expanded', 'false');
+                    }
+                }
+            });
+
+            if (isShown) {
+                targetEl.classList.remove('show');
+                this.classList.add('collapsed');
+                this.setAttribute('aria-expanded', 'false');
+            } else {
+                targetEl.classList.add('show');
+                this.classList.remove('collapsed');
+                this.setAttribute('aria-expanded', 'true');
+            }
+        });
+    });
+});
+</script>
 
 <?php include 'includes/footer.php'; ?>

@@ -126,14 +126,17 @@ if (empty($_SESSION['chat_csrf_token'])) {
             <a href="support.php" class="anplay-suggestion-chip text-decoration-none" style="background: rgba(239, 68, 68, 0.15); border-color: rgba(239, 68, 68, 0.35); color: #f87171;">
                 <i class="bi bi-headset text-danger"></i> Gặp nhân viên hỗ trợ
             </a>
+            <button class="anplay-suggestion-chip" type="button" data-question="Tôi có thể lưu game (Save Game) và chơi tiếp không?" onclick="anplayQuickAsk(this)">
+                <i class="bi bi-cloud-check text-info"></i> Lưu Game & Chơi tiếp?
+            </button>
+            <button class="anplay-suggestion-chip" type="button" data-question="Tôi có được phép đổi mật khẩu tài khoản game không?" onclick="anplayQuickAsk(this)">
+                <i class="bi bi-shield-lock text-warning"></i> Quyền đổi mật khẩu?
+            </button>
             <button class="anplay-suggestion-chip" type="button" data-question="Shop có những game gì đang cho thuê?" onclick="anplayQuickAsk(this)">
                 <i class="bi bi-joystick text-primary"></i> Game cho thuê?
             </button>
             <button class="anplay-suggestion-chip" type="button" data-question="Hướng dẫn quy trình thuê tài khoản game" onclick="anplayQuickAsk(this)">
                 <i class="bi bi-question-circle text-info"></i> Cách thuê game?
-            </button>
-            <button class="anplay-suggestion-chip" type="button" data-question="Chính sách bảo hành và đổi tài khoản thế nào?" onclick="anplayQuickAsk(this)">
-                <i class="bi bi-shield-check text-success"></i> Bảo hành 1 đổi 1?
             </button>
         </div>
 

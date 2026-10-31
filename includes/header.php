@@ -152,11 +152,15 @@ if (isset($_SESSION['user_id'])) {
             <i class="bi bi-list fs-2"></i>
         </button>
 
-        <!-- Form tìm kiếm thông minh (desktop) -->
-        <form action="index.php" method="GET" class="search-container d-none d-md-block">
-            <i class="bi bi-search search-icon-left"></i>
-            <input type="text" name="search" class="search-input-box" placeholder="Tìm kiếm bom tấn, tài khoản Steam, EA, Epic..." value="<?php echo isset($_GET['search']) ? htmlspecialchars($_GET['search']) : ''; ?>">
+        <!-- Form tìm kiếm thông minh (desktop) - Nhận click nút, Enter, Live Search -->
+        <form action="index.php" method="GET" class="search-container d-none d-md-block" id="headerSearchForm" role="search">
+            <button type="submit" class="search-submit-btn" id="searchHeaderBtn" aria-label="Tìm kiếm trên ANPLAY STORE" title="Nhấn để tìm kiếm">
+                <i class="bi bi-search"></i>
+            </button>
+            <input type="text" name="search" id="headerSearchInput" class="search-input-box" placeholder="Tìm kiếm bom tấn, tài khoản Steam, EA, Epic..." value="<?php echo isset($_GET['search']) ? htmlspecialchars($_GET['search']) : ''; ?>" autocomplete="off" style="padding-left: 42px;">
             <span class="search-kbd-hint">Ctrl + K</span>
+            <!-- Live Search Dropdown kết quả nhanh từ Database -->
+            <div class="search-live-dropdown" id="searchLiveDropdown" style="display: none;"></div>
         </form>
 
         <!-- Nút tìm kiếm mobile -->
@@ -348,9 +352,12 @@ if (isset($_SESSION['user_id'])) {
 
     <!-- MOBILE SEARCH OVERLAY -->
     <div class="mobile-search-overlay" id="mobileSearchOverlay">
-        <form action="index.php" method="GET" class="flex-1 position-relative" style="flex:1">
-            <i class="bi bi-search search-icon-left" style="left:14px;top:50%;transform:translateY(-50%);position:absolute;color:var(--text-dim);pointer-events:none;"></i>
-            <input type="text" name="search" class="search-input-box" id="mobileSearchInput" placeholder="Tìm kiếm game..." autocomplete="off" value="<?php echo isset($_GET['search']) ? htmlspecialchars($_GET['search']) : ''; ?>" style="padding-left:42px;">
+        <form action="index.php" method="GET" class="flex-1 position-relative" style="flex:1" id="mobileSearchForm" role="search">
+            <button type="submit" class="search-submit-btn" id="mobileSearchSubmitBtn" aria-label="Tìm kiếm game" title="Tìm kiếm" style="left: 10px;">
+                <i class="bi bi-search"></i>
+            </button>
+            <input type="text" name="search" class="search-input-box" id="mobileSearchInput" placeholder="Tìm kiếm tựa game..." autocomplete="off" value="<?php echo isset($_GET['search']) ? htmlspecialchars($_GET['search']) : ''; ?>" style="padding-left:42px;">
+            <div class="search-live-dropdown" id="mobileSearchLiveDropdown" style="display: none;"></div>
         </form>
         <button type="button" id="mobileSearchClose" style="background:transparent;border:none;color:var(--text-muted);font-size:1.2rem;padding:6px 8px;cursor:pointer;" aria-label="Đóng tìm kiếm">
             <i class="bi bi-x-lg"></i>
@@ -563,6 +570,137 @@ if (isset($_SESSION['user_id'])) {
                     .catch(() => {});
             }, 35000);
             <?php endif; ?>
+
+            // =========================================================
+            // KHỞI TẠO LIVE SEARCH CHO DESKTOP VÀ MOBILE
+            // =========================================================
+            function setupLiveSearch(inputId, dropdownId, formId) {
+                const input = document.getElementById(inputId);
+                const dropdown = document.getElementById(dropdownId);
+                const form = document.getElementById(formId);
+                if (!input || !dropdown || !form) return;
+
+                let debounceTimer = null;
+                let abortController = null;
+
+                function escapeHtml(str) {
+                    if (!str) return '';
+                    return String(str).replace(/[&<>"']/g, function(m) {
+                        return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' })[m];
+                    });
+                }
+
+                input.addEventListener('input', function() {
+                    const query = this.value.trim();
+                    clearTimeout(debounceTimer);
+
+                    if (query.length < 1) {
+                        dropdown.style.display = 'none';
+                        dropdown.innerHTML = '';
+                        return;
+                    }
+
+                    debounceTimer = setTimeout(() => {
+                        // Hiển thị trạng thái đang tìm kiếm
+                        dropdown.style.display = 'block';
+                        dropdown.innerHTML = `
+                            <div class="search-live-empty text-secondary">
+                                <span class="spinner-border spinner-border-sm me-2 text-primary" role="status"></span>
+                                Đang tìm kiếm tựa game...
+                            </div>`;
+
+                        if (abortController) { abortController.abort(); }
+                        abortController = new AbortController();
+
+                        fetch('api_search.php?q=' + encodeURIComponent(query), { signal: abortController.signal })
+                            .then(res => {
+                                if (!res.ok) throw new Error('HTTP ' + res.status);
+                                return res.json();
+                            })
+                            .then(data => {
+                                if (!data.success) {
+                                    dropdown.innerHTML = `
+                                        <div class="search-live-empty text-danger">
+                                            <i class="bi bi-exclamation-triangle me-1"></i> Có lỗi khi tải dữ liệu: ${escapeHtml(data.error || 'Vui lòng thử lại')}
+                                        </div>`;
+                                    return;
+                                }
+
+                                if (!data.results || data.results.length === 0) {
+                                    dropdown.innerHTML = `
+                                        <div class="search-live-empty">
+                                            <i class="bi bi-search fs-3 d-block mb-1 text-muted"></i>
+                                            <span>Không tìm thấy tựa game nào cho "<strong>${escapeHtml(query)}</strong>"</span>
+                                            <div class="mt-2">
+                                                <a href="index.php" class="btn btn-sm btn-gaming-secondary py-1 px-3">Xem Tất Cả Game</a>
+                                            </div>
+                                        </div>`;
+                                    return;
+                                }
+
+                                let html = '';
+                                data.results.forEach(item => {
+                                    const availBadge = (item.available_acc > 0) 
+                                        ? `<span class="badge bg-success bg-opacity-25 text-success" style="font-size:0.68rem;">🟢 Còn ${item.available_acc} TK</span>` 
+                                        : `<span class="badge bg-danger bg-opacity-25 text-danger" style="font-size:0.68rem;">🔴 Hết TK</span>`;
+
+                                    html += `
+                                        <a href="${item.url}" class="search-live-item">
+                                            <img src="${escapeHtml(item.image_url)}" class="search-live-thumb" alt="${escapeHtml(item.title)}" onerror="this.src='img/default-game.jpg'">
+                                            <div class="search-live-info">
+                                                <div class="search-live-title">${escapeHtml(item.title)}</div>
+                                                <div class="search-live-meta">
+                                                    <span class="badge bg-secondary bg-opacity-25" style="font-size:0.68rem;">${escapeHtml(item.platform)}</span>
+                                                    <span class="search-live-price">Từ ${item.min_price_fmt}</span>
+                                                    ${availBadge}
+                                                </div>
+                                            </div>
+                                            <i class="bi bi-chevron-right text-secondary small"></i>
+                                        </a>`;
+                                });
+
+                                html += `
+                                    <div class="search-live-footer">
+                                        <a href="index.php?search=${encodeURIComponent(query)}" class="text-info text-decoration-none fw-semibold">
+                                            <i class="bi bi-arrow-right-circle me-1"></i> Xem tất cả kết quả cho "${escapeHtml(query)}" &rarr;
+                                        </a>
+                                    </div>`;
+
+                                dropdown.innerHTML = html;
+                            })
+                            .catch(err => {
+                                if (err.name === 'AbortError') return;
+                                dropdown.innerHTML = `
+                                    <div class="search-live-empty text-warning">
+                                        <i class="bi bi-wifi-off me-1"></i> Không thể kết nối tìm kiếm: ${escapeHtml(err.message)}
+                                    </div>`;
+                            });
+                    }, 200);
+                });
+
+                // Nhấn phím Escape đóng dropdown
+                input.addEventListener('keydown', function(e) {
+                    if (e.key === 'Escape') {
+                        dropdown.style.display = 'none';
+                    }
+                });
+
+                // Click ra ngoài đóng dropdown
+                document.addEventListener('click', function(e) {
+                    if (!form.contains(e.target)) {
+                        dropdown.style.display = 'none';
+                    }
+                });
+
+                input.addEventListener('focus', function() {
+                    if (this.value.trim().length > 0 && dropdown.children.length > 0) {
+                        dropdown.style.display = 'block';
+                    }
+                });
+            }
+
+            setupLiveSearch('headerSearchInput', 'searchLiveDropdown', 'headerSearchForm');
+            setupLiveSearch('mobileSearchInput', 'mobileSearchLiveDropdown', 'mobileSearchForm');
         });
 
         // XỬ LÝ CHUYỂN ĐỔI CHẾ ĐỘ LIGHT / DARK THEME

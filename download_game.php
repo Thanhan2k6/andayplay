@@ -110,6 +110,16 @@ if (!$is_allowed) {
                             </div>
                         </div>
 
+                        <!-- Buttons: Quyền đổi mật khẩu & Save Game -->
+                        <div class="d-flex flex-wrap gap-2 mb-3">
+                            <button type="button" class="btn btn-sm btn-outline-warning py-1 px-3 d-inline-flex align-items-center" data-bs-toggle="modal" data-bs-target="#dlPassPolicyModal" style="font-size: 0.8rem;" title="Xem chính sách và quyền đổi mật khẩu tài khoản">
+                                <i class="bi bi-shield-lock me-1"></i> Chính sách đổi mật khẩu
+                            </button>
+                            <button type="button" class="btn btn-sm btn-outline-info py-1 px-3 d-inline-flex align-items-center" data-bs-toggle="modal" data-bs-target="#dlSaveGameModal" style="font-size: 0.8rem;" title="Xem hướng dẫn lưu tiến trình game">
+                                <i class="bi bi-cloud-check me-1"></i> Kiểm tra Save Game
+                            </button>
+                        </div>
+
                         <!-- Due Date Info -->
                         <div class="d-flex justify-content-between align-items-center pt-2 border-top border-secondary border-opacity-25 text-secondary small">
                             <span><i class="bi bi-clock me-1"></i> Thời hạn sử dụng đến:</span>
@@ -187,5 +197,80 @@ function togglePass(inputId, btn) {
     }
 }
 </script>
+
+<!-- MODAL: CHÍNH SÁCH & QUYỀN ĐỔI MẬT KHẨU TÀI KHOẢN -->
+<div class="modal fade" id="dlPassPolicyModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content modal-gaming shadow-lg text-white" style="background: var(--bg-card); border: 1px solid var(--border-color);">
+            <div class="modal-header border-secondary border-opacity-25">
+                <h5 class="modal-title fw-bold text-warning d-flex align-items-center">
+                    <i class="bi bi-shield-lock-fill me-2 fs-5"></i> Chính Sách Mật Khẩu Tài Khoản Game
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div class="p-3 rounded-3 mb-3" style="background: rgba(239, 68, 68, 0.12); border: 1px solid rgba(239, 68, 68, 0.3);">
+                    <div class="d-flex align-items-center gap-2 mb-1">
+                        <span class="badge bg-danger text-white"><i class="bi bi-slash-circle me-1"></i> KHÔNG ĐƯỢC PHÉP ĐỔI MẬT KHẨU</span>
+                    </div>
+                    <small class="text-danger fw-semibold">
+                        Tài khoản game <strong><?php echo htmlspecialchars($game['account_username'] ?? 'cho thuê'); ?></strong> thuộc quyền sở hữu của ANPLAY STORE.
+                    </small>
+                </div>
+
+                <h6 class="fw-bold text-light mb-2">Quy định và giới hạn bảo mật:</h6>
+                <ul class="text-secondary small mb-3 ps-3" style="line-height: 1.7;">
+                    <li><strong>Chính sách thuê chia sẻ:</strong> Khách hàng chỉ được cấp quyền đăng nhập chơi game trong thời gian thuê. <em>Tuyệt đối không tự ý đổi mật khẩu, email hoặc cài Steam Guard cá nhân</em>.</li>
+                    <li><strong>Phát hiện vi phạm:</strong> Việc cố tình can thiệp mật khẩu sẽ khiến tài khoản bị thu hồi vĩnh viễn và chấm dứt quyền sử dụng dịch vụ.</li>
+                    <li><strong>Nếu tài khoản bị lỗi:</strong> ANPLAY STORE cam kết <strong>Bảo hành 1 Đổi 1</strong>. Nếu mật khẩu bị sai hoặc bị đăng xuất, hãy bấm nút hỗ trợ bên dưới để kỹ thuật viên cấp đổi mật khẩu mới trong 1 - 3 phút.</li>
+                </ul>
+            </div>
+            <div class="modal-footer border-secondary border-opacity-25">
+                <button type="button" class="btn btn-gaming-secondary" data-bs-dismiss="modal">Đã Hiểu</button>
+                <a href="support.php" class="btn btn-danger">
+                    <i class="bi bi-headset me-1"></i> Gặp Kỹ Thuật Viên Đổi Mật Khẩu
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL: KIỂM TRA LƯU TIẾN TRÌNH (SAVE GAME) & TIẾP TỤC CHƠI -->
+<div class="modal fade" id="dlSaveGameModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content modal-gaming shadow-lg text-white" style="background: var(--bg-card); border: 1px solid var(--border-color);">
+            <div class="modal-header border-secondary border-opacity-25">
+                <h5 class="modal-title fw-bold text-info d-flex align-items-center">
+                    <i class="bi bi-cloud-check-fill me-2 fs-5"></i> Lưu Tiến Trình Game (Save Game)
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div class="p-3 rounded-3 mb-3" style="background: rgba(16, 185, 129, 0.12); border: 1px solid rgba(16, 185, 129, 0.3);">
+                    <div class="d-flex align-items-center gap-2 mb-1">
+                        <span class="badge bg-success text-white"><i class="bi bi-check-circle-fill me-1"></i> SAVE GAME: HOẠT ĐỘNG HOÀN HẢO</span>
+                    </div>
+                    <small class="text-success fw-semibold">
+                        Tựa game <strong><?php echo htmlspecialchars($game['title']); ?></strong> hỗ trợ lưu tiến trình qua Steam Cloud & lưu cục bộ trên máy tính.
+                    </small>
+                </div>
+
+                <h6 class="fw-bold text-light mb-2">Cách thức lưu và tiếp tục chơi:</h6>
+                <ul class="text-secondary small mb-3 ps-3" style="line-height: 1.7;">
+                    <li><strong>Đồng bộ đám mây (Cloud Save):</strong> Tiến trình game được nền tảng tự động lưu lên máy chủ bản quyền gắn với tài khoản <code><?php echo htmlspecialchars($game['account_username'] ?? ''); ?></code>.</li>
+                    <li><strong>Lưu máy tính (Local Save):</strong> Tệp lưu game còn được lưu tự động tại <code>%USERPROFILE%\Documents</code> hoặc <code>Saved Games</code>. Bạn có thể sao lưu tệp này bất cứ lúc nào.</li>
+                    <li><strong>Để chơi tiếp không mất save:</strong> Khi hết hạn, bạn hãy chọn <strong>"Thuê lại tài khoản cũ (Giữ Save)"</strong> tại Thư viện để nhận lại chính xác tài khoản này!</li>
+                </ul>
+
+                <div class="p-2 rounded-3" style="background: rgba(255,255,255,0.03); border: 1px dashed var(--border-color); font-size: 0.8rem; color: #94a3b8;">
+                    <i class="bi bi-info-circle text-info me-1"></i> Giới hạn kỹ thuật: Trò chơi chạy trực tiếp qua phần mềm Steam/Epic trên máy tính bạn, website ANPLAY STORE không can thiệp vào bộ nhớ máy tính để bảo đảm an toàn dữ liệu cá nhân.
+                </div>
+            </div>
+            <div class="modal-footer border-secondary border-opacity-25">
+                <button type="button" class="btn btn-gaming-secondary" data-bs-dismiss="modal">Đóng</button>
+            </div>
+        </div>
+    </div>
+</div>
 
 <?php include 'includes/footer.php'; ?>
