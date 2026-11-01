@@ -96,6 +96,12 @@ $page_file_name = basename($_SERVER['PHP_SELF']);
             --admin-bg-card: #ffffff;
             --admin-border: #e2e8f0;
             --admin-border-focus: rgba(79, 70, 229, 0.4);
+            --bg-card: #ffffff;
+            --border-color: #e2e8f0;
+            --text-heading: #0f172a;
+            --text-primary: #0f172a;
+            --text-secondary: #334155;
+            --text-muted: #64748b;
         }
 
         [data-theme="light"] body.admin-body {
@@ -128,6 +134,346 @@ $page_file_name = basename($_SERVER['PHP_SELF']);
 
         [data-theme="light"] .admin-topbar-title {
             color: #0f172a !important;
+        }
+
+        /* Light Mode High-Contrast Rules for Admin Dashboard Elements */
+        [data-theme="light"] .admin-header-badge {
+            background: #eef2ff !important;
+            color: #4338ca !important;
+            border: 1px solid #c7d2fe !important;
+        }
+
+        [data-theme="light"] .kpi-stat-card {
+            background: #ffffff !important;
+            box-shadow: 0 4px 15px -2px rgba(15, 23, 42, 0.05);
+        }
+
+        [data-theme="light"] .kpi-badge-info {
+            background: #e0f2fe !important;
+            color: #0369a1 !important;
+            border: 1px solid #bae6fd !important;
+        }
+
+        [data-theme="light"] .chart-container-box,
+        [data-theme="light"] .tasks-container-box {
+            background: #ffffff !important;
+            border-color: #e2e8f0 !important;
+            box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.06);
+        }
+
+        [data-theme="light"] .period-badge {
+            background: #eef2ff !important;
+            color: #4338ca !important;
+            border: 1px solid #c7d2fe !important;
+        }
+
+        /* CRON MONITOR BANNER (LIGHT MODE) */
+        [data-theme="light"] .cron-monitor-banner {
+            background: linear-gradient(135deg, #eef2ff 0%, #f8fafc 100%) !important;
+            border: 1px solid #c7d2fe !important;
+            box-shadow: 0 8px 24px -4px rgba(79, 70, 229, 0.1) !important;
+        }
+
+        [data-theme="light"] .cron-title {
+            color: #0f172a !important;
+        }
+
+        [data-theme="light"] .cron-shield-icon {
+            color: #4f46e5 !important;
+        }
+
+        [data-theme="light"] .cron-desc {
+            color: #334155 !important;
+        }
+
+        [data-theme="light"] .cron-last-run-text {
+            color: #475569 !important;
+        }
+
+        [data-theme="light"] .cron-time-val {
+            color: #0284c7 !important;
+        }
+
+        [data-theme="light"] .cron-status-badge {
+            background: #dcfce7 !important;
+            color: #166534 !important;
+            border: 1px solid #86efac !important;
+        }
+
+        [data-theme="light"] .cron-status-dot {
+            background: #16a34a !important;
+            box-shadow: 0 0 8px #16a34a !important;
+        }
+
+        [data-theme="light"] .cron-duration-badge {
+            background: #e2e8f0 !important;
+            color: #334155 !important;
+            border: 1px solid #cbd5e1 !important;
+        }
+
+        [data-theme="light"] .cron-btn-config {
+            background: #ffffff !important;
+            color: #0369a1 !important;
+            border-color: #0284c7 !important;
+        }
+
+        [data-theme="light"] .cron-btn-config:hover {
+            background: #0284c7 !important;
+            color: #ffffff !important;
+        }
+
+        [data-theme="light"] .cron-btn-secondary {
+            background: #ffffff !important;
+            color: #1e293b !important;
+            border-color: #cbd5e1 !important;
+        }
+
+        [data-theme="light"] .cron-btn-secondary:hover {
+            background: #f1f5f9 !important;
+            color: var(--brand-primary) !important;
+        }
+
+        /* TASKS ITEM CARD (LIGHT MODE) */
+        [data-theme="light"] .task-item-card {
+            background: #f8fafc !important;
+            border: 1px solid #e2e8f0 !important;
+        }
+
+        [data-theme="light"] .task-item-card:hover {
+            background: #f1f5f9 !important;
+            border-color: #cbd5e1 !important;
+        }
+
+        [data-theme="light"] .task-item-title {
+            color: #0f172a !important;
+        }
+
+        [data-theme="light"] .task-item-desc {
+            color: #64748b !important;
+        }
+
+        [data-theme="light"] .task-badge-neutral {
+            background: #f1f5f9 !important;
+            color: #334155 !important;
+            border: 1px solid #cbd5e1 !important;
+        }
+
+        /* MODALS & TABLES (LIGHT MODE) */
+        [data-theme="light"] .modal-gaming {
+            background-color: #ffffff !important;
+            color: #0f172a !important;
+            border-color: #e2e8f0 !important;
+        }
+
+        [data-theme="light"] .modal-step-title {
+            color: #0f172a !important;
+        }
+
+        [data-theme="light"] .modal-guide-list li {
+            color: #334155 !important;
+        }
+
+        [data-theme="light"] .table-cron-logs {
+            color: #0f172a !important;
+        }
+
+        [data-theme="light"] .table-cron-head-row th {
+            background: #f8fafc !important;
+            color: #475569 !important;
+            border-bottom: 2px solid #e2e8f0 !important;
+        }
+
+        [data-theme="light"] .table-cron-logs tbody tr {
+            border-bottom: 1px solid #f1f5f9 !important;
+        }
+
+        [data-theme="light"] .table-cron-logs tbody tr:hover td {
+            background: #f8fafc !important;
+        }
+
+        [data-theme="light"] .table-log-time {
+            color: #0f172a !important;
+        }
+
+        [data-theme="light"] .badge-trigger-source {
+            background: #f1f5f9 !important;
+            color: #334155 !important;
+            border: 1px solid #cbd5e1 !important;
+        }
+
+        [data-theme="light"] .cron-url-input-field {
+            background: #f8fafc !important;
+            color: #b45309 !important;
+            border-color: #cbd5e1 !important;
+        }
+
+        [data-theme="light"] .cron-info-callout {
+            background: #ecfdf5 !important;
+            border: 1px solid #a7f3d0 !important;
+        }
+
+        [data-theme="light"] .cron-info-callout p {
+            color: #166534 !important;
+        }
+
+        [data-theme="light"] .text-info-callout {
+            color: #075985 !important;
+        }
+
+        /* SIDEBAR FOOTER & PROFILE DROPDOWN (LIGHT MODE) */
+        [data-theme="light"] .admin-sidebar-footer {
+            background: #f8fafc !important;
+            border-top-color: #e2e8f0 !important;
+        }
+
+        [data-theme="light"] .admin-sidebar-footer .bg-dark {
+            background: #ffffff !important;
+            border-color: #e2e8f0 !important;
+        }
+
+        [data-theme="light"] .admin-sidebar-footer .text-white {
+            color: #0f172a !important;
+        }
+
+        [data-theme="light"] .admin-profile-dropdown {
+            background: #ffffff !important;
+            border: 1px solid #e2e8f0 !important;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08) !important;
+        }
+
+        [data-theme="light"] .admin-profile-name {
+            color: #0f172a !important;
+        }
+
+        [data-theme="light"] .admin-profile-dropdown .dropdown-item {
+            color: #334155 !important;
+        }
+
+        [data-theme="light"] .admin-profile-dropdown .dropdown-item:hover {
+            background: #f1f5f9 !important;
+            color: var(--brand-primary) !important;
+        }
+
+        /* NOTIFICATION DROPDOWN (LIGHT MODE) */
+        [data-theme="light"] .admin-notif-dropdown {
+            background: #ffffff !important;
+            border: 1px solid #e2e8f0 !important;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08) !important;
+        }
+
+        [data-theme="light"] .admin-notif-dropdown .bg-dark {
+            background: #f8fafc !important;
+        }
+
+        [data-theme="light"] .admin-notif-dropdown .text-white {
+            color: #0f172a !important;
+        }
+
+        [data-theme="light"] .admin-notif-item {
+            border-bottom-color: #f1f5f9 !important;
+            color: #475569 !important;
+        }
+
+        [data-theme="light"] .admin-notif-item:hover {
+            background: #f8fafc !important;
+            color: #0f172a !important;
+        }
+
+        [data-theme="light"] .admin-notif-item.unread {
+            background: #eef2ff !important;
+        }
+
+        [data-theme="light"] .admin-notif-item a.text-white {
+            color: #0f172a !important;
+        }
+
+        /* FOOTER BAR (LIGHT MODE) */
+        [data-theme="light"] .admin-footer-bar {
+            background: #ffffff !important;
+            border-top-color: #e2e8f0 !important;
+            color: #64748b !important;
+        }
+
+        [data-theme="light"] .admin-footer-brand {
+            color: #0f172a !important;
+        }
+
+        /* Dark mode defaults for new components */
+        .cron-monitor-banner {
+            background: linear-gradient(135deg, rgba(30, 27, 75, 0.85) 0%, rgba(15, 23, 42, 0.95) 100%);
+            border: 1px solid rgba(99, 102, 241, 0.4);
+            box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.6);
+        }
+
+        .cron-title {
+            color: #ffffff;
+        }
+
+        .cron-desc {
+            color: #cbd5e1;
+        }
+
+        .cron-last-run-text {
+            color: #94a3b8;
+        }
+
+        .cron-time-val {
+            color: #38bdf8;
+        }
+
+        .cron-status-badge {
+            background: rgba(16, 185, 129, 0.18);
+            color: #10b981;
+            border: 1px solid rgba(16, 185, 129, 0.35);
+            font-weight: 700;
+        }
+
+        .cron-status-dot {
+            width: 8px;
+            height: 8px;
+            background: #10b981;
+            box-shadow: 0 0 8px #10b981;
+        }
+
+        .cron-duration-badge {
+            background: rgba(255, 255, 255, 0.1);
+            color: #cbd5e1;
+        }
+
+        .task-item-card {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--border-color);
+            transition: all 0.2s ease;
+        }
+
+        .task-item-card:hover {
+            background: rgba(255, 255, 255, 0.04);
+            border-color: rgba(99, 102, 241, 0.3);
+        }
+
+        .task-item-title {
+            color: #f1f5f9;
+        }
+
+        .task-badge-neutral {
+            background: rgba(255, 255, 255, 0.08);
+            color: #e2e8f0;
+        }
+
+        .badge-trigger-source {
+            background: rgba(255, 255, 255, 0.06);
+            color: #cbd5e1;
+        }
+
+        .cron-info-callout {
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.25);
+        }
+
+        .admin-profile-dropdown {
+            background: #111420;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #fff;
         }
 
         body.admin-body {
@@ -523,17 +869,17 @@ $page_file_name = basename($_SERVER['PHP_SELF']);
                         </div>
                         <i class="bi bi-chevron-down text-secondary small"></i>
                     </button>
-                    <ul class="dropdown-menu dropdown-menu-end shadow-lg" style="background: #111420; border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; min-width: 200px;">
+                    <ul class="dropdown-menu dropdown-menu-end shadow-lg admin-profile-dropdown" style="border-radius: 12px; min-width: 200px;">
                         <li class="px-3 py-2 border-bottom border-secondary border-opacity-25">
-                            <div class="text-white fw-bold small text-truncate">@<?php echo htmlspecialchars($admin_username); ?></div>
+                            <div class="fw-bold small text-truncate admin-profile-name">@<?php echo htmlspecialchars($admin_username); ?></div>
                             <div class="text-secondary small" style="font-size: 0.75rem;">
                                 <?php echo $admin_is_super ? 'Quản Trị Cấp Cao' : 'Quản Trị Viên'; ?>
                             </div>
                         </li>
-                        <li><a class="dropdown-item text-light small py-2" href="admin_dashboard.php"><i class="bi bi-speedometer2 me-2 text-primary"></i>Bảng điều khiển</a></li>
-                        <li><a class="dropdown-item text-light small py-2" href="admin_notifications.php"><i class="bi bi-bell me-2 text-warning"></i>Trung tâm thông báo</a></li>
+                        <li><a class="dropdown-item small py-2" href="admin_dashboard.php"><i class="bi bi-speedometer2 me-2 text-primary"></i>Bảng điều khiển</a></li>
+                        <li><a class="dropdown-item small py-2" href="admin_notifications.php"><i class="bi bi-bell me-2 text-warning"></i>Trung tâm thông báo</a></li>
                         <?php if ($admin_is_super): ?>
-                            <li><a class="dropdown-item text-light small py-2" href="admin_management.php"><i class="bi bi-shield-shaded me-2 text-danger"></i>Quản trị hệ thống</a></li>
+                            <li><a class="dropdown-item small py-2" href="admin_management.php"><i class="bi bi-shield-shaded me-2 text-danger"></i>Quản trị hệ thống</a></li>
                         <?php endif; ?>
                         <li><hr class="dropdown-divider border-secondary border-opacity-25"></li>
                         <li><a class="dropdown-item text-danger small py-2 fw-semibold" href="logout.php"><i class="bi bi-box-arrow-right me-2"></i>Đăng xuất</a></li>

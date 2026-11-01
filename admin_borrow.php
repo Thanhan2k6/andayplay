@@ -91,7 +91,7 @@ if (!$result) {
 }
 ?>
 
-<div class="container-fluid px-lg-5 py-4 my-2 text-white">
+<div class="container-fluid px-lg-5 py-4 my-2">
     <!-- Top Header -->
     <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 pb-3 border-bottom border-secondary border-opacity-25 gap-3">
         <div>
@@ -100,7 +100,7 @@ if (!$result) {
                     <i class="bi bi-card-checklist me-1"></i> RENTAL ORDERS
                 </span>
             </div>
-            <h2 class="fw-extrabold text-white mb-0">Quản Lý Đơn Thuê Tài Khoản Game</h2>
+            <h2 class="fw-extrabold mb-0">Quản Lý Đơn Thuê Tài Khoản Game</h2>
             <p class="text-secondary small mb-0">Theo dõi lịch sử đơn, tiến độ hạn thuê, doanh thu, thanh toán VietQR và xử lý thu hồi sớm</p>
         </div>
         <div class="d-flex gap-2">
@@ -114,15 +114,15 @@ if (!$result) {
     </div>
 
     <?php if ($message): ?>
-        <div class="alert alert-dismissible fade show mb-4 text-white" style="background: rgba(16,185,129,0.15); border: 1px solid #10b981;" role="alert">
+        <div class="alert alert-success alert-dismissible fade show mb-4" role="alert">
             <i class="bi bi-check-circle-fill text-success me-2"></i><?php echo htmlspecialchars($message); ?>
-            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert"></button>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
     <?php endif; ?>
     <?php if ($error): ?>
         <div class="alert alert-danger alert-dismissible fade show mb-4" role="alert">
             <i class="bi bi-exclamation-triangle-fill me-2"></i><?php echo htmlspecialchars($error); ?>
-            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert"></button>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
     <?php endif; ?>
 
@@ -200,7 +200,7 @@ if (!$result) {
                         </td>
                         <td>
                             <?php if (!empty($row['account_username'])): ?>
-                                <span class="badge" style="background: rgba(99,102,241,0.15); color: #c7d2fe; border: 1px solid rgba(99,102,241,0.3); font-size: 0.78rem;">
+                                <span class="badge badge-gaming-account">
                                     <i class="bi bi-person-fill me-1"></i><?php echo htmlspecialchars($row['account_username']); ?>
                                 </span>
                             <?php else: ?>

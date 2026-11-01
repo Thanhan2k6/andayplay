@@ -433,8 +433,8 @@ $csrf_token = generate_csrf_token();
                             </div>
 
                             <!-- Hướng dẫn chơi game an toàn -->
-                            <div class="p-3 rounded-3 mb-3" style="background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(255, 255, 255, 0.08);">
-                                <small class="text-light fw-bold d-block mb-2">
+                            <div class="steam-offline-guide-box p-3 rounded-3 mb-3">
+                                <small class="steam-offline-title fw-bold d-block mb-2">
                                     <i class="bi bi-info-circle-fill text-primary me-1"></i> Hướng Dẫn Đăng Nhập & Chơi Game:
                                 </small>
                                 <ol class="text-secondary small mb-0 ps-3" style="font-size: 0.8rem; line-height: 1.6;">
@@ -456,7 +456,7 @@ $csrf_token = generate_csrf_token();
                         <?php else: ?>
                             <div class="text-center py-4">
                                 <i class="bi bi-hourglass-split fs-1 text-warning d-block mb-2"></i>
-                                <h6 class="text-white fw-bold mb-1">Đang phân bổ tài khoản...</h6>
+                                <h6 class="fw-bold mb-1">Đang phân bổ tài khoản...</h6>
                                 <p class="text-secondary small mb-3">Hệ thống đang chỉ định tài khoản game trống cho bạn. Vui lòng nhấn Tải lại trang hoặc liên hệ hỗ trợ.</p>
                                 <a href="checkout_qr.php?order_id=<?php echo $order_id; ?>" class="btn btn-sm btn-gaming-primary">
                                     <i class="bi bi-arrow-clockwise me-1"></i> Tải lại trang
@@ -492,21 +492,21 @@ $csrf_token = generate_csrf_token();
                 <span class="badge bg-success bg-opacity-15 text-success border border-success border-opacity-25 px-3 py-2 fw-bold mb-2">
                     <i class="bi bi-qr-code me-1"></i> CỔNG THANH TOÁN TỰ ĐỘNG VIETQR
                 </span>
-                <h3 class="fw-bold text-white mb-1">Quét Mã QR Để Hoàn Tất Đơn Thuê</h3>
+                <h3 class="fw-bold mb-1">Quét Mã QR Để Hoàn Tất Đơn Thuê</h3>
                 <p class="text-secondary small mb-0">Hệ thống ngân hàng tự động xác nhận giao dịch 24/7 và cấp tài khoản ngay lập tức</p>
             </div>
 
             <?php if ($allocation_error): ?>
-                <div class="alert alert-warning alert-dismissible fade show mb-4 text-white" style="background: rgba(245, 158, 11, 0.15); border: 1px solid #f59e0b;" role="alert">
+                <div class="alert alert-warning alert-dismissible fade show mb-4" style="background: rgba(245, 158, 11, 0.15); border: 1px solid #f59e0b;" role="alert">
                     <i class="bi bi-exclamation-triangle-fill text-warning me-2"></i><strong>Thông báo:</strong> <?php echo htmlspecialchars($allocation_error); ?>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert"></button>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                 </div>
             <?php endif; ?>
 
             <!-- ĐỒNG HỒ ĐẾM NGƯỢC 15 PHÚT -->
-            <div class="p-3 rounded-4 mb-4 text-center" style="background: rgba(244, 63, 94, 0.1); border: 1px solid rgba(244, 63, 94, 0.25);">
+            <div class="countdown-banner-box p-3 rounded-4 mb-4 text-center">
                 <small class="text-danger fw-bold d-block mb-1"><i class="bi bi-stopwatch-fill me-1"></i> MÃ QR CÓ HIỆU LỰC TRONG:</small>
-                <h4 class="text-white fw-bold mb-0 font-monospace" id="countdown_clock">15:00</h4>
+                <h4 class="fw-bold mb-0 font-monospace countdown-timer-text" id="countdown_clock">15:00</h4>
             </div>
 
             <div class="row g-4 align-items-center">

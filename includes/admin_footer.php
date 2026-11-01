@@ -7,9 +7,9 @@
         </main> <!-- /admin-content-area -->
 
         <!-- ADMIN FOOTER BAR -->
-        <footer class="py-3 px-4 border-top border-secondary border-opacity-10 text-secondary small d-flex flex-wrap justify-content-between align-items-center gap-2" style="background: rgba(10, 12, 18, 0.6);">
+        <footer class="admin-footer-bar py-3 px-4 border-top border-secondary border-opacity-10 small d-flex flex-wrap justify-content-between align-items-center gap-2">
             <div>
-                <span class="text-white fw-bold">ANPLAY ADMIN CONSOLE</span>
+                <span class="fw-bold admin-footer-brand">ANPLAY ADMIN CONSOLE</span>
                 <span class="text-secondary ms-1">v2.0 — Hệ thống Quản trị & Vận hành Nền tảng Thuê Game</span>
             </div>
             <div class="d-flex align-items-center gap-3">

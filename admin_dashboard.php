@@ -70,17 +70,17 @@ try {
 } catch (Throwable $e) {}
 ?>
 
-<div class="container-fluid px-lg-5 py-4 my-2 text-white">
+<div class="container-fluid px-lg-5 py-4 my-2">
     <!-- Top Bar Navigation -->
     <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 pb-3 border-bottom border-secondary border-opacity-25 gap-3">
         <div>
             <div class="d-flex align-items-center gap-2 mb-1">
-                <span class="badge" style="background: rgba(99,102,241,0.2); color: var(--primary); font-size: 0.75rem; border: 1px solid rgba(99,102,241,0.4);">
+                <span class="badge admin-header-badge">
                     <i class="bi bi-shield-lock-fill me-1"></i> ADMIN CONSOLE
                 </span>
                 <span class="text-secondary small">Năm hoạt động: <?php echo $current_year; ?></span>
             </div>
-            <h2 class="fw-extrabold text-white mb-0">Trung Tâm Quản Trị & Báo Cáo Doanh Thu</h2>
+            <h2 class="fw-extrabold mb-0">Trung Tâm Quản Trị & Báo Cáo Doanh Thu</h2>
         </div>
         <div class="d-flex gap-2">
             <a href="cron_process_expirations.php?secret_token=ANPLAY_CRON_SEC_9b8e21a7df4e083c6f41" target="_blank" class="btn btn-gaming-secondary btn-sm d-flex align-items-center" title="Xem bảng điều khiển Cron Worker">
@@ -96,12 +96,12 @@ try {
     <div class="row g-3 mb-4">
         <!-- Doanh Thu -->
         <div class="col-sm-6 col-xl-3">
-            <div class="p-4 rounded-4 h-100 position-relative overflow-hidden" style="background: var(--bg-card); border: 1px solid rgba(16, 185, 129, 0.3);">
+            <div class="kpi-stat-card p-4 rounded-4 h-100 position-relative overflow-hidden" style="background: var(--bg-card); border: 1px solid rgba(16, 185, 129, 0.3);">
                 <div class="d-flex justify-content-between align-items-start">
                     <div>
                         <span class="text-secondary small text-uppercase fw-bold letter-spacing-1">Tổng Doanh Thu</span>
-                        <h3 class="fw-extrabold text-white mt-2 mb-1"><?php echo number_format($total_revenue, 0, ',', '.'); ?> đ</h3>
-                        <span class="badge bg-success bg-opacity-25 text-success small">Thanh toán tự động</span>
+                        <h3 class="fw-extrabold text-success mt-2 mb-1"><?php echo number_format($total_revenue, 0, ',', '.'); ?> đ</h3>
+                        <span class="badge bg-success bg-opacity-25 text-success small fw-semibold">Thanh toán tự động</span>
                     </div>
                     <div class="p-3 rounded-3" style="background: rgba(16, 185, 129, 0.15); color: #10b981;">
                         <i class="bi bi-cash-stack fs-3"></i>
@@ -112,12 +112,12 @@ try {
 
         <!-- Kho Tài Khoản (Sẵn / Tổng) -->
         <div class="col-sm-6 col-xl-3">
-            <div class="p-4 rounded-4 h-100 position-relative overflow-hidden" style="background: var(--bg-card); border: 1px solid rgba(6, 182, 212, 0.3);">
+            <div class="kpi-stat-card p-4 rounded-4 h-100 position-relative overflow-hidden" style="background: var(--bg-card); border: 1px solid rgba(6, 182, 212, 0.3);">
                 <div class="d-flex justify-content-between align-items-start">
                     <div>
                         <span class="text-secondary small text-uppercase fw-bold letter-spacing-1">Kho Tài Khoản</span>
-                        <h3 class="fw-extrabold text-white mt-2 mb-1"><?php echo $available_accounts; ?> <span class="fs-6 text-secondary fw-normal">/ <?php echo $total_accounts; ?> TK</span></h3>
-                        <span class="badge" style="background: rgba(6, 182, 212, 0.15); color: var(--accent-cyan); font-size: 0.75rem;">
+                        <h3 class="fw-extrabold text-info mt-2 mb-1"><?php echo $available_accounts; ?> <span class="fs-6 text-secondary fw-normal">/ <?php echo $total_accounts; ?> TK</span></h3>
+                        <span class="badge kpi-badge-info" style="background: rgba(6, 182, 212, 0.15); color: var(--accent-cyan); font-size: 0.75rem;">
                             Đang cho thuê: <?php echo $rented_accounts; ?>
                         </span>
                     </div>
@@ -130,7 +130,7 @@ try {
 
         <!-- Đơn Đang Hoạt Động -->
         <div class="col-sm-6 col-xl-3">
-            <div class="p-4 rounded-4 h-100 position-relative overflow-hidden" style="background: var(--bg-card); border: 1px solid rgba(245, 158, 11, 0.3);">
+            <div class="kpi-stat-card p-4 rounded-4 h-100 position-relative overflow-hidden" style="background: var(--bg-card); border: 1px solid rgba(245, 158, 11, 0.3);">
                 <div class="d-flex justify-content-between align-items-start">
                     <div>
                         <span class="text-secondary small text-uppercase fw-bold letter-spacing-1">Đơn Đang Hoạt Động</span>
@@ -146,7 +146,7 @@ try {
 
         <!-- Tài Khoản Bảo Trì & Sự Cố -->
         <div class="col-sm-6 col-xl-3">
-            <div class="p-4 rounded-4 h-100 position-relative overflow-hidden" style="background: var(--bg-card); border: 1px solid rgba(239, 68, 68, 0.3);">
+            <div class="kpi-stat-card p-4 rounded-4 h-100 position-relative overflow-hidden" style="background: var(--bg-card); border: 1px solid rgba(239, 68, 68, 0.3);">
                 <div class="d-flex justify-content-between align-items-start">
                     <div>
                         <span class="text-secondary small text-uppercase fw-bold letter-spacing-1">Bảo Trì / Cần Kiểm Tra</span>
@@ -162,28 +162,28 @@ try {
     </div>
 
     <!-- CRON AUTOMATION & EXPIRATION MONITOR WIDGET -->
-    <div class="p-4 rounded-4 mb-4 position-relative overflow-hidden" style="background: linear-gradient(135deg, rgba(30, 27, 75, 0.6) 0%, rgba(15, 23, 42, 0.8) 100%); border: 1px solid rgba(99, 102, 241, 0.35);">
+    <div class="cron-monitor-banner p-4 rounded-4 mb-4 position-relative overflow-hidden">
         <div class="row align-items-center g-3">
             <div class="col-lg-7">
                 <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
-                    <span class="badge" style="background: rgba(16,185,129,0.18); color: #10b981; border: 1px solid rgba(16,185,129,0.35); font-weight: 700;">
-                        <span class="status-dot d-inline-block rounded-circle me-1" style="width: 8px; height: 8px; background: #10b981; box-shadow: 0 0 8px #10b981;"></span>
+                    <span class="badge cron-status-badge">
+                        <span class="cron-status-dot d-inline-block rounded-circle me-1"></span>
                         CRON WORKER: ĐANG CHẠY TỰ ĐỘNG
                     </span>
-                    <span class="text-secondary small">
+                    <span class="cron-last-run-text small">
                         <?php if ($last_cron_log): ?>
-                            Chạy gần nhất: <strong class="text-info"><?php echo date('H:i:s d/m/Y', strtotime($last_cron_log['start_time'])); ?></strong> 
-                            <span class="badge bg-secondary bg-opacity-25 text-light"><?php echo $last_cron_log['duration_ms']; ?>ms</span>
+                            Chạy gần nhất: <strong class="cron-time-val"><?php echo date('H:i:s d/m/Y', strtotime($last_cron_log['start_time'])); ?></strong> 
+                            <span class="badge cron-duration-badge"><?php echo $last_cron_log['duration_ms']; ?>ms</span>
                         <?php else: ?>
                             <span class="text-warning">Chưa có nhật ký ghi nhận</span>
                         <?php endif; ?>
                     </span>
                 </div>
-                <h5 class="fw-bold text-white mb-1">
-                    <i class="bi bi-shield-check text-info me-1"></i> Tự Động Quét, Thu Hồi Kho & Cảnh Báo Đơn Thuê Hết Hạn
+                <h5 class="fw-bold cron-title mb-1">
+                    <i class="bi bi-shield-check cron-shield-icon me-1"></i> Tự Động Quét, Thu Hồi Kho & Cảnh Báo Đơn Thuê Hết Hạn
                 </h5>
-                <p class="text-secondary small mb-0">
-                    Thu hồi quyền xem mật khẩu tức thì khi hết hạn, tái cấp kho <span class="badge bg-success bg-opacity-25 text-success">AVAILABLE</span>, gửi 3 mốc cảnh báo (24h, 1h, 15 phút) và tự nhận diện đơn gia hạn hợp lệ.
+                <p class="cron-desc small mb-0">
+                    Thu hồi quyền xem mật khẩu tức thì khi hết hạn, tái cấp kho <span class="badge bg-success bg-opacity-25 text-success fw-bold">AVAILABLE</span>, gửi 3 mốc cảnh báo (24h, 1h, 15 phút) và tự nhận diện đơn gia hạn hợp lệ.
                 </p>
             </div>
             <div class="col-lg-5 text-lg-end">
@@ -191,10 +191,10 @@ try {
                     <button type="button" class="btn btn-gaming-primary btn-sm px-3 py-2" id="btn-quick-cron-scan" onclick="runQuickCronScan(this)">
                         <i class="bi bi-lightning-charge-fill me-1"></i> Quét Hết Hạn Ngay
                     </button>
-                    <button type="button" class="btn btn-gaming-secondary btn-sm px-3 py-2" data-bs-toggle="modal" data-bs-target="#modalCronLogs">
+                    <button type="button" class="btn btn-gaming-secondary btn-sm px-3 py-2 cron-btn-secondary" data-bs-toggle="modal" data-bs-target="#modalCronLogs">
                         <i class="bi bi-clock-history me-1"></i> Xem Nhật Ký (<?php echo count($recent_cron_logs); ?>)
                     </button>
-                    <button type="button" class="btn btn-outline-info btn-sm px-3 py-2" data-bs-toggle="modal" data-bs-target="#modalCronConfig">
+                    <button type="button" class="btn btn-outline-info btn-sm px-3 py-2 cron-btn-config" data-bs-toggle="modal" data-bs-target="#modalCronConfig">
                         <i class="bi bi-gear-wide-connected me-1"></i> Cấu Hình Web-Cron
                     </button>
                 </div>
@@ -206,13 +206,13 @@ try {
     <div class="row g-4">
         <!-- Revenue Chart (8 cols) -->
         <div class="col-lg-8">
-            <div class="p-4 rounded-4 h-100" style="background: var(--bg-card); border: 1px solid var(--border-color);">
+            <div class="p-4 rounded-4 h-100 chart-container-box" style="background: var(--bg-card); border: 1px solid var(--border-color);">
                 <div class="d-flex justify-content-between align-items-center mb-4">
                     <div>
-                        <h5 class="fw-bold text-white mb-1"><i class="bi bi-graph-up text-info me-2"></i>Doanh Thu Thuê Tài Khoản Game (Năm <?php echo $current_year; ?>)</h5>
+                        <h5 class="fw-bold mb-1"><i class="bi bi-graph-up text-info me-2"></i>Doanh Thu Thuê Tài Khoản Game (Năm <?php echo $current_year; ?>)</h5>
                         <p class="text-secondary small mb-0">Biểu đồ tổng hợp doanh thu theo từng tháng dựa trên giao dịch thực tế</p>
                     </div>
-                    <span class="badge" style="background: rgba(99,102,241,0.15); color: var(--primary);">12 THÁNG</span>
+                    <span class="badge period-badge" style="background: rgba(99,102,241,0.15); color: var(--primary);">12 THÁNG</span>
                 </div>
                 <div style="height: 330px;">
                     <canvas id="revenueChart"></canvas>
@@ -222,15 +222,15 @@ try {
 
         <!-- Tasks & Alerts (4 cols) -->
         <div class="col-lg-4">
-            <div class="p-4 rounded-4 h-100 d-flex flex-column" style="background: var(--bg-card); border: 1px solid var(--border-color);">
-                <h5 class="fw-bold text-white mb-3"><i class="bi bi-bell text-warning me-2"></i>Tác Vụ Cần Chú Ý</h5>
+            <div class="p-4 rounded-4 h-100 d-flex flex-column tasks-container-box" style="background: var(--bg-card); border: 1px solid var(--border-color);">
+                <h5 class="fw-bold mb-3"><i class="bi bi-bell text-warning me-2"></i>Tác Vụ Cần Chú Ý</h5>
                 
                 <div class="d-flex flex-column gap-3 mb-4">
                     <!-- Item 1 -->
-                    <div class="p-3 rounded-3 d-flex justify-content-between align-items-center" style="background: rgba(255,255,255,0.02); border: 1px solid var(--border-color);">
+                    <div class="task-item-card p-3 rounded-3 d-flex justify-content-between align-items-center">
                         <div>
-                            <span class="d-block small text-light fw-semibold">Tài khoản báo lỗi / Bảo trì</span>
-                            <small class="text-secondary">Cần kiểm tra lại thông tin đăng nhập</small>
+                            <span class="d-block small task-item-title fw-semibold">Tài khoản báo lỗi / Bảo trì</span>
+                            <small class="task-item-desc text-secondary">Cần kiểm tra lại thông tin đăng nhập</small>
                         </div>
                         <a href="admin_accounts.php?filter_status=MAINTENANCE" class="status-pill status-pill-warning text-decoration-none">
                             <?php echo $maintenance_accounts; ?> TK
@@ -238,10 +238,10 @@ try {
                     </div>
 
                     <!-- Item 2 -->
-                    <div class="p-3 rounded-3 d-flex justify-content-between align-items-center" style="background: rgba(255,255,255,0.02); border: 1px solid var(--border-color);">
+                    <div class="task-item-card p-3 rounded-3 d-flex justify-content-between align-items-center">
                         <div>
-                            <span class="d-block small text-light fw-semibold">Đơn sắp hết hạn (trong 24h)</span>
-                            <small class="text-secondary">Chuẩn bị tự động thu hồi tài khoản</small>
+                            <span class="d-block small task-item-title fw-semibold">Đơn sắp hết hạn (trong 24h)</span>
+                            <small class="task-item-desc text-secondary">Chuẩn bị tự động thu hồi tài khoản</small>
                         </div>
                         <span class="status-pill status-pill-info">
                             <?php echo $expiring_soon; ?> đơn
@@ -249,10 +249,10 @@ try {
                     </div>
 
                     <!-- Item 3 -->
-                    <div class="p-3 rounded-3 d-flex justify-content-between align-items-center" style="background: rgba(255,255,255,0.02); border: 1px solid var(--border-color);">
+                    <div class="task-item-card p-3 rounded-3 d-flex justify-content-between align-items-center">
                         <div>
-                            <span class="d-block small text-light fw-semibold">Đơn lỗi chờ cấp bù tài khoản</span>
-                            <small class="text-secondary">Khách đã trả tiền nhưng kho hết TK</small>
+                            <span class="d-block small task-item-title fw-semibold">Đơn lỗi chờ cấp bù tài khoản</span>
+                            <small class="task-item-desc text-secondary">Khách đã trả tiền nhưng kho hết TK</small>
                         </div>
                         <a href="admin_borrow.php?status=pending" class="status-pill status-pill-danger text-decoration-none">
                             <?php echo $failed_allocations; ?> đơn
@@ -260,12 +260,12 @@ try {
                     </div>
 
                     <!-- Item 4 -->
-                    <div class="p-3 rounded-3 d-flex justify-content-between align-items-center" style="background: rgba(255,255,255,0.02); border: 1px solid var(--border-color);">
+                    <div class="task-item-card p-3 rounded-3 d-flex justify-content-between align-items-center">
                         <div>
-                            <span class="d-block small text-light fw-semibold">Tổng khách hàng đăng ký</span>
-                            <small class="text-secondary">Tài khoản game thủ trên website</small>
+                            <span class="d-block small task-item-title fw-semibold">Tổng khách hàng đăng ký</span>
+                            <small class="task-item-desc text-secondary">Tài khoản game thủ trên website</small>
                         </div>
-                        <span class="badge" style="background: rgba(255,255,255,0.08); color: #e2e8f0;">
+                        <span class="badge task-badge-neutral">
                             <?php echo $total_users; ?> người dùng
                         </span>
                     </div>
@@ -404,12 +404,12 @@ function copyCronUrl(btn) {
 <!-- MODAL: NHẬT KÝ CRON WORKER -->
 <div class="modal fade" id="modalCronLogs" tabindex="-1" aria-labelledby="modalCronLogsLabel" aria-hidden="true">
     <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
-        <div class="modal-content text-white" style="background: var(--bg-card); border: 1px solid var(--border-color);">
+        <div class="modal-content modal-gaming" style="background: var(--bg-card); border: 1px solid var(--border-color);">
             <div class="modal-header border-bottom border-secondary border-opacity-25">
                 <h5 class="modal-title fw-bold" id="modalCronLogsLabel">
                     <i class="bi bi-clock-history text-info me-2"></i> Lịch Sử Quét Cron Gần Nhất
                 </h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body p-4">
                 <?php if (empty($recent_cron_logs)): ?>
@@ -419,9 +419,9 @@ function copyCronUrl(btn) {
                     </div>
                 <?php else: ?>
                     <div class="table-responsive">
-                        <table class="table table-dark table-hover align-middle mb-0" style="background: transparent;">
+                        <table class="table table-hover align-middle mb-0 table-cron-logs">
                             <thead>
-                                <tr class="text-secondary small text-uppercase">
+                                <tr class="table-cron-head-row text-secondary small text-uppercase">
                                     <th>#ID</th>
                                     <th>Thời Điểm</th>
                                     <th>Nguồn Kích Hoạt</th>
@@ -440,9 +440,9 @@ function copyCronUrl(btn) {
                                 ?>
                                     <tr>
                                         <td class="font-monospace text-secondary">#<?php echo $log['id']; ?></td>
-                                        <td class="fw-semibold text-light"><?php echo date('H:i:s d/m/Y', strtotime($log['start_time'])); ?></td>
+                                        <td class="fw-semibold table-log-time"><?php echo date('H:i:s d/m/Y', strtotime($log['start_time'])); ?></td>
                                         <td>
-                                            <span class="badge" style="background: rgba(255,255,255,0.06); color: #cbd5e1;">
+                                            <span class="badge badge-trigger-source">
                                                 <?php echo htmlspecialchars($log['triggered_by']); ?>
                                             </span>
                                         </td>
@@ -452,7 +452,7 @@ function copyCronUrl(btn) {
                                         <td class="text-warning fw-bold"><?php echo $log['warned_count']; ?></td>
                                         <td class="text-success fw-bold"><?php echo $log['extended_count']; ?></td>
                                         <td>
-                                            <span class="badge <?php echo $badge_class; ?> text-uppercase">
+                                            <span class="badge <?php echo $badge_class; ?> text-uppercase fw-bold">
                                                 <?php echo $st; ?>
                                             </span>
                                         </td>
@@ -476,30 +476,30 @@ function copyCronUrl(btn) {
 <!-- MODAL: HƯỚNG DẪN CẤU HÌNH WEB-CRON 24/7 -->
 <div class="modal fade" id="modalCronConfig" tabindex="-1" aria-labelledby="modalCronConfigLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered">
-        <div class="modal-content text-white" style="background: var(--bg-card); border: 1px solid var(--border-color);">
+        <div class="modal-content modal-gaming" style="background: var(--bg-card); border: 1px solid var(--border-color);">
             <div class="modal-header border-bottom border-secondary border-opacity-25">
                 <h5 class="modal-title fw-bold" id="modalCronConfigLabel">
                     <i class="bi bi-gear-wide-connected text-info me-2"></i> Thiết Lập Tự Động Quét Hết Hạn 24/7 (Web-Cron)
                 </h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body p-4">
-                <div class="alert alert-info bg-info bg-opacity-10 border-info border-opacity-25 text-light mb-4">
+                <div class="alert alert-info bg-info bg-opacity-10 border-info border-opacity-25 text-info-callout mb-4">
                     <i class="bi bi-info-circle-fill text-info me-2"></i>
                     <strong>Môi trường Hosting InfinityFree:</strong> Máy chủ không mở cổng SSH terminal định kỳ vĩnh viễn. Để hệ thống tự động quét mỗi 1 đến 5 phút mà không cần người dùng truy cập, giải pháp chuẩn công nghiệp là sử dụng <strong>External Web-Cron</strong> (như cron-job.org hoặc UptimeRobot).
                 </div>
 
-                <h6 class="fw-bold text-white mb-2">1. Đường Dẫn Web-Cron Bảo Mật Của Bạn:</h6>
+                <h6 class="fw-bold modal-step-title mb-2">1. Đường Dẫn Web-Cron Bảo Mật Của Bạn:</h6>
                 <div class="input-group mb-4">
-                    <input type="text" id="cronUrlInput" class="form-control form-control-gaming text-warning font-monospace" readonly
+                    <input type="text" id="cronUrlInput" class="form-control form-control-gaming cron-url-input-field font-monospace" readonly
                            value="https://anplaystore.free.nf/cron_process_expirations.php?secret_token=ANPLAY_CRON_SEC_9b8e21a7df4e083c6f41&format=json">
                     <button class="btn btn-gaming-secondary" type="button" onclick="copyCronUrl(this)">
                         <i class="bi bi-clipboard me-1"></i> Sao chép URL
                     </button>
                 </div>
 
-                <h6 class="fw-bold text-white mb-2">2. Hướng Dẫn Cấu Hình Trên cron-job.org (Miễn Phí):</h6>
-                <ol class="text-secondary small mb-3 ps-3" style="line-height: 1.8;">
+                <h6 class="fw-bold modal-step-title mb-2">2. Hướng Dẫn Cấu Hình Trên cron-job.org (Miễn Phí):</h6>
+                <ol class="modal-guide-list text-secondary small mb-3 ps-3" style="line-height: 1.8;">
                     <li>Truy cập <a href="https://cron-job.org" target="_blank" class="text-info fw-bold">cron-job.org</a> và đăng ký một tài khoản miễn phí.</li>
                     <li>Vào mục <strong>Cronjobs</strong> &rarr; Chọn <strong>Create Cronjob</strong>.</li>
                     <li>Dán URL ở trên vào ô <strong>URL</strong>.</li>
@@ -508,7 +508,7 @@ function copyCronUrl(btn) {
                     <li>Nhấn <strong>Create</strong> để kích hoạt. Kể từ lúc này, hệ thống sẽ tự động quét, cảnh báo và thu hồi tài khoản đúng thời gian thực 24/7!</li>
                 </ol>
 
-                <div class="p-3 rounded-3" style="background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.25);">
+                <div class="cron-info-callout p-3 rounded-3">
                     <div class="d-flex align-items-center gap-2 text-success small fw-bold">
                         <i class="bi bi-shield-check fs-5"></i>
                         <span>Lớp bảo vệ dự phòng bổ sung:</span>

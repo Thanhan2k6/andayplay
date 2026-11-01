@@ -959,6 +959,443 @@
     color: var(--text-secondary) !important;
 }
 
+    /* 11. Modal Close Button in Light Mode */
+    [data-theme="light"] .btn-close-white {
+        filter: invert(1) grayscale(100%) brightness(20%) !important;
+        opacity: 0.75;
+    }
+    [data-theme="light"] .btn-close-white:hover {
+        opacity: 1;
+    }
+
+    /* 12. Alert High-Contrast Overrides for Light Mode (WCAG AAA) */
+    [data-theme="light"] .alert-warning {
+        background-color: #fef3c7 !important;
+        border-color: #fcd34d !important;
+        color: #92400e !important;
+    }
+    [data-theme="light"] .alert-warning * {
+        color: #92400e !important;
+    }
+    [data-theme="light"] .alert-danger {
+        background-color: #fee2e2 !important;
+        border-color: #fca5a5 !important;
+        color: #991b1b !important;
+    }
+    [data-theme="light"] .alert-danger * {
+        color: #991b1b !important;
+    }
+    [data-theme="light"] .alert-success {
+        background-color: #dcfce7 !important;
+        border-color: #86efac !important;
+        color: #166534 !important;
+    }
+    [data-theme="light"] .alert-success * {
+        color: #166534 !important;
+    }
+    [data-theme="light"] .alert-info {
+        background-color: #e0f2fe !important;
+        border-color: #7dd3fc !important;
+        color: #075985 !important;
+    }
+    [data-theme="light"] .alert-info * {
+        color: #075985 !important;
+    }
+
+    /* 13. High-Contrast Text Color Adjustments for Light Mode */
+    [data-theme="light"] .text-info {
+        color: #0284c7 !important;
+    }
+    [data-theme="light"] .text-warning {
+        color: #b45309 !important;
+    }
+    [data-theme="light"] .text-success {
+        color: #15803d !important;
+    }
+    [data-theme="light"] .text-danger {
+        color: #b91c1c !important;
+    }
+
+    /* 14. Badge Tint Overrides for Light Mode */
+    [data-theme="light"] .badge.bg-success,
+    [data-theme="light"] .badge.text-success {
+        background-color: #dcfce7 !important;
+        color: #166534 !important;
+        border: 1px solid #86efac !important;
+    }
+    [data-theme="light"] .badge.bg-danger,
+    [data-theme="light"] .badge.text-danger {
+        background-color: #fee2e2 !important;
+        color: #991b1b !important;
+        border: 1px solid #fca5a5 !important;
+    }
+    [data-theme="light"] .badge.bg-warning,
+    [data-theme="light"] .badge.text-warning {
+        background-color: #fef9c3 !important;
+        color: #854d0e !important;
+        border: 1px solid #fde047 !important;
+    }
+    [data-theme="light"] .badge.bg-info,
+    [data-theme="light"] .badge.text-info {
+        background-color: #e0f2fe !important;
+        color: #075985 !important;
+        border: 1px solid #bae6fd !important;
+    }
+    [data-theme="light"] .badge.bg-secondary {
+        background-color: #f1f5f9 !important;
+        color: #475569 !important;
+        border: 1px solid #cbd5e1 !important;
+    }
+    [data-theme="light"] .badge-gaming-account {
+        background-color: #eef2ff !important;
+        color: #4338ca !important;
+        border: 1px solid #c7d2fe !important;
+        font-weight: 700 !important;
+    }
+
+    /* Automatic Color & Background Contrast Enrichment for Legacy Inline Styles */
+    [data-theme="light"] [style*="color: #10b981"],
+    [data-theme="light"] [style*="color: #34d399"],
+    [data-theme="light"] [style*="color: #6ee7b7"] {
+        color: #166534 !important;
+    }
+    [data-theme="light"] [style*="color: #818cf8"],
+    [data-theme="light"] [style*="color: #c7d2fe"],
+    [data-theme="light"] [style*="color: #a855f7"],
+    [data-theme="light"] [style*="color: #c084fc"] {
+        color: #4338ca !important;
+    }
+    [data-theme="light"] [style*="color: #f87171"],
+    [data-theme="light"] [style*="color: #f43f5e"],
+    [data-theme="light"] [style*="color: #ef4444"] {
+        color: #991b1b !important;
+    }
+    [data-theme="light"] [style*="color: #f59e0b"],
+    [data-theme="light"] [style*="color: #fbbf24"],
+    [data-theme="light"] [style*="color: #fde68a"] {
+        color: #854d0e !important;
+    }
+    [data-theme="light"] [style*="color: #06b6d4"],
+    [data-theme="light"] [style*="color: #38bdf8"],
+    [data-theme="light"] [style*="color: #7dd3fc"] {
+        color: #075985 !important;
+    }
+    [data-theme="light"] [style*="color: #cbd5e1"],
+    [data-theme="light"] [style*="color: #94a3b8"],
+    [data-theme="light"] [style*="color: #e2e8f0"] {
+        color: #334155 !important;
+    }
+    [data-theme="light"] [style*="background: rgba(255, 255, 255, 0.0"],
+    [data-theme="light"] [style*="background: rgba(255,255,255,0.0"],
+    [data-theme="light"] [style*="background: rgba(255, 255, 255, 0.1"],
+    [data-theme="light"] [style*="background: rgba(255,255,255,0.1"] {
+        background-color: #f8fafc !important;
+        border-color: #e2e8f0 !important;
+    }
+
+    /* 15. Cron Monitor Banner & Admin Widgets (Light Mode) */
+    [data-theme="light"] .cron-monitor-banner {
+        background: linear-gradient(135deg, #eef2ff 0%, #f8fafc 100%) !important;
+        border: 1px solid #c7d2fe !important;
+        box-shadow: 0 8px 24px -4px rgba(79, 70, 229, 0.1) !important;
+    }
+    [data-theme="light"] .cron-title {
+        color: #0f172a !important;
+    }
+    [data-theme="light"] .cron-shield-icon {
+        color: #4f46e5 !important;
+    }
+    [data-theme="light"] .cron-desc {
+        color: #334155 !important;
+    }
+    [data-theme="light"] .cron-last-run-text {
+        color: #475569 !important;
+    }
+    [data-theme="light"] .cron-time-val {
+        color: #0284c7 !important;
+    }
+    [data-theme="light"] .cron-status-badge {
+        background: #dcfce7 !important;
+        color: #166534 !important;
+        border: 1px solid #86efac !important;
+    }
+    [data-theme="light"] .cron-status-dot {
+        background: #16a34a !important;
+        box-shadow: 0 0 8px #16a34a !important;
+    }
+    [data-theme="light"] .cron-duration-badge {
+        background: #e2e8f0 !important;
+        color: #334155 !important;
+        border: 1px solid #cbd5e1 !important;
+    }
+    [data-theme="light"] .cron-btn-config {
+        background: #ffffff !important;
+        color: #0369a1 !important;
+        border-color: #0284c7 !important;
+    }
+    [data-theme="light"] .cron-btn-config:hover {
+        background: #0284c7 !important;
+        color: #ffffff !important;
+    }
+    [data-theme="light"] .cron-btn-secondary {
+        background: #ffffff !important;
+        color: #1e293b !important;
+        border-color: #cbd5e1 !important;
+    }
+    [data-theme="light"] .cron-btn-secondary:hover {
+        background: #f1f5f9 !important;
+        color: var(--brand-primary) !important;
+    }
+
+    /* 16. Task Cards & Credentials in Light Mode */
+    [data-theme="light"] .task-item-card {
+        background: #f8fafc !important;
+        border: 1px solid #e2e8f0 !important;
+    }
+    [data-theme="light"] .task-item-card:hover {
+        background: #f1f5f9 !important;
+        border-color: #cbd5e1 !important;
+    }
+    [data-theme="light"] .task-item-title {
+        color: #0f172a !important;
+        font-weight: 700 !important;
+    }
+    [data-theme="light"] .task-item-desc {
+        color: #64748b !important;
+    }
+    [data-theme="light"] .task-badge-neutral {
+        background: #f1f5f9 !important;
+        color: #334155 !important;
+        border: 1px solid #cbd5e1 !important;
+    }
+
+    [data-theme="light"] .account-credentials-card {
+        background-color: #ffffff !important;
+        border: 1px solid #c7d2fe !important;
+        box-shadow: 0 8px 30px -4px rgba(79, 70, 229, 0.08) !important;
+    }
+    [data-theme="light"] .credentials-region-badge {
+        background: #f1f5f9 !important;
+        color: #475569 !important;
+        border: 1px solid #e2e8f0 !important;
+    }
+    [data-theme="light"] .credentials-input-field {
+        background-color: #f8fafc !important;
+        color: #0f172a !important;
+        border-color: #cbd5e1 !important;
+    }
+    [data-theme="light"] .credentials-password-field {
+        background-color: #f8fafc !important;
+        color: #b45309 !important;
+        border-color: #cbd5e1 !important;
+    }
+
+    [data-theme="light"] .launcher-helper-card {
+        background: #f8fafc !important;
+        border: 1px solid #e2e8f0 !important;
+    }
+    [data-theme="light"] .launcher-helper-title {
+        color: #0f172a !important;
+    }
+
+    [data-theme="light"] .security-warning-callout {
+        background: #fffbeb !important;
+        border: 1px solid #fde68a !important;
+    }
+    [data-theme="light"] .security-warning-callout ul li {
+        color: #78350f !important;
+    }
+
+    [data-theme="light"] .steam-offline-guide-box {
+        background-color: #eef2ff !important;
+        border: 1px solid #c7d2fe !important;
+    }
+    [data-theme="light"] .steam-offline-title {
+        color: #1e1b4b !important;
+    }
+    [data-theme="light"] .steam-offline-guide-box ol li {
+        color: #334155 !important;
+    }
+
+    [data-theme="light"] .countdown-banner-box {
+        background: #fff1f2 !important;
+        border: 1px solid #fecdd3 !important;
+    }
+    [data-theme="light"] .countdown-timer-text {
+        color: #be123c !important;
+    }
+
+    [data-theme="light"] .table-cron-logs {
+        color: #0f172a !important;
+    }
+    [data-theme="light"] .table-cron-head-row th {
+        background: #f8fafc !important;
+        color: #475569 !important;
+        border-bottom: 2px solid #e2e8f0 !important;
+    }
+    [data-theme="light"] .table-cron-logs tbody tr {
+        border-bottom: 1px solid #f1f5f9 !important;
+    }
+    [data-theme="light"] .table-cron-logs tbody tr:hover td {
+        background: #f8fafc !important;
+    }
+    [data-theme="light"] .table-log-time {
+        color: #0f172a !important;
+    }
+    [data-theme="light"] .badge-trigger-source {
+        background: #f1f5f9 !important;
+        color: #334155 !important;
+        border: 1px solid #cbd5e1 !important;
+    }
+    [data-theme="light"] .cron-url-input-field {
+        background: #f8fafc !important;
+        color: #b45309 !important;
+        border-color: #cbd5e1 !important;
+    }
+    [data-theme="light"] .cron-info-callout {
+        background: #ecfdf5 !important;
+        border: 1px solid #a7f3d0 !important;
+    }
+    [data-theme="light"] .cron-info-callout p {
+        color: #166534 !important;
+    }
+    [data-theme="light"] .text-info-callout {
+        color: #075985 !important;
+    }
+
+    /* 17. Admin Console Nav & Group Titles in Light Mode */
+    [data-theme="light"] .admin-nav-group-title {
+        color: #475569 !important;
+        font-weight: 800 !important;
+    }
+
+/* =========================================================
+   DEFAULT DARK MODE COMPONENT STYLES
+   ========================================================= */
+.cron-monitor-banner {
+    background: linear-gradient(135deg, rgba(30, 27, 75, 0.85) 0%, rgba(15, 23, 42, 0.95) 100%);
+    border: 1px solid rgba(99, 102, 241, 0.4);
+    box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.6);
+}
+.cron-title { color: #ffffff; }
+.cron-shield-icon { color: #06b6d4; }
+.cron-desc { color: #cbd5e1; }
+.cron-last-run-text { color: #94a3b8; }
+.cron-time-val { color: #38bdf8; }
+.cron-status-badge {
+    background: rgba(16, 185, 129, 0.18);
+    color: #10b981;
+    border: 1px solid rgba(16, 185, 129, 0.35);
+    font-weight: 700;
+}
+.cron-status-dot {
+    width: 8px;
+    height: 8px;
+    background: #10b981;
+    box-shadow: 0 0 8px #10b981;
+}
+.cron-duration-badge {
+    background: rgba(255, 255, 255, 0.1);
+    color: #cbd5e1;
+}
+.cron-btn-config {
+    color: #06b6d4;
+    border-color: rgba(6, 182, 212, 0.4);
+}
+.cron-btn-config:hover {
+    background: #06b6d4;
+    color: #ffffff;
+}
+
+.task-item-card {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid var(--border-color);
+    transition: all 0.2s ease;
+}
+.task-item-card:hover {
+    background: rgba(255, 255, 255, 0.04);
+    border-color: rgba(99, 102, 241, 0.3);
+}
+.task-item-title { color: #f1f5f9; }
+.task-badge-neutral {
+    background: rgba(255, 255, 255, 0.08);
+    color: #e2e8f0;
+}
+.badge-gaming-account {
+    background: rgba(99, 102, 241, 0.15);
+    color: #c7d2fe;
+    border: 1px solid rgba(99, 102, 241, 0.3);
+    font-size: 0.78rem;
+}
+
+.account-credentials-card {
+    background: rgba(15, 17, 24, 0.9);
+    border: 1px solid var(--border-color);
+}
+.credentials-region-badge {
+    background: rgba(255, 255, 255, 0.06);
+    color: #94a3b8;
+    border: 1px solid var(--border-color);
+}
+.credentials-input-field {
+    color: #ffffff;
+}
+.credentials-password-field {
+    color: #f59e0b;
+}
+
+.launcher-helper-card {
+    background: rgba(15, 23, 42, 0.6);
+    border: 1px solid var(--border-color);
+}
+.launcher-helper-title {
+    color: #f1f5f9;
+}
+
+.security-warning-callout {
+    background: rgba(245, 158, 11, 0.08);
+    border: 1px solid rgba(245, 158, 11, 0.25);
+}
+
+.steam-offline-guide-box {
+    background: rgba(15, 23, 42, 0.7);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+}
+.steam-offline-title {
+    color: #f1f5f9;
+}
+
+.countdown-banner-box {
+    background: rgba(244, 63, 94, 0.1);
+    border: 1px solid rgba(244, 63, 94, 0.25);
+}
+.countdown-timer-text {
+    color: #ffffff;
+}
+
+.table-cron-logs {
+    background: transparent;
+    color: #f1f5f9;
+}
+.table-cron-head-row th {
+    color: #94a3b8;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+.table-log-time {
+    color: #f8fafc;
+}
+.badge-trigger-source {
+    background: rgba(255, 255, 255, 0.06);
+    color: #cbd5e1;
+}
+.cron-url-input-field {
+    color: #f59e0b;
+}
+.cron-info-callout {
+    background: rgba(16, 185, 129, 0.1);
+    border: 1px solid rgba(16, 185, 129, 0.25);
+}
+
 /* =========================================================
    BASE RESET & TYPOGRAPHY
    ========================================================= */

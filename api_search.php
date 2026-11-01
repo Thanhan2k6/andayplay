@@ -108,3 +108,4 @@ try {
         'results' => []
     ], JSON_UNESCAPED_UNICODE);
 }
+

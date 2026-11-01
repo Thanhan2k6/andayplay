@@ -153,7 +153,7 @@ try {
 $csrf_token = generate_csrf_token();
 ?>
 
-<div class="container-fluid px-lg-5 py-4 my-2 text-white">
+<div class="container-fluid px-lg-5 py-4 my-2">
     <!-- Header -->
     <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 pb-3 border-bottom border-secondary border-opacity-25 gap-3">
         <div>
@@ -162,7 +162,7 @@ $csrf_token = generate_csrf_token();
                     <i class="bi bi-box-seam-fill me-1"></i> INVENTORY CONTROL
                 </span>
             </div>
-            <h2 class="fw-extrabold text-white mb-0">Quản Lý Kho Tài Khoản Game</h2>
+            <h2 class="fw-extrabold mb-0">Quản Lý Kho Tài Khoản Game</h2>
             <p class="text-secondary small mb-0">Nhập kho tự động, mã hóa AES-256 an toàn, quản lý trạng thái và tự động giảm tồn kho khi có khách thuê</p>
         </div>
         <div class="d-flex gap-2">
@@ -176,9 +176,9 @@ $csrf_token = generate_csrf_token();
     </div>
 
     <?php if ($message): ?>
-        <div class="alert alert-dismissible fade show mb-4 text-white" style="background: rgba(16,185,129,0.15); border: 1px solid #10b981;" role="alert">
+        <div class="alert alert-success alert-dismissible fade show mb-4" role="alert">
             <i class="bi bi-check-circle-fill text-success me-2"></i><?php echo htmlspecialchars($message); ?>
-            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert"></button>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
     <?php endif; ?>
     <?php if ($error): ?>
@@ -354,12 +354,12 @@ $csrf_token = generate_csrf_token();
 <!-- MODAL THÊM TÀI KHOẢN MỚI -->
 <div class="modal fade" id="addAccountModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content" style="background: var(--bg-card); border: 1px solid var(--border-color); color: #fff;">
+        <div class="modal-content modal-gaming" style="background: var(--bg-card); border: 1px solid var(--border-color);">
             <form method="POST" action="">
                 <input type="hidden" name="csrf_token" value="<?php echo $csrf_token; ?>">
                 <div class="modal-header border-secondary border-opacity-25">
                     <h5 class="modal-title text-success fw-bold"><i class="bi bi-plus-circle me-1"></i> Nhập Tài Khoản Vào Kho</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
                     <div class="mb-3">
@@ -383,21 +383,21 @@ $csrf_token = generate_csrf_token();
 
                     <div id="manualInputs">
                         <div class="mb-3">
-                            <label class="form-label text-light small fw-bold">Tên đăng nhập / Email Game:</label>
+                            <label class="form-label text-secondary small fw-bold">Tên đăng nhập / Email Game:</label>
                             <input type="text" name="account_username" id="inp_username" class="form-control form-control-gaming" placeholder="Ví dụ: steam_vip_01@game.com">
                         </div>
                         <div class="mb-3">
-                            <label class="form-label text-light small fw-bold">Mật khẩu game:</label>
+                            <label class="form-label text-secondary small fw-bold">Mật khẩu game:</label>
                             <input type="text" name="account_password" id="inp_password" class="form-control form-control-gaming" placeholder="Nhập mật khẩu an toàn...">
                         </div>
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label text-light small fw-bold">Server / Khu vực:</label>
+                        <label class="form-label text-secondary small fw-bold">Server / Khu vực:</label>
                         <input type="text" name="server_region" class="form-control form-control-gaming" value="Global">
                     </div>
                     <div class="mb-3">
-                        <label class="form-label text-light small fw-bold">Ghi chú nội bộ:</label>
+                        <label class="form-label text-secondary small fw-bold">Ghi chú nội bộ:</label>
                         <textarea name="notes" class="form-control form-control-gaming" rows="2" placeholder="Ví dụ: Tài khoản có sẵn DLC..."></textarea>
                     </div>
                 </div>
@@ -413,15 +413,15 @@ $csrf_token = generate_csrf_token();
 <!-- MODAL NẠP HÀNG LOẠT TỰ ĐỘNG 20 TÀI KHOẢN -->
 <div class="modal fade" id="batchGenerateModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content" style="background: var(--bg-card); border: 1px solid var(--border-color); color: #fff;">
+        <div class="modal-content modal-gaming" style="background: var(--bg-card); border: 1px solid var(--border-color);">
             <form method="POST" action="">
                 <input type="hidden" name="csrf_token" value="<?php echo $csrf_token; ?>">
                 <div class="modal-header border-secondary border-opacity-25">
                     <h5 class="modal-title text-warning fw-bold"><i class="bi bi-lightning-charge-fill me-2"></i> Nạp Hàng Loạt 20 Tài Khoản / Game</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
-                    <div class="p-3 rounded-3 small mb-3" style="background: rgba(6,182,212,0.1); border: 1px solid rgba(6,182,212,0.3); color: #cbd5e1;">
+                    <div class="p-3 rounded-3 small mb-3 alert alert-info">
                         <i class="bi bi-info-circle text-info me-1"></i> Hệ thống sẽ tự động tạo tài khoản với username độc lập và mật khẩu ngẫu nhiên độ an toàn cao (mã hóa chuẩn AES-256). Khi có người thuê, số lượng khả dụng sẽ tự động trừ đi 1!
                     </div>
 

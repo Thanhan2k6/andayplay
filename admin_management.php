@@ -348,11 +348,11 @@ require_once __DIR__ . '/includes/admin_header.php';
     <!-- STATS CARDS -->
     <div class="row g-3 mb-4">
         <div class="col-6 col-md-3">
-            <div class="card h-100 p-3 rounded-4 border border-secondary border-opacity-10" style="background: #121622;">
+            <div class="card h-100 p-3 rounded-4 border border-secondary border-opacity-10" style="background: var(--admin-bg-card);">
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
                         <div class="text-secondary small fw-bold text-uppercase" style="font-size: 0.72rem;">Tổng Quản Trị</div>
-                        <div class="fs-3 fw-bold text-white mt-1"><?php echo $total_admins; ?></div>
+                        <div class="fs-3 fw-bold mt-1"><?php echo $total_admins; ?></div>
                     </div>
                     <div class="rounded-3 p-3" style="background: rgba(99, 102, 241, 0.15); color: #818cf8;">
                         <i class="bi bi-people-fill fs-4"></i>
@@ -361,7 +361,7 @@ require_once __DIR__ . '/includes/admin_header.php';
             </div>
         </div>
         <div class="col-6 col-md-3">
-            <div class="card h-100 p-3 rounded-4 border border-secondary border-opacity-10" style="background: #121622;">
+            <div class="card h-100 p-3 rounded-4 border border-secondary border-opacity-10" style="background: var(--admin-bg-card);">
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
                         <div class="text-secondary small fw-bold text-uppercase" style="font-size: 0.72rem;">Super Admin</div>
@@ -374,7 +374,7 @@ require_once __DIR__ . '/includes/admin_header.php';
             </div>
         </div>
         <div class="col-6 col-md-3">
-            <div class="card h-100 p-3 rounded-4 border border-secondary border-opacity-10" style="background: #121622;">
+            <div class="card h-100 p-3 rounded-4 border border-secondary border-opacity-10" style="background: var(--admin-bg-card);">
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
                         <div class="text-secondary small fw-bold text-uppercase" style="font-size: 0.72rem;">Đang Hoạt Động</div>
@@ -387,7 +387,7 @@ require_once __DIR__ . '/includes/admin_header.php';
             </div>
         </div>
         <div class="col-6 col-md-3">
-            <div class="card h-100 p-3 rounded-4 border border-secondary border-opacity-10" style="background: #121622;">
+            <div class="card h-100 p-3 rounded-4 border border-secondary border-opacity-10" style="background: var(--admin-bg-card);">
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
                         <div class="text-secondary small fw-bold text-uppercase" style="font-size: 0.72rem;">Đang Bị Khóa</div>
@@ -427,9 +427,9 @@ require_once __DIR__ . '/includes/admin_header.php';
         <!-- TAB 1: DANH SÁCH VÀ THAO TÁC QUẢN TRỊ VIÊN -->
         <!-- =================================================================== -->
         <div class="tab-pane fade show active" id="tab-admins" role="tabpanel">
-            <div class="card border border-secondary border-opacity-10 rounded-4 shadow-sm" style="background: #121622;">
+            <div class="card border border-secondary border-opacity-10 rounded-4 shadow-sm" style="background: var(--admin-bg-card);">
                 <div class="card-header bg-transparent border-bottom border-secondary border-opacity-10 p-3 d-flex justify-content-between align-items-center">
-                    <h5 class="fw-bold text-white mb-0">Danh Sách Thành Viên Ban Quản Trị</h5>
+                    <h5 class="fw-bold mb-0">Danh Sách Thành Viên Ban Quản Trị</h5>
                     <span class="text-secondary small">Cập nhật quyền hạn và trạng thái theo thời gian thực</span>
                 </div>
                 <div class="table-responsive">
@@ -602,9 +602,9 @@ require_once __DIR__ . '/includes/admin_header.php';
         <!-- TAB 2: MA TRẬN PHÂN QUYỀN HỆ THỐNG (PERMISSION MATRIX) -->
         <!-- =================================================================== -->
         <div class="tab-pane fade" id="tab-matrix" role="tabpanel">
-            <div class="card border border-secondary border-opacity-10 rounded-4 shadow-sm" style="background: #121622;">
+            <div class="card border border-secondary border-opacity-10 rounded-4 shadow-sm" style="background: var(--admin-bg-card);">
                 <div class="card-header bg-transparent border-bottom border-secondary border-opacity-10 p-3">
-                    <h5 class="fw-bold text-white mb-0">Ma Trận 16 Quyền Hạn Hệ Thống (Permission Matrix)</h5>
+                    <h5 class="fw-bold mb-0">Ma Trận 16 Quyền Hạn Hệ Thống (Permission Matrix)</h5>
                     <p class="text-secondary small mb-0 mt-1">SUPER_ADMIN mặc định sở hữu toàn quyền. ADMIN được phân bổ linh hoạt. USER không có quyền quản trị.</p>
                 </div>
                 <div class="table-responsive">
@@ -669,10 +669,10 @@ require_once __DIR__ . '/includes/admin_header.php';
         <!-- TAB 3: NHẬT KÝ KIỂM TOÁN BAN QUẢN TRỊ (AUDIT LOGS) -->
         <!-- =================================================================== -->
         <div class="tab-pane fade" id="tab-audit" role="tabpanel">
-            <div class="card border border-secondary border-opacity-10 rounded-4 shadow-sm" style="background: #121622;">
+            <div class="card border border-secondary border-opacity-10 rounded-4 shadow-sm" style="background: var(--admin-bg-card);">
                 <div class="card-header bg-transparent border-bottom border-secondary border-opacity-10 p-3 d-flex flex-wrap justify-content-between align-items-center gap-2">
                     <div>
-                        <h5 class="fw-bold text-white mb-0">Lịch Sử Kiểm Toán An Ninh & Hoạt Động</h5>
+                        <h5 class="fw-bold mb-0">Lịch Sử Kiểm Toán An Ninh & Hoạt Động</h5>
                         <small class="text-secondary">Theo dõi minh bạch mọi thay đổi cấu hình, tạo mới, nâng cấp, khóa hoặc xóa tài khoản</small>
                     </div>
                     <!-- Bộ lọc theo Admin -->
@@ -765,7 +765,7 @@ require_once __DIR__ . '/includes/admin_header.php';
 <!-- ======================================================================= -->
 <div class="modal fade" id="createAdminModal" tabindex="-1" aria-labelledby="createAdminModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered">
-        <div class="modal-content border-secondary border-opacity-25 rounded-4" style="background: #121622; color: #fff;">
+        <div class="modal-content modal-gaming border-secondary border-opacity-25 rounded-4" style="background: var(--admin-bg-card);">
             <div class="modal-header border-secondary border-opacity-25">
                 <div class="d-flex align-items-center gap-2">
                     <div class="rounded-3 p-2" style="background: rgba(99,102,241,0.2); color: #818cf8;">
@@ -863,7 +863,7 @@ require_once __DIR__ . '/includes/admin_header.php';
 <!-- ======================================================================= -->
 <div class="modal fade" id="editPermModal" tabindex="-1" aria-labelledby="editPermModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered">
-        <div class="modal-content border-secondary border-opacity-25 rounded-4" style="background: #121622; color: #fff;">
+        <div class="modal-content modal-gaming border-secondary border-opacity-25 rounded-4" style="background: var(--admin-bg-card);">
             <div class="modal-header border-secondary border-opacity-25">
                 <div class="d-flex align-items-center gap-2">
                     <div class="rounded-3 p-2" style="background: rgba(6,182,212,0.2); color: #06b6d4;">

@@ -77,10 +77,10 @@ if (!$is_allowed) {
                 </div>
 
                 <!-- THÔNG TIN TÀI KHOẢN CHO THUÊ -->
-                <div class="p-4 rounded-3 mb-4 text-start" style="background: rgba(15, 17, 24, 0.9); border: 1px solid var(--border-color);">
+                <div class="account-credentials-card p-4 rounded-3 mb-4 text-start">
                         <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom border-secondary border-opacity-25">
                             <span class="small fw-bold text-info"><i class="bi bi-person-fill-lock me-1"></i> TÀI KHOẢN GAME ĐÃ CẤP CHO BẠN</span>
-                            <span class="badge" style="background: rgba(255,255,255,0.06); color: #94a3b8; font-size: 0.75rem; border: 1px solid var(--border-color);">
+                            <span class="badge credentials-region-badge">
                                 Khu vực: <?php echo htmlspecialchars($game['server_region'] ?? 'Global'); ?>
                             </span>
                         </div>
@@ -89,7 +89,7 @@ if (!$is_allowed) {
                         <div class="mb-3">
                             <label class="small text-secondary d-block mb-1">Tên đăng nhập / Email:</label>
                             <div class="input-group">
-                                <input type="text" class="form-control form-control-gaming text-white fw-bold user-select-all" value="<?php echo htmlspecialchars($game['account_username']); ?>" readonly id="dl_username">
+                                <input type="text" class="form-control form-control-gaming credentials-input-field fw-bold user-select-all" value="<?php echo htmlspecialchars($game['account_username']); ?>" readonly id="dl_username">
                                 <button class="btn btn-gaming-secondary" type="button" onclick="copyValue('dl_username', this)">
                                     <i class="bi bi-clipboard me-1"></i> Sao chép
                                 </button>
@@ -100,7 +100,7 @@ if (!$is_allowed) {
                         <div class="mb-3">
                             <label class="small text-secondary d-block mb-1">Mật khẩu game:</label>
                             <div class="input-group">
-                                <input type="password" class="form-control form-control-gaming text-warning fw-bold user-select-all" value="<?php echo htmlspecialchars($plain_password); ?>" readonly id="dl_password">
+                                <input type="password" class="form-control form-control-gaming credentials-password-field text-warning fw-bold user-select-all" value="<?php echo htmlspecialchars($plain_password); ?>" readonly id="dl_password">
                                 <button class="btn btn-gaming-secondary" type="button" onclick="togglePass('dl_password', this)">
                                     <i class="bi bi-eye"></i>
                                 </button>
@@ -135,8 +135,8 @@ if (!$is_allowed) {
                         </a>
                     <?php endif; ?>
 
-                    <div class="p-3 rounded-3 mt-2 text-start" style="background: rgba(15, 23, 42, 0.6); border: 1px solid var(--border-color);">
-                        <small class="text-light fw-bold d-block mb-2"><i class="bi bi-laptop me-1 text-primary"></i> Khởi Động Launcher Game Trên Máy Bạn:</small>
+                    <div class="launcher-helper-card p-3 rounded-3 mt-2 text-start">
+                        <small class="launcher-helper-title fw-bold d-block mb-2"><i class="bi bi-laptop me-1 text-primary"></i> Khởi Động Launcher Game Trên Máy Bạn:</small>
                         <div class="d-flex flex-wrap gap-2">
                             <a href="steam://open/main" class="btn btn-sm btn-gaming-secondary py-1 px-3">
                                 <i class="bi bi-steam me-1"></i> Mở Steam Client
@@ -152,7 +152,7 @@ if (!$is_allowed) {
                 </div>
 
                 <!-- Quy định an toàn tài khoản -->
-                <div class="p-3 rounded-3 mb-4 text-start" style="background: rgba(245, 158, 11, 0.08); border: 1px solid rgba(245, 158, 11, 0.25);">
+                <div class="security-warning-callout p-3 rounded-3 mb-4 text-start">
                     <small class="text-warning fw-bold d-block mb-1"><i class="bi bi-shield-exclamation me-1"></i> Quy định sử dụng tài khoản thuê:</small>
                     <ul class="text-secondary small mb-0 ps-3">
                         <li>Không tự ý đổi mật khẩu, email hoặc thêm số điện thoại vào tài khoản.</li>

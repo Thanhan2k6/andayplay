@@ -214,7 +214,18 @@ function render_403($message = "Bạn không có quyền truy cập vào khu v�
         .icon-box { width: 80px; height: 80px; border-radius: 50%; background: rgba(244,63,94,0.15); color: #f43f5e; display: inline-flex; align-items: center; justify-content: center; font-size: 36px; margin-bottom: 24px; border: 1px solid rgba(244,63,94,0.3); }
         .btn-gaming { background: #6366f1; color: #fff; border-radius: 12px; padding: 12px 28px; font-weight: 700; text-decoration: none; display: inline-block; transition: all 0.2s; border: none; }
         .btn-gaming:hover { background: #4f46e5; color: #fff; transform: translateY(-2px); }
+
+        [data-theme='light'] body { background-color: #f8fafc; color: #0f172a; }
+        [data-theme='light'] .error-card { background: #ffffff; border-color: #fecdd3; box-shadow: 0 20px 40px -10px rgba(15, 23, 42, 0.1); }
+        [data-theme='light'] .text-white { color: #0f172a !important; }
+        [data-theme='light'] .text-secondary { color: #475569 !important; }
     </style>
+    <script>
+        try {
+            var theme = localStorage.getItem('anplay_theme') || 'dark';
+            document.documentElement.setAttribute('data-theme', theme);
+        } catch(e) {}
+    </script>
 </head>
 <body>
     <div class='error-card'>
