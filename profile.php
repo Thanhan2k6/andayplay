@@ -353,11 +353,11 @@ try {
 require_once __DIR__ . '/includes/header.php';
 ?>
 
-<div class="container-fluid px-lg-5 py-4 my-2 text-white">
+<div class="container-fluid px-lg-5 py-4 my-2">
     <!-- HERO PROFILE HEADER -->
     <div class="gaming-card p-4 mb-4 position-relative overflow-hidden" style="background: var(--surface-card); border: 1px solid var(--border-default);">
         <div class="position-absolute end-0 top-0 p-4 opacity-10 d-none d-lg-block pointer-events-none">
-            <i class="bi bi-controller text-white" style="font-size: 10rem;"></i>
+            <i class="bi bi-controller" style="font-size: 10rem;"></i>
         </div>
 
         <div class="d-flex flex-wrap align-items-center justify-content-between gap-4 position-relative">
@@ -369,7 +369,7 @@ require_once __DIR__ . '/includes/header.php';
                 </div>
                 <div>
                     <div class="d-flex align-items-center gap-2 mb-1">
-                        <h2 class="fw-extrabold text-white mb-0">@<?php echo htmlspecialchars($user_info['username']); ?></h2>
+                        <h2 class="fw-extrabold mb-0">@<?php echo htmlspecialchars($user_info['username']); ?></h2>
                         <?php if ($user_info['role'] == 1): ?>
                             <span class="badge" style="background: rgba(244,63,94,0.2); color: #f43f5e; border: 1px solid rgba(244,63,94,0.4); font-size: 0.75rem;">
                                 <i class="bi bi-shield-check me-1"></i> Quản Trị Viên
@@ -401,7 +401,7 @@ require_once __DIR__ . '/includes/header.php';
 
     <!-- NOTIFICATION ALERTS -->
     <?php if (!empty($success_msg)): ?>
-        <div class="alert alert-dismissible fade show mb-4 text-white" style="background: rgba(16,185,129,0.15); border: 1px solid #10b981;" role="alert">
+        <div class="alert alert-dismissible fade show mb-4" style="background: rgba(16,185,129,0.15); border: 1px solid #10b981;" role="alert">
             <div class="d-flex align-items-center">
                 <i class="bi bi-check-circle-fill text-success fs-5 me-2"></i>
                 <div class="fw-semibold"><?php echo htmlspecialchars($success_msg); ?></div>
@@ -411,7 +411,7 @@ require_once __DIR__ . '/includes/header.php';
     <?php endif; ?>
 
     <?php if (!empty($error_msg)): ?>
-        <div class="alert alert-dismissible fade show mb-4 text-white" style="background: rgba(244,63,94,0.15); border: 1px solid #f43f5e;" role="alert">
+        <div class="alert alert-dismissible fade show mb-4" style="background: rgba(244,63,94,0.15); border: 1px solid #f43f5e;" role="alert">
             <div class="d-flex align-items-center">
                 <i class="bi bi-exclamation-triangle-fill text-danger fs-5 me-2"></i>
                 <div class="fw-semibold"><?php echo htmlspecialchars($error_msg); ?></div>
@@ -423,10 +423,10 @@ require_once __DIR__ . '/includes/header.php';
     <!-- KPI STATS CARDS -->
     <div class="row g-3 mb-4">
         <div class="col-sm-6 col-lg-3">
-            <div class="p-3 rounded-4 h-100 d-flex align-items-center justify-content-between" style="background: var(--bg-card); border: 1px solid var(--border-color);">
+            <div class="p-3 rounded-3 h-100 d-flex align-items-center justify-content-between" style="background: var(--bg-card); border: 1px solid var(--border-color);">
                 <div>
                     <span class="text-secondary small text-uppercase fw-bold">Tổng lượt thuê</span>
-                    <h3 class="fw-bold text-white mb-0 mt-1"><?php echo $total_rented; ?></h3>
+                    <h3 class="fw-bold mb-0 mt-1"><?php echo $total_rented; ?></h3>
                 </div>
                 <div class="p-3 rounded-3" style="background: rgba(99,102,241,0.12); color: var(--primary);">
                     <i class="bi bi-controller fs-4"></i>
@@ -434,7 +434,7 @@ require_once __DIR__ . '/includes/header.php';
             </div>
         </div>
         <div class="col-sm-6 col-lg-3">
-            <div class="p-3 rounded-4 h-100 d-flex align-items-center justify-content-between" style="background: var(--bg-card); border: 1px solid rgba(16,185,129,0.3);">
+            <div class="p-3 rounded-3 h-100 d-flex align-items-center justify-content-between" style="background: var(--bg-card); border: 1px solid rgba(16,185,129,0.3);">
                 <div>
                     <span class="text-secondary small text-uppercase fw-bold">Đang hoạt động</span>
                     <h3 class="fw-bold text-success mb-0 mt-1"><?php echo $active_rentals; ?></h3>
@@ -445,7 +445,7 @@ require_once __DIR__ . '/includes/header.php';
             </div>
         </div>
         <div class="col-sm-6 col-lg-3">
-            <div class="p-3 rounded-4 h-100 d-flex align-items-center justify-content-between" style="background: var(--bg-card); border: 1px solid rgba(6,182,212,0.3);">
+            <div class="p-3 rounded-3 h-100 d-flex align-items-center justify-content-between" style="background: var(--bg-card); border: 1px solid rgba(6,182,212,0.3);">
                 <div>
                     <span class="text-secondary small text-uppercase fw-bold">Tổng chi tiêu</span>
                     <h3 class="fw-bold text-info mb-0 mt-1"><?php echo number_format($total_spent, 0, ',', '.'); ?>đ</h3>
@@ -456,7 +456,7 @@ require_once __DIR__ . '/includes/header.php';
             </div>
         </div>
         <div class="col-sm-6 col-lg-3">
-            <div class="p-3 rounded-4 h-100 d-flex align-items-center justify-content-between" style="background: var(--bg-card); border: 1px solid rgba(245,158,11,0.3);">
+            <div class="p-3 rounded-3 h-100 d-flex align-items-center justify-content-between" style="background: var(--bg-card); border: 1px solid rgba(245,158,11,0.3);">
                 <div>
                     <span class="text-secondary small text-uppercase fw-bold">Hạng tài khoản</span>
                     <h3 class="fw-bold text-warning mb-0 mt-1"><?php echo ($user_info['role'] == 1) ? 'ADMIN' : 'VIP TIER'; ?></h3>
@@ -474,41 +474,41 @@ require_once __DIR__ . '/includes/header.php';
         <div class="col-lg-3">
             <div class="gaming-card p-3" style="background: var(--bg-card); border: 1px solid var(--border-color);">
                 <div class="nav flex-column nav-pills gap-2" id="profileTabs" role="tablist">
-                    <a href="profile.php?tab=overview" class="nav-link py-3 px-3 rounded-3 d-flex align-items-center gap-3 <?php echo ($tab === 'overview') ? 'active bg-primary text-white fw-bold shadow' : 'text-secondary'; ?>" style="border: 1px solid <?php echo ($tab === 'overview') ? 'var(--primary)' : 'transparent'; ?>;">
+                    <a href="profile.php?tab=overview" class="nav-link py-3 px-3 rounded-3 d-flex align-items-center gap-3 <?php echo ($tab === 'overview') ? 'active bg-primary fw-bold shadow' : 'text-secondary'; ?>" style="border: 1px solid <?php echo ($tab === 'overview') ? 'var(--primary)' : 'transparent'; ?>;">
                         <i class="bi bi-grid-fill fs-5"></i>
                         <div>
-                            <div class="text-white fw-bold">Tổng Quan</div>
+                            <div class=" fw-bold">Tổng Quan</div>
                             <small class="text-muted d-block" style="font-size: 0.72rem;">Thông số & đơn thuê gần nhất</small>
                         </div>
                     </a>
 
-                    <a href="profile.php?tab=info" class="nav-link py-3 px-3 rounded-3 d-flex align-items-center gap-3 <?php echo ($tab === 'info') ? 'active bg-primary text-white fw-bold shadow' : 'text-secondary'; ?>" style="border: 1px solid <?php echo ($tab === 'info') ? 'var(--primary)' : 'transparent'; ?>;">
+                    <a href="profile.php?tab=info" class="nav-link py-3 px-3 rounded-3 d-flex align-items-center gap-3 <?php echo ($tab === 'info') ? 'active bg-primary fw-bold shadow' : 'text-secondary'; ?>" style="border: 1px solid <?php echo ($tab === 'info') ? 'var(--primary)' : 'transparent'; ?>;">
                         <i class="bi bi-person-lines-fill fs-5"></i>
                         <div>
-                            <div class="text-white fw-bold">Thông Tin Cá Nhân</div>
+                            <div class=" fw-bold">Thông Tin Cá Nhân</div>
                             <small class="text-muted d-block" style="font-size: 0.72rem;">Tên, email và liên hệ</small>
                         </div>
                     </a>
 
-                    <a href="profile.php?tab=orders" class="nav-link py-3 px-3 rounded-3 d-flex align-items-center gap-3 <?php echo ($tab === 'orders') ? 'active bg-primary text-white fw-bold shadow' : 'text-secondary'; ?>" style="border: 1px solid <?php echo ($tab === 'orders') ? 'var(--primary)' : 'transparent'; ?>;">
+                    <a href="profile.php?tab=orders" class="nav-link py-3 px-3 rounded-3 d-flex align-items-center gap-3 <?php echo ($tab === 'orders') ? 'active bg-primary fw-bold shadow' : 'text-secondary'; ?>" style="border: 1px solid <?php echo ($tab === 'orders') ? 'var(--primary)' : 'transparent'; ?>;">
                         <i class="bi bi-receipt-cutoff fs-5"></i>
                         <div>
-                            <div class="text-white fw-bold">Lịch Sử Đơn Hàng</div>
+                            <div class=" fw-bold">Lịch Sử Đơn Hàng</div>
                             <small class="text-muted d-block" style="font-size: 0.72rem;">Hóa đơn và chi tiết thuê game</small>
                         </div>
                     </a>
 
-                    <a href="profile.php?tab=security" class="nav-link py-3 px-3 rounded-3 d-flex align-items-center gap-3 <?php echo ($tab === 'security') ? 'active bg-primary text-white fw-bold shadow' : 'text-secondary'; ?>" style="border: 1px solid <?php echo ($tab === 'security') ? 'var(--primary)' : 'transparent'; ?>;">
+                    <a href="profile.php?tab=security" class="nav-link py-3 px-3 rounded-3 d-flex align-items-center gap-3 <?php echo ($tab === 'security') ? 'active bg-primary fw-bold shadow' : 'text-secondary'; ?>" style="border: 1px solid <?php echo ($tab === 'security') ? 'var(--primary)' : 'transparent'; ?>;">
                         <i class="bi bi-shield-lock-fill fs-5"></i>
                         <div>
-                            <div class="text-white fw-bold">Đổi Mật Khẩu & Bảo Mật</div>
+                            <div class=" fw-bold">Đổi Mật Khẩu & Bảo Mật</div>
                             <small class="text-muted d-block" style="font-size: 0.72rem;">Bảo vệ tài khoản và phiên đăng nhập</small>
                         </div>
                     </a>
                     <a href="notifications.php" class="nav-link py-3 px-3 rounded-3 d-flex align-items-center gap-3 text-secondary" style="border: 1px solid transparent;">
                         <i class="bi bi-bell-fill fs-5 text-warning"></i>
                         <div>
-                            <div class="text-white fw-bold">Thông Báo Hệ Thống</div>
+                            <div class=" fw-bold">Thông Báo Hệ Thống</div>
                             <small class="text-muted d-block" style="font-size: 0.72rem;">Hộp thư, cập nhật và khuyến mãi</small>
                         </div>
                     </a>
@@ -516,7 +516,7 @@ require_once __DIR__ . '/includes/header.php';
                     <a href="support.php" class="nav-link py-3 px-3 rounded-3 d-flex align-items-center gap-3 text-secondary" style="border: 1px solid transparent;">
                         <i class="bi bi-headset fs-5 text-info"></i>
                         <div>
-                            <div class="text-white fw-bold">Hỗ Trợ & Khiếu Nại</div>
+                            <div class=" fw-bold">Hỗ Trợ & Khiếu Nại</div>
                             <small class="text-muted d-block" style="font-size: 0.72rem;">Tạo ticket và trò chuyện với kỹ thuật</small>
                         </div>
                     </a>
@@ -528,7 +528,7 @@ require_once __DIR__ . '/includes/header.php';
                 <div class="p-3 rounded-3" style="background: rgba(255,255,255,0.02); border: 1px solid var(--border-color);">
                     <div class="d-flex align-items-center gap-2 mb-2">
                         <i class="bi bi-headset text-info fs-5"></i>
-                        <span class="fw-bold small text-white">Hỗ Trợ Kỹ Thuật 24/7</span>
+                        <span class="fw-bold small">Hỗ Trợ Kỹ Thuật 24/7</span>
                     </div>
                     <p class="text-secondary small mb-2" style="font-size: 0.75rem;">Gặp sự cố với tài khoản thuê hoặc lỗi thanh toán?</p>
                     <a href="support.php" class="btn btn-sm btn-gaming-primary w-100 py-1 mb-2" style="font-size: 0.78rem;">
@@ -546,14 +546,14 @@ require_once __DIR__ . '/includes/header.php';
             <?php if ($tab === 'overview'): ?>
                 <!-- ================= TAB 1: OVERVIEW ================= -->
                 <div class="gaming-card p-4 mb-4" style="background: var(--bg-card); border: 1px solid var(--border-color);">
-                    <h4 class="fw-bold text-white mb-1"><i class="bi bi-grid-fill me-2 text-primary"></i> Tổng Quan Tài Khoản</h4>
+                    <h4 class="fw-bold mb-1"><i class="bi bi-grid-fill me-2 text-primary"></i> Tổng Quan Tài Khoản</h4>
                     <p class="text-secondary small mb-4">Thông tin trạng thái thành viên và hoạt động gần đây của bạn tại ANPLAY STORE</p>
 
                     <div class="row g-3 mb-4">
                         <div class="col-md-6">
                             <div class="p-3 rounded-3 h-100" style="background: var(--surface-secondary); border: 1px solid var(--border-default);">
                                 <div class="text-secondary small mb-1">Tên đăng nhập hệ thống</div>
-                                <div class="fw-bold text-white fs-5">@<?php echo htmlspecialchars($user_info['username']); ?></div>
+                                <div class="fw-bold fs-5">@<?php echo htmlspecialchars($user_info['username']); ?></div>
                                 <div class="text-muted small mt-2"><i class="bi bi-info-circle me-1"></i> Tên người dùng là duy nhất và không thể thay đổi</div>
                             </div>
                         </div>
@@ -568,7 +568,7 @@ require_once __DIR__ . '/includes/header.php';
 
                     <!-- GẦN ĐÂY: DANH SÁCH GAME ĐANG THUÊ -->
                     <div class="d-flex justify-content-between align-items-center mb-3">
-                        <h5 class="fw-bold text-white mb-0"><i class="bi bi-joystick me-2 text-warning"></i> Hoạt Động Thuê Gần Đây</h5>
+                        <h5 class="fw-bold mb-0"><i class="bi bi-joystick me-2 text-warning"></i> Hoạt Động Thuê Gần Đây</h5>
                         <a href="profile.php?tab=orders" class="small text-primary text-decoration-none fw-semibold">Xem toàn bộ lịch sử <i class="bi bi-arrow-right"></i></a>
                     </div>
 
@@ -600,11 +600,11 @@ require_once __DIR__ . '/includes/header.php';
                                                     <?php if (!empty($ord['image_url'])): ?>
                                                         <img src="<?php echo htmlspecialchars($ord['image_url']); ?>" width="36" height="36" class="rounded object-fit-cover">
                                                     <?php endif; ?>
-                                                    <span class="text-white fw-bold"><?php echo htmlspecialchars($ord['title'] ?? 'Game #' . $ord['game_id']); ?></span>
+                                                    <span class=" fw-bold"><?php echo htmlspecialchars($ord['title'] ?? 'Game #' . $ord['game_id']); ?></span>
                                                 </div>
                                             </td>
-                                            <td class="text-light small"><?php echo intval($ord['duration_hours'] ?? 24); ?> giờ</td>
-                                            <td class="text-light small"><?php echo !empty($ord['due_date']) ? date('d/m/Y H:i', $due_ts) : '---'; ?></td>
+                                            <td class=" small"><?php echo intval($ord['duration_hours'] ?? 24); ?> giờ</td>
+                                            <td class=" small"><?php echo !empty($ord['due_date']) ? date('d/m/Y H:i', $due_ts) : '---'; ?></td>
                                             <td>
                                                 <?php if ($ord['status'] === 'active' && !$is_expired): ?>
                                                     <span class="badge" style="background: rgba(16,185,129,0.2); color: #10b981; border: 1px solid rgba(16,185,129,0.4);">Đang kích hoạt</span>
@@ -637,7 +637,7 @@ require_once __DIR__ . '/includes/header.php';
             <?php elseif ($tab === 'info'): ?>
                 <!-- ================= TAB 2: EDIT PROFILE INFO ================= -->
                 <div class="gaming-card p-4" style="background: var(--bg-card); border: 1px solid var(--border-color);">
-                    <h4 class="fw-bold text-white mb-1"><i class="bi bi-person-lines-fill me-2 text-primary"></i> Thông Tin Cá Nhân</h4>
+                    <h4 class="fw-bold mb-1"><i class="bi bi-person-lines-fill me-2 text-primary"></i> Thông Tin Cá Nhân</h4>
                     <p class="text-secondary small mb-4">Cập nhật thông tin tài khoản và địa chỉ email để nhận thông báo thời hạn thuê game</p>
 
                     <form method="POST" action="profile.php?tab=info">
@@ -645,7 +645,7 @@ require_once __DIR__ . '/includes/header.php';
 
                         <div class="row g-3 mb-4">
                             <div class="col-md-6">
-                                <label class="form-label text-light small fw-bold">Tên đăng nhập (Username):</label>
+                                <label class="form-label small fw-bold">Tên đăng nhập (Username):</label>
                                 <div class="input-group">
                                     <span class="input-group-text" style="background: var(--surface-secondary); border-color: var(--border-default); color: var(--text-muted);"><i class="bi bi-at"></i></span>
                                     <input type="text" class="form-control form-control-gaming text-secondary" value="<?php echo htmlspecialchars($user_info['username']); ?>" readonly disabled>
@@ -654,21 +654,21 @@ require_once __DIR__ . '/includes/header.php';
                             </div>
 
                             <div class="col-md-6">
-                                <label class="form-label text-light small fw-bold">Địa chỉ Email liên kết:</label>
+                                <label class="form-label small fw-bold">Địa chỉ Email liên kết:</label>
                                 <div class="input-group">
                                     <span class="input-group-text" style="background: var(--surface-secondary); border-color: var(--border-default); color: var(--text-muted);"><i class="bi bi-envelope"></i></span>
-                                    <input type="email" name="email" class="form-control form-control-gaming text-white" value="<?php echo htmlspecialchars($user_info['email']); ?>" required placeholder="name@example.com">
+                                    <input type="email" name="email" class="form-control form-control-gaming" value="<?php echo htmlspecialchars($user_info['email']); ?>" required placeholder="name@example.com">
                                 </div>
                                 <small class="text-secondary d-block mt-1">Dùng để nhận hóa đơn, thông tin tài khoản và khôi phục mật khẩu khi cần.</small>
                             </div>
 
                             <div class="col-md-6">
-                                <label class="form-label text-light small fw-bold">Cấp bậc thành viên:</label>
+                                <label class="form-label small fw-bold">Cấp bậc thành viên:</label>
                                 <input type="text" class="form-control form-control-gaming text-secondary" value="<?php echo ($user_info['role'] == 1) ? 'Quản Trị Viên (Administrator)' : 'Khách Hàng VIP (Customer)'; ?>" readonly disabled>
                             </div>
 
                             <div class="col-md-6">
-                                <label class="form-label text-light small fw-bold">Ngày tham gia hệ thống:</label>
+                                <label class="form-label small fw-bold">Ngày tham gia hệ thống:</label>
                                 <input type="text" class="form-control form-control-gaming text-secondary" value="<?php echo date('d/m/Y H:i:s', strtotime($user_info['created_at'] ?? 'now')); ?>" readonly disabled>
                             </div>
                         </div>
@@ -687,10 +687,10 @@ require_once __DIR__ . '/includes/header.php';
                 <div class="gaming-card p-4" style="background: var(--bg-card); border: 1px solid var(--border-color);">
                     <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
                         <div>
-                            <h4 class="fw-bold text-white mb-1"><i class="bi bi-receipt-cutoff me-2 text-info"></i> Lịch Sử Đơn Hàng & Giao Dịch</h4>
+                            <h4 class="fw-bold mb-1"><i class="bi bi-receipt-cutoff me-2 text-info"></i> Lịch Sử Đơn Hàng & Giao Dịch</h4>
                             <p class="text-secondary small mb-0">Theo dõi toàn bộ các đơn hàng thuê game, trạng thái thanh toán và thời hạn sử dụng</p>
                         </div>
-                        <span class="badge bg-secondary bg-opacity-25 text-white border border-secondary px-3 py-2">
+                        <span class="badge bg-secondary bg-opacity-25 border border-secondary px-3 py-2">
                             Tổng số đơn: <?php echo count($orders); ?>
                         </span>
                     </div>
@@ -726,7 +726,7 @@ require_once __DIR__ . '/includes/header.php';
                                                             <img src="<?php echo htmlspecialchars($ord['image_url']); ?>" width="40" height="40" class="rounded object-fit-cover shadow-sm">
                                                         <?php endif; ?>
                                                         <div>
-                                                            <div class="text-white fw-bold"><?php echo htmlspecialchars($ord['title'] ?? 'Game #' . $ord['game_id']); ?></div>
+                                                            <div class=" fw-bold"><?php echo htmlspecialchars($ord['title'] ?? 'Game #' . $ord['game_id']); ?></div>
                                                             <div class="text-secondary small" style="font-size: 0.72rem;">
                                                                 <i class="bi bi-clock me-1"></i> Gói <?php echo intval($ord['duration_hours'] ?? 24); ?> giờ
                                                             </div>
@@ -791,7 +791,7 @@ require_once __DIR__ . '/includes/header.php';
             <?php elseif ($tab === 'security'): ?>
                 <!-- ================= TAB 4: CHANGE PASSWORD & SECURITY ================= -->
                 <div class="gaming-card p-4" style="background: var(--bg-card); border: 1px solid var(--border-color);">
-                    <h4 class="fw-bold text-white mb-1"><i class="bi bi-shield-lock-fill me-2 text-warning"></i> Đổi Mật Khẩu & Bảo Mật Tài Khoản</h4>
+                    <h4 class="fw-bold mb-1"><i class="bi bi-shield-lock-fill me-2 text-warning"></i> Đổi Mật Khẩu & Bảo Mật Tài Khoản</h4>
                     <p class="text-secondary small mb-4">Khuyến cáo sử dụng mật khẩu mạnh kết hợp chữ hoa, chữ thường, số và ký tự đặc biệt</p>
 
                     <div class="row g-4">
@@ -800,7 +800,7 @@ require_once __DIR__ . '/includes/header.php';
                                 <input type="hidden" name="csrf_token" value="<?php echo $csrf_token; ?>">
 
                                 <div class="mb-3">
-                                    <label class="form-label text-light small fw-bold">Mật khẩu hiện tại:</label>
+                                    <label class="form-label small fw-bold">Mật khẩu hiện tại:</label>
                                     <div class="input-group">
                                         <input type="password" name="current_password" id="cur_pass" class="form-control form-control-gaming" required placeholder="Nhập mật khẩu đang sử dụng">
                                         <button class="btn btn-gaming-secondary" type="button" onclick="togglePasswordVisibility('cur_pass', this)">
@@ -810,7 +810,7 @@ require_once __DIR__ . '/includes/header.php';
                                 </div>
 
                                 <div class="mb-3">
-                                    <label class="form-label text-light small fw-bold">Mật khẩu mới:</label>
+                                    <label class="form-label small fw-bold">Mật khẩu mới:</label>
                                     <div class="input-group">
                                         <input type="password" name="new_password" id="new_pass" class="form-control form-control-gaming" minlength="6" required placeholder="Tối thiểu 6 ký tự">
                                         <button class="btn btn-gaming-secondary" type="button" onclick="togglePasswordVisibility('new_pass', this)">
@@ -820,7 +820,7 @@ require_once __DIR__ . '/includes/header.php';
                                 </div>
 
                                 <div class="mb-4">
-                                    <label class="form-label text-light small fw-bold">Xác nhận mật khẩu mới:</label>
+                                    <label class="form-label small fw-bold">Xác nhận mật khẩu mới:</label>
                                     <div class="input-group">
                                         <input type="password" name="confirm_password" id="conf_pass" class="form-control form-control-gaming" minlength="6" required placeholder="Nhập lại mật khẩu mới">
                                         <button class="btn btn-gaming-secondary" type="button" onclick="togglePasswordVisibility('conf_pass', this)">
@@ -839,7 +839,7 @@ require_once __DIR__ . '/includes/header.php';
 
                         <div class="col-lg-5">
                             <div class="p-4 rounded-3 h-100" style="background: var(--surface-secondary); border: 1px solid var(--border-default);">
-                                <h6 class="fw-bold text-white mb-3 d-flex align-items-center">
+                                <h6 class="fw-bold mb-3 d-flex align-items-center">
                                     <i class="bi bi-shield-check text-success me-2 fs-5"></i> Trạng Thái Bảo Mật
                                 </h6>
                                 <ul class="list-unstyled text-secondary small mb-4">
@@ -872,7 +872,7 @@ require_once __DIR__ . '/includes/header.php';
                 <div class="gaming-card p-4 mt-4" style="background: var(--bg-card); border: 1px solid var(--border-color);">
                     <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
                         <div>
-                            <h4 class="fw-bold text-white mb-1">
+                            <h4 class="fw-bold mb-1">
                                 <i class="bi bi-shield-check text-primary me-2"></i> Xác Thực 2 Bước (2FA / Google Authenticator)
                             </h4>
                             <p class="text-secondary small mb-0">Bảo vệ tài khoản và kho game của bạn với lớp bảo mật RFC 6238 TOTP tiêu chuẩn ngân hàng</p>
@@ -905,7 +905,7 @@ require_once __DIR__ . '/includes/header.php';
                             <div class="row g-2 mb-3">
                                 <?php foreach ($_SESSION['newly_generated_backup_codes'] as $bcode): ?>
                                     <div class="col-6 col-md-3">
-                                        <div class="p-2 text-center rounded font-monospace fw-bold text-white bg-dark border border-secondary border-opacity-25 user-select-all backup-code-item">
+                                        <div class="p-2 text-center rounded font-monospace fw-bold anplay-surface-muted border border-secondary border-opacity-25 user-select-all backup-code-item">
                                             <?php echo htmlspecialchars($bcode); ?>
                                         </div>
                                     </div>
@@ -933,14 +933,14 @@ require_once __DIR__ . '/includes/header.php';
                                             <i class="bi bi-shield-lock-fill"></i>
                                         </div>
                                         <div>
-                                            <h6 class="text-white fw-bold mb-1">Tài khoản được bảo vệ bởi xác thực 2 bước</h6>
+                                            <h6 class=" fw-bold mb-1">Tài khoản được bảo vệ bởi xác thực 2 bước</h6>
                                             <p class="text-secondary small mb-0">Mỗi lần đăng nhập sẽ yêu cầu mật khẩu và mã OTP 6 số từ Google Authenticator hoặc mã dự phòng.</p>
                                         </div>
                                     </div>
                                 </div>
                                 <div class="d-flex align-items-center justify-content-between p-3 rounded-3" style="background: var(--surface-secondary); border: 1px solid var(--border-default);">
                                     <div>
-                                        <span class="text-light small fw-bold d-block">Mã dự phòng khả dụng:</span>
+                                        <span class=" small fw-bold d-block">Mã dự phòng khả dụng:</span>
                                         <span class="text-secondary small">Dùng khi không truy cập được điện thoại</span>
                                     </div>
                                     <span class="badge <?php echo $remaining_codes_count > 2 ? 'bg-primary' : 'bg-warning text-dark'; ?> fs-6 px-3 py-2">
@@ -1022,7 +1022,7 @@ require_once __DIR__ . '/includes/header.php';
                             $qr_url = TotpService::getQrCodeUrl($user_info['username'], $temp_secret);
                             ?>
                             <div class="p-3 p-md-4 rounded-3" style="background: var(--surface-secondary); border: 1px solid var(--border-highlight);">
-                                <h5 class="fw-bold text-white mb-3"><i class="bi bi-qr-code-scan text-primary me-2"></i> Thiết Lập Xác Thực 2 Bước (3 Bước Đơn Giản)</h5>
+                                <h5 class="fw-bold mb-3"><i class="bi bi-qr-code-scan text-primary me-2"></i> Thiết Lập Xác Thực 2 Bước (3 Bước Đơn Giản)</h5>
 
                                 <div class="row g-4">
                                     <!-- Bước 1: Quét mã QR -->
@@ -1040,13 +1040,13 @@ require_once __DIR__ . '/includes/header.php';
                                     <!-- Bước 2 & 3: Lưu mã dự phòng & Nhập OTP -->
                                     <div class="col-md-8">
                                         <div class="mb-3">
-                                            <label class="text-light fw-bold small d-block mb-1">
+                                            <label class=" fw-bold small d-block mb-1">
                                                 Bước 2: Lưu 8 mã dự phòng (Phòng khi mất điện thoại):
                                             </label>
                                             <div class="row g-1 mb-2">
                                                 <?php foreach ($temp_backup as $tc): ?>
                                                     <div class="col-6 col-sm-3">
-                                                        <div class="p-1 px-2 text-center rounded font-monospace small text-white bg-dark border border-secondary border-opacity-25 user-select-all">
+                                                        <div class="p-1 px-2 text-center rounded font-monospace small anplay-surface-muted border border-secondary border-opacity-25 user-select-all">
                                                             <?php echo htmlspecialchars($tc); ?>
                                                         </div>
                                                     </div>
@@ -1059,7 +1059,7 @@ require_once __DIR__ . '/includes/header.php';
 
                                         <form method="POST" action="profile.php?tab=security" class="pt-2 border-top border-secondary border-opacity-25">
                                             <input type="hidden" name="csrf_token" value="<?php echo $csrf_token; ?>">
-                                            <label class="text-light fw-bold small d-block mb-2">Bước 3: Nhập Mật khẩu & Mã OTP 6 số để kích hoạt:</label>
+                                            <label class=" fw-bold small d-block mb-2">Bước 3: Nhập Mật khẩu & Mã OTP 6 số để kích hoạt:</label>
 
                                             <div class="row g-2 mb-3">
                                                 <div class="col-sm-6">
@@ -1087,13 +1087,13 @@ require_once __DIR__ . '/includes/header.php';
                                         Khi bật xác thực 2 bước (2FA), bạn sẽ cần nhập thêm mã 6 số từ ứng dụng bảo mật (Google Authenticator, Microsoft Authenticator) mỗi khi đăng nhập. Điều này ngăn chặn hacker dù họ có biết mật khẩu của bạn.
                                     </p>
                                     <div class="d-flex flex-wrap gap-2">
-                                        <span class="badge bg-dark border border-secondary text-secondary small py-2 px-3">
+                                        <span class="badge anplay-surface-muted border border-secondary text-secondary small py-2 px-3">
                                             <i class="bi bi-google text-danger me-1"></i> Google Authenticator
                                         </span>
-                                        <span class="badge bg-dark border border-secondary text-secondary small py-2 px-3">
+                                        <span class="badge anplay-surface-muted border border-secondary text-secondary small py-2 px-3">
                                             <i class="bi bi-microsoft text-primary me-1"></i> Microsoft Authenticator
                                         </span>
-                                        <span class="badge bg-dark border border-secondary text-secondary small py-2 px-3">
+                                        <span class="badge anplay-surface-muted border border-secondary text-secondary small py-2 px-3">
                                             <i class="bi bi-shield text-info me-1"></i> Twilio Authy
                                         </span>
                                     </div>

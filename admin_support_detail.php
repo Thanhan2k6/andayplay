@@ -172,7 +172,7 @@ $page_title = "Chi Tiết Yêu Cầu Hỗ Trợ " . ($ticket['ticket_code'] ?? '
 require_once __DIR__ . '/includes/admin_header.php';
 ?>
 
-<div class="container-fluid px-lg-5 py-4 text-white">
+<div class="container-fluid px-lg-5 py-4">
     <!-- Top Action Navigation -->
     <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
         <a href="admin_support.php" class="btn btn-gaming-secondary btn-sm py-2 px-3">
@@ -205,17 +205,17 @@ require_once __DIR__ . '/includes/admin_header.php';
     <div class="row g-4">
         <!-- CỘT TRÁI: KHUNG HỘI THOẠI & TRẢ LỜI KHÁCH HÀNG -->
         <div class="col-lg-8">
-            <div class="panel-dark p-4 rounded-4 shadow-sm mb-4">
+            <div class="panel-dark p-4 rounded-3 shadow-sm mb-4">
                 <!-- Tiêu đề Ticket -->
                 <div class="pb-3 mb-3 border-bottom border-secondary border-opacity-25">
                     <div class="d-flex flex-wrap align-items-center gap-2 text-secondary small mb-1">
                         <span class="font-monospace text-primary fw-bold fs-6"><?php echo htmlspecialchars($ticket['ticket_code']); ?></span>
                         <span>•</span>
-                        <span class="badge bg-secondary bg-opacity-25 text-light"><?php echo $cat_info['label']; ?></span>
+                        <span class="badge bg-secondary bg-opacity-25"><?php echo $cat_info['label']; ?></span>
                         <span>•</span>
                         <span>Tạo lúc: <?php echo date('d/m/Y H:i:s', strtotime($ticket['created_at'])); ?></span>
                     </div>
-                    <h3 class="fw-bold text-white mb-2"><?php echo htmlspecialchars($ticket['title']); ?></h3>
+                    <h3 class="fw-bold mb-2"><?php echo htmlspecialchars($ticket['title']); ?></h3>
                 </div>
 
                 <!-- DÒNG THỜI GIAN TIN NHẮN HỘI THOẠI -->
@@ -242,7 +242,7 @@ require_once __DIR__ . '/includes/admin_header.php';
                                     <span class="text-secondary small" style="font-size: 0.72rem;"><?php echo format_time_ago($m['created_at']); ?></span>
                                 </div>
 
-                                <div class="p-3 rounded-4 shadow-sm" style="background: <?php echo $is_admin_msg ? 'rgba(239,68,68,0.08)' : 'rgba(255,255,255,0.04)'; ?>; border: 1px solid <?php echo $is_admin_msg ? 'rgba(239,68,68,0.25)' : 'rgba(255,255,255,0.08)'; ?>; color: #e2e8f0; font-size: 0.92rem; line-height: 1.6;">
+                                <div class="p-3 rounded-3 shadow-sm" style="background: <?php echo $is_admin_msg ? 'rgba(239,68,68,0.08)' : 'rgba(255,255,255,0.04)'; ?>; border: 1px solid <?php echo $is_admin_msg ? 'rgba(239,68,68,0.25)' : 'rgba(255,255,255,0.08)'; ?>; color: #e2e8f0; font-size: 0.92rem; line-height: 1.6;">
                                     <?php echo nl2br(htmlspecialchars($m['message'])); ?>
 
                                     <!-- ĐÍNH KÈM -->
@@ -269,15 +269,15 @@ require_once __DIR__ . '/includes/admin_header.php';
 
                 <!-- ĐÁNH GIÁ CỦA KHÁCH HÀNG NẾU CÓ -->
                 <?php if (!empty($ticket['rating'])): ?>
-                    <div class="panel-dark p-3 rounded-4 mb-4 border border-warning border-opacity-30" style="background: rgba(245,158,11,0.06);">
+                    <div class="panel-dark p-3 rounded-3 mb-4 border border-warning border-opacity-30" style="background: rgba(245,158,11,0.06);">
                         <div class="d-flex align-items-center gap-2 mb-1">
                             <span class="text-warning fw-bold fs-5">
                                 <?php echo str_repeat('★', intval($ticket['rating'])) . str_repeat('☆', 5 - intval($ticket['rating'])); ?>
                             </span>
-                            <span class="text-white small fw-bold">Khách hàng đã đánh giá dịch vụ hỗ trợ (<?php echo $ticket['rating']; ?>/5 sao)</span>
+                            <span class=" small fw-bold">Khách hàng đã đánh giá dịch vụ hỗ trợ (<?php echo $ticket['rating']; ?>/5 sao)</span>
                         </div>
                         <?php if (!empty($ticket['rating_comment'])): ?>
-                            <p class="mb-0 text-light small fst-italic">"<?php echo htmlspecialchars($ticket['rating_comment']); ?>"</p>
+                            <p class="mb-0 small fst-italic">"<?php echo htmlspecialchars($ticket['rating_comment']); ?>"</p>
                         <?php endif; ?>
                     </div>
                 <?php endif; ?>
@@ -338,8 +338,8 @@ require_once __DIR__ . '/includes/admin_header.php';
         <!-- CỘT PHẢI: ĐIỀU KHIỂN TRẠNG THÁI & BỐI CẢNH ĐƠN HÀNG/KHÁCH HÀNG -->
         <div class="col-lg-4">
             <!-- PANEL THAY ĐỔI TRẠNG THÁI & ƯU TIÊN -->
-            <div class="panel-dark p-4 rounded-4 shadow-sm mb-4">
-                <h5 class="fw-bold text-white mb-3 pb-2 border-bottom border-secondary border-opacity-25">
+            <div class="panel-dark p-4 rounded-3 shadow-sm mb-4">
+                <h5 class="fw-bold mb-3 pb-2 border-bottom border-secondary border-opacity-25">
                     <i class="bi bi-gear-fill me-2 text-warning"></i> Quản Lý Trạng Thái Ticket
                 </h5>
 
@@ -349,11 +349,11 @@ require_once __DIR__ . '/includes/admin_header.php';
                     <div class="mb-3">
                         <label class="form-label text-secondary small fw-bold">Trạng Thái Ticket</label>
                         <select name="status" class="form-select form-control-gaming">
-                            <option value="new" <?php echo ($ticket['status'] === 'new') ? 'selected' : ''; ?>>🔵 Mới gửi</option>
+                            <option value="new" <?php echo ($ticket['status'] === 'new') ? 'selected' : ''; ?>>Mới gửi</option>
                             <option value="assigned" <?php echo ($ticket['status'] === 'assigned') ? 'selected' : ''; ?>>Đã tiếp nhận</option>
-                            <option value="in_progress" <?php echo ($ticket['status'] === 'in_progress') ? 'selected' : ''; ?>>🟡 Đang xử lý</option>
-                            <option value="waiting_customer" <?php echo ($ticket['status'] === 'waiting_customer') ? 'selected' : ''; ?>>⚪ Chờ khách phản hồi</option>
-                            <option value="resolved" <?php echo ($ticket['status'] === 'resolved') ? 'selected' : ''; ?>>✅ Đã giải quyết</option>
+                            <option value="in_progress" <?php echo ($ticket['status'] === 'in_progress') ? 'selected' : ''; ?>>Đang xử lý</option>
+                            <option value="waiting_customer" <?php echo ($ticket['status'] === 'waiting_customer') ? 'selected' : ''; ?>>Chờ khách phản hồi</option>
+                            <option value="resolved" <?php echo ($ticket['status'] === 'resolved') ? 'selected' : ''; ?>>Đã giải quyết</option>
                             <option value="closed" <?php echo ($ticket['status'] === 'closed') ? 'selected' : ''; ?>>Đã đóng hoàn tất</option>
                         </select>
                     </div>
@@ -361,10 +361,10 @@ require_once __DIR__ . '/includes/admin_header.php';
                     <div class="mb-3">
                         <label class="form-label text-secondary small fw-bold">Mức Độ Ưu Tiên</label>
                         <select name="priority" class="form-select form-control-gaming">
-                            <option value="low" <?php echo ($ticket['priority'] === 'low') ? 'selected' : ''; ?>>⚪ Thấp</option>
-                            <option value="normal" <?php echo ($ticket['priority'] === 'normal') ? 'selected' : ''; ?>>🔵 Bình thường</option>
-                            <option value="high" <?php echo ($ticket['priority'] === 'high') ? 'selected' : ''; ?>>🟠 Ưu tiên cao</option>
-                            <option value="urgent" <?php echo ($ticket['priority'] === 'urgent') ? 'selected' : ''; ?>>🔴 Khẩn cấp</option>
+                            <option value="low" <?php echo ($ticket['priority'] === 'low') ? 'selected' : ''; ?>>Thấp</option>
+                            <option value="normal" <?php echo ($ticket['priority'] === 'normal') ? 'selected' : ''; ?>>Bình thường</option>
+                            <option value="high" <?php echo ($ticket['priority'] === 'high') ? 'selected' : ''; ?>>Ưu tiên cao</option>
+                            <option value="urgent" <?php echo ($ticket['priority'] === 'urgent') ? 'selected' : ''; ?>>Khẩn cấp</option>
                         </select>
                     </div>
 
@@ -397,20 +397,20 @@ require_once __DIR__ . '/includes/admin_header.php';
             </div>
 
             <!-- PANEL THÔNG TIN KHÁCH HÀNG -->
-            <div class="panel-dark p-4 rounded-4 shadow-sm mb-4">
-                <h5 class="fw-bold text-white mb-3 pb-2 border-bottom border-secondary border-opacity-25">
+            <div class="panel-dark p-4 rounded-3 shadow-sm mb-4">
+                <h5 class="fw-bold mb-3 pb-2 border-bottom border-secondary border-opacity-25">
                     <i class="bi bi-person-circle me-2 text-primary"></i> Khách Hàng
                 </h5>
                 <div class="d-flex align-items-center gap-3 mb-3">
                     <img src="https://ui-avatars.com/api/?name=<?php echo urlencode($ticket['customer_name']); ?>&background=6366f1&color=fff&bold=true&rounded=true" width="48" height="48" class="rounded-circle shadow" alt="Avatar">
                     <div>
-                        <div class="fw-bold text-white">@<?php echo htmlspecialchars($ticket['customer_name']); ?></div>
+                        <div class="fw-bold">@<?php echo htmlspecialchars($ticket['customer_name']); ?></div>
                         <div class="text-secondary small"><?php echo htmlspecialchars($ticket['customer_email']); ?></div>
                     </div>
                 </div>
                 <div class="d-flex justify-content-between small text-secondary py-1 border-top border-secondary border-opacity-10">
                     <span>Tổng đơn thuê:</span>
-                    <strong class="text-white"><?php echo $customer_order_count; ?> đơn</strong>
+                    <strong class=""><?php echo $customer_order_count; ?> đơn</strong>
                 </div>
                 <div class="d-flex justify-content-between small text-secondary py-1 border-top border-secondary border-opacity-10">
                     <span>Thành viên từ:</span>
@@ -420,8 +420,8 @@ require_once __DIR__ . '/includes/admin_header.php';
 
             <!-- PANEL THÔNG TIN ĐƠN THUÊ & TÀI KHOẢN GAME (NẾU CÓ) -->
             <?php if (!empty($ticket['game_title']) || !empty($ticket['order_code'])): ?>
-                <div class="panel-dark p-4 rounded-4 shadow-sm mb-4">
-                    <h5 class="fw-bold text-white mb-3 pb-2 border-bottom border-secondary border-opacity-25">
+                <div class="panel-dark p-4 rounded-3 shadow-sm mb-4">
+                    <h5 class="fw-bold mb-3 pb-2 border-bottom border-secondary border-opacity-25">
                         <i class="bi bi-controller me-2 text-success"></i> Đơn Thuê & Game Gặp Sự Cố
                     </h5>
 
@@ -431,7 +431,7 @@ require_once __DIR__ . '/includes/admin_header.php';
                                 <img src="<?php echo htmlspecialchars($ticket['game_img']); ?>" width="55" height="55" class="rounded-3 object-fit-cover shadow" alt="Game">
                             <?php endif; ?>
                             <div>
-                                <h6 class="fw-bold mb-1 text-white"><?php echo htmlspecialchars($ticket['game_title']); ?></h6>
+                                <h6 class="fw-bold mb-1"><?php echo htmlspecialchars($ticket['game_title']); ?></h6>
                                 <span class="badge bg-secondary bg-opacity-25 text-info">Bản quyền Steam / PC</span>
                             </div>
                         </div>
@@ -464,7 +464,7 @@ require_once __DIR__ . '/includes/admin_header.php';
                             <span class="text-secondary small d-block mb-1">Tài khoản cấp cho khách:</span>
                             <div class="d-flex justify-content-between align-items-center mb-1">
                                 <span class="text-secondary small">Tài khoản:</span>
-                                <strong class="text-white font-monospace"><?php echo htmlspecialchars($ticket['account_username']); ?></strong>
+                                <strong class=" font-monospace"><?php echo htmlspecialchars($ticket['account_username']); ?></strong>
                             </div>
                             <div class="d-flex justify-content-between align-items-center">
                                 <span class="text-secondary small">Mật khẩu:</span>

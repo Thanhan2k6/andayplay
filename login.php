@@ -82,7 +82,7 @@ if (isset($_POST['btn_login'])) {
 
                             var welcomeUser = " . $safe_js_user . ";
                             Swal.fire({
-                                title: '🎉 Đăng Nhập Thành Công!',
+                                title: 'Đăng Nhập Thành Công!',
                                 text: 'Chào mừng chiến binh @' + welcomeUser + ' quay lại ANPLAY STORE.',
                                 icon: 'success',
                                 background: '#0f1118',
@@ -173,7 +173,7 @@ if (isset($_POST['btn_verify_2fa'])) {
 
                     var welcomeUser = " . $safe_js_user . ";
                     Swal.fire({
-                        title: '🛡️ Xác Thực 2FA Thành Công!',
+                        title: 'Xác Thực 2FA Thành Công!',
                         text: 'Chào mừng chiến binh @' + welcomeUser + ' quay lại ANPLAY STORE.',
                         icon: 'success',
                         background: '#0f1118',
@@ -253,9 +253,25 @@ $is_2fa_step = !empty($_SESSION['2fa_pending']) && !empty($_SESSION['2fa_pending
             --primary: #4f46e5;
             --primary-hover: #4338ca;
             --primary-glow: rgba(79, 70, 229, 0.16);
-            --accent-cyan: #0284c7;
+            --accent-cyan: #0369a1;
             --text-main: #0f172a;
-            --text-muted: #64748b;
+            --text-muted: #475569;
+        }
+
+        :root:not([data-theme="light"]) .text-secondary,
+        :root:not([data-theme="light"]) .text-muted {
+            color: #a3b3c6 !important;
+        }
+
+        :root:not([data-theme="light"]) a:not(.btn) {
+            color: #a5b4fc;
+        }
+
+        .btn-gaming-primary,
+        .btn-primary {
+            background: #4f46e5 !important;
+            border-color: #4f46e5 !important;
+            color: #ffffff !important;
         }
 
         body {
@@ -381,7 +397,9 @@ $is_2fa_step = !empty($_SESSION['2fa_pending']) && !empty($_SESSION['2fa_pending
             border-radius: 8px;
         }
 
-        [data-theme="light"] .text-white {
+        [data-theme="light"] .,
+        [data-theme="light"] .,
+        [data-theme="light"] .auth-card .form-label {
             color: var(--text-main) !important;
         }
 
@@ -451,14 +469,14 @@ $is_2fa_step = !empty($_SESSION['2fa_pending']) && !empty($_SESSION['2fa_pending
             <div class="brand-box brand-box-2fa">
                 <i class="bi bi-shield-lock-fill fs-3"></i>
             </div>
-            <h3 class="fw-extrabold text-white mb-1" style="letter-spacing: -0.5px;">XÁC THỰC <span style="color: #10b981;">2 BƯỚC</span></h3>
+            <h3 class="fw-extrabold mb-1" style="letter-spacing: -0.5px;">XÁC THỰC <span style="color: #10b981;">2 BƯỚC</span></h3>
             <p class="text-secondary small mb-4">
-                Xin chào <strong class="text-white">@<?php echo htmlspecialchars($_SESSION['2fa_pending_username']); ?></strong>, vui lòng nhập mã OTP 6 số từ Google Authenticator hoặc mã dự phòng để đăng nhập.
+                Xin chào <strong class="">@<?php echo htmlspecialchars($_SESSION['2fa_pending_username']); ?></strong>, vui lòng nhập mã OTP 6 số từ Google Authenticator hoặc mã dự phòng để đăng nhập.
             </p>
 
             <form method="POST" action="" class="text-start">
                 <div class="mb-4">
-                    <label class="form-label text-light small fw-bold mb-1">Mã xác thực hoặc Mã dự phòng</label>
+                    <label class="form-label small fw-bold mb-1">Mã xác thực hoặc Mã dự phòng</label>
                     <div class="input-group">
                         <span class="input-group-text"><i class="bi bi-key-fill text-warning"></i></span>
                         <input type="text" name="totp_code" class="form-control form-control-gaming font-monospace text-center fs-5 fw-bold text-warning" 
@@ -488,14 +506,14 @@ $is_2fa_step = !empty($_SESSION['2fa_pending']) && !empty($_SESSION['2fa_pending
                 <div class="brand-box">
                     <i class="bi bi-controller fs-3"></i>
                 </div>
-                <h3 class="fw-extrabold text-white mb-1" style="letter-spacing: -0.5px;">ANPLAY <span style="color: var(--accent-cyan);">STORE</span></h3>
+                <h3 class="fw-extrabold mb-1" style="letter-spacing: -0.5px;">ANPLAY <span style="color: var(--accent-cyan);">STORE</span></h3>
             </a>
             <p class="text-secondary small mb-4">Đăng nhập tài khoản để vào thế giới game bản quyền</p>
 
             <form method="POST" action="" class="text-start">
                 <!-- Username Input -->
                 <div class="mb-3">
-                    <label class="form-label text-light small fw-bold mb-1">Email hoặc Tên đăng nhập</label>
+                    <label class="form-label small fw-bold mb-1">Email hoặc Tên đăng nhập</label>
                     <div class="input-group">
                         <span class="input-group-text"><i class="bi bi-person"></i></span>
                         <input type="text" name="username" class="form-control form-control-gaming" placeholder="Tên tài khoản hoặc email..." value="<?php echo isset($_POST['username']) ? htmlspecialchars($_POST['username']) : ''; ?>" required autocomplete="username">
@@ -505,7 +523,7 @@ $is_2fa_step = !empty($_SESSION['2fa_pending']) && !empty($_SESSION['2fa_pending
                 <!-- Password Input -->
                 <div class="mb-4">
                     <div class="d-flex justify-content-between align-items-center mb-1">
-                        <label class="form-label text-light small fw-bold mb-0">Mật khẩu</label>
+                        <label class="form-label small fw-bold mb-0">Mật khẩu</label>
                         <a href="forgot_password.php" class="small text-decoration-none" style="color: var(--accent-cyan); font-size: 0.8rem;">Quên mật khẩu?</a>
                     </div>
                     <div class="input-group">

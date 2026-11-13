@@ -101,8 +101,8 @@ $page_file_name = basename($_SERVER['PHP_SELF']);
             --border-color: #e2e8f0;
             --text-heading: #0f172a;
             --text-primary: #0f172a;
-            --text-secondary: #334155;
-            --text-muted: #64748b;
+            --text-secondary: #1e293b;
+            --text-muted: #475569;
         }
 
         [data-theme="light"] body.admin-body {
@@ -146,7 +146,8 @@ $page_file_name = basename($_SERVER['PHP_SELF']);
 
         [data-theme="light"] .kpi-stat-card {
             background: #ffffff !important;
-            box-shadow: 0 4px 15px -2px rgba(15, 23, 42, 0.05);
+            border-color: #e2e8f0 !important;
+            box-shadow: none !important;
         }
 
         [data-theme="light"] .kpi-badge-info {
@@ -159,7 +160,7 @@ $page_file_name = basename($_SERVER['PHP_SELF']);
         [data-theme="light"] .tasks-container-box {
             background: #ffffff !important;
             border-color: #e2e8f0 !important;
-            box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.06);
+            box-shadow: none !important;
         }
 
         [data-theme="light"] .period-badge {
@@ -170,9 +171,9 @@ $page_file_name = basename($_SERVER['PHP_SELF']);
 
         /* CRON MONITOR BANNER (LIGHT MODE) */
         [data-theme="light"] .cron-monitor-banner {
-            background: linear-gradient(135deg, #eef2ff 0%, #f8fafc 100%) !important;
-            border: 1px solid #c7d2fe !important;
-            box-shadow: 0 8px 24px -4px rgba(79, 70, 229, 0.1) !important;
+            background: #ffffff !important;
+            border: 1px solid #e2e8f0 !important;
+            box-shadow: none !important;
         }
 
         [data-theme="light"] .cron-title {
@@ -192,7 +193,15 @@ $page_file_name = basename($_SERVER['PHP_SELF']);
         }
 
         [data-theme="light"] .cron-time-val {
-            color: #0284c7 !important;
+            color: #0369a1 !important;
+        }
+
+        [data-theme="light"] .admin-brand-subtitle {
+            color: #be123c !important;
+        }
+
+        [data-theme="light"] .admin-store-link {
+            color: #475569 !important;
         }
 
         [data-theme="light"] .cron-status-badge {
@@ -401,9 +410,9 @@ $page_file_name = basename($_SERVER['PHP_SELF']);
 
         /* Dark mode defaults for new components */
         .cron-monitor-banner {
-            background: linear-gradient(135deg, rgba(30, 27, 75, 0.85) 0%, rgba(15, 23, 42, 0.95) 100%);
-            border: 1px solid rgba(99, 102, 241, 0.4);
-            box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.6);
+            background: var(--admin-bg-card);
+            border: 1px solid var(--admin-border);
+            box-shadow: none;
         }
 
         .cron-title {
@@ -559,7 +568,7 @@ $page_file_name = basename($_SERVER['PHP_SELF']);
             font-weight: 800;
             text-transform: uppercase;
             letter-spacing: 0.8px;
-            color: #64748b;
+            color: #94a3b8;
             padding: 0.75rem 0.65rem 0.35rem;
             margin-top: 0.35rem;
         }
@@ -771,11 +780,11 @@ $page_file_name = basename($_SERVER['PHP_SELF']);
                     <i class="bi bi-list fs-5"></i>
                 </button>
                 <div class="d-none d-sm-flex align-items-center gap-2">
-                    <span class="badge bg-dark border border-secondary border-opacity-50 text-secondary px-2 py-1 small">
+                    <span class="badge anplay-surface-muted border border-secondary border-opacity-50 text-secondary px-2 py-1 small">
                         <i class="bi bi-terminal-fill me-1 text-info"></i> CONSOLE
                     </span>
                     <span class="text-secondary small">|</span>
-                    <span class="text-white fw-bold small text-uppercase" style="letter-spacing: 0.5px;">
+                    <span class=" fw-bold small text-uppercase" style="letter-spacing: 0.5px;">
                         <?php
                             $labels = [
                                 'admin_dashboard.php' => 'Bảng Điều Khiển Tổng Quan',
@@ -831,9 +840,9 @@ $page_file_name = basename($_SERVER['PHP_SELF']);
                         </span>
                     </button>
                     <div class="dropdown-menu dropdown-menu-end admin-notif-dropdown" aria-labelledby="adminNotifDropdownBtn">
-                        <div class="p-3 border-bottom border-secondary border-opacity-25 d-flex justify-content-between align-items-center bg-dark bg-opacity-50">
+                        <div class="p-3 border-bottom border-secondary border-opacity-25 d-flex justify-content-between align-items-center anplay-surface-muted bg-opacity-50">
                             <div class="d-flex align-items-center gap-2">
-                                <span class="fw-bold text-white small">Thông Báo Quản Trị</span>
+                                <span class="fw-bold small">Thông Báo Quản Trị</span>
                                 <span class="badge bg-danger rounded-pill" id="adminNotifHeaderBadge"><?php echo $admin_unread_notifs; ?> mới</span>
                             </div>
                             <button type="button" class="btn btn-link text-info p-0 small text-decoration-none" onclick="markAllAdminNotificationsReadQuick(event)" style="font-size: 0.78rem;">
@@ -846,7 +855,7 @@ $page_file_name = basename($_SERVER['PHP_SELF']);
                                 <div>Đang tải thông báo...</div>
                             </div>
                         </div>
-                        <div class="p-2 border-top border-secondary border-opacity-25 text-center bg-dark bg-opacity-25">
+                        <div class="p-2 border-top border-secondary border-opacity-25 text-center anplay-surface-muted bg-opacity-25">
                             <a href="admin_notifications.php" class="text-primary small text-decoration-none fw-bold">
                                 Xem tất cả thông báo &rarr;
                             </a>
@@ -856,12 +865,12 @@ $page_file_name = basename($_SERVER['PHP_SELF']);
 
                 <!-- Admin Profile Dropdown -->
                 <div class="dropdown">
-                    <button class="btn btn-sm d-flex align-items-center gap-2 p-1 px-2 rounded-pill bg-dark bg-opacity-50 border border-secondary border-opacity-25" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    <button class="btn btn-sm d-flex align-items-center gap-2 p-1 px-2 rounded-pill anplay-surface-muted bg-opacity-50 border border-secondary border-opacity-25" type="button" data-bs-toggle="dropdown" aria-expanded="false">
                         <div class="admin-avatar-sm" style="width: 28px; height: 28px; font-size: 0.8rem;">
                             <?php echo strtoupper(substr($admin_username, 0, 1)); ?>
                         </div>
                         <div class="d-none d-sm-block text-start" style="line-height: 1.1;">
-                            <span class="text-white small fw-bold d-block text-truncate" style="max-width: 100px;">@<?php echo htmlspecialchars($admin_username); ?></span>
+                            <span class=" small fw-bold d-block text-truncate" style="max-width: 100px;">@<?php echo htmlspecialchars($admin_username); ?></span>
                             <?php if ($admin_is_super): ?>
                                 <span class="text-danger fw-bold" style="font-size: 0.65rem;">SUPER ADMIN</span>
                             <?php else: ?>
@@ -891,4 +900,3 @@ $page_file_name = basename($_SERVER['PHP_SELF']);
 
         <!-- ADMIN CONTENT AREA -->
         <main class="admin-content-area">
-

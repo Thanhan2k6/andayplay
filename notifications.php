@@ -119,7 +119,7 @@ $notifications = get_user_notifications($conn, $user_id, $filter_type, $unread_o
 require_once __DIR__ . '/includes/header.php';
 ?>
 
-<div class="container-fluid px-lg-5 py-4 text-white">
+<div class="container-fluid px-lg-5 py-4">
     <!-- Header title -->
     <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 pb-3 border-bottom border-secondary border-opacity-25 gap-3">
         <div>
@@ -131,7 +131,7 @@ require_once __DIR__ . '/includes/header.php';
                     <span class="badge bg-danger rounded-pill"><?php echo $total_unread; ?> chưa đọc</span>
                 <?php endif; ?>
             </div>
-            <h2 class="fw-extrabold text-white mb-0">Hộp Thư & Trung Tâm Thông Báo</h2>
+            <h2 class="fw-extrabold mb-0">Hộp Thư & Trung Tâm Thông Báo</h2>
         </div>
         <div class="d-flex flex-wrap gap-2">
             <?php if ($total_unread > 0): ?>
@@ -180,11 +180,11 @@ require_once __DIR__ . '/includes/header.php';
     <div class="row">
         <div class="col-lg-12">
             <?php if (empty($notifications)): ?>
-                <div class="panel-dark text-center py-5 my-3 rounded-4" style="border: 1px dashed rgba(255,255,255,0.15);">
+                <div class="panel-dark text-center py-5 my-3 rounded-3" style="border: 1px dashed rgba(255,255,255,0.15);">
                     <div class="p-4 d-inline-block rounded-circle mb-3" style="background: rgba(99,102,241,0.08);">
                         <i class="bi bi-bell-slash fs-1 text-secondary"></i>
                     </div>
-                    <h5 class="fw-bold text-white mb-2">Không có thông báo nào</h5>
+                    <h5 class="fw-bold mb-2">Không có thông báo nào</h5>
                     <p class="text-secondary small mb-3">Hiện tại chưa có thông tin hoặc cập nhật mới trong mục này.</p>
                     <a href="index.php" class="btn btn-gaming-secondary btn-sm px-4">Khám phá cửa hàng</a>
                 </div>
@@ -195,7 +195,7 @@ require_once __DIR__ . '/includes/header.php';
                         $is_unread = ($n['is_read'] == 0);
                         $click_url = !empty($n['link']) ? "notifications.php?action=read_and_go&id={$n['id']}&redirect=" . urlencode($n['link']) : "notifications.php?action=mark_single&id={$n['id']}&tab=" . urlencode($tab);
                     ?>
-                        <div class="panel-dark p-3 p-md-4 rounded-4 position-relative transition-all" style="background: <?php echo $is_unread ? 'rgba(99,102,241,0.06)' : 'rgba(255,255,255,0.02)'; ?>; border: 1px solid <?php echo $is_unread ? 'rgba(99,102,241,0.3)' : 'rgba(255,255,255,0.07)'; ?>;">
+                        <div class="panel-dark p-3 p-md-4 rounded-3 position-relative transition-all" style="background: <?php echo $is_unread ? 'rgba(99,102,241,0.06)' : 'rgba(255,255,255,0.02)'; ?>; border: 1px solid <?php echo $is_unread ? 'rgba(99,102,241,0.3)' : 'rgba(255,255,255,0.07)'; ?>;">
                             <div class="d-flex align-items-start gap-3">
                                 <!-- Icon Box -->
                                 <div class="rounded-3 p-3 d-flex align-items-center justify-content-center flex-shrink-0" style="width: 48px; height: 48px; background: <?php echo $icon_info['bg']; ?>; color: <?php echo $icon_info['color']; ?>;">
@@ -209,7 +209,7 @@ require_once __DIR__ . '/includes/header.php';
                                             <span class="badge" style="background: <?php echo $icon_info['bg']; ?>; color: <?php echo $icon_info['color']; ?>; font-size: 0.7rem; border: 1px solid <?php echo $icon_info['color']; ?>44;">
                                                 <?php echo $icon_info['label']; ?>
                                             </span>
-                                            <h6 class="fw-bold mb-0 text-white <?php echo $is_unread ? 'text-primary' : ''; ?>">
+                                            <h6 class="fw-bold mb-0 <?php echo $is_unread ? 'text-primary' : ''; ?>">
                                                 <?php echo htmlspecialchars($n['title']); ?>
                                             </h6>
                                             <?php if ($is_unread): ?>

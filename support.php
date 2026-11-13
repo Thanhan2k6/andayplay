@@ -194,7 +194,7 @@ try {
 require_once __DIR__ . '/includes/header.php';
 ?>
 
-<div class="container-fluid px-lg-5 py-4 text-white">
+<div class="container-fluid px-lg-5 py-4">
     <!-- Header bar -->
     <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 pb-3 border-bottom border-secondary border-opacity-25 gap-3">
         <div>
@@ -204,7 +204,7 @@ require_once __DIR__ . '/includes/header.php';
                 </span>
                 <span class="text-secondary small">Cam kết hỗ trợ 100% khách hàng</span>
             </div>
-            <h2 class="fw-extrabold text-white mb-0">Trung Tâm Hỗ Trợ & Khiếu Nại Khách Hàng</h2>
+            <h2 class="fw-extrabold mb-0">Trung Tâm Hỗ Trợ & Khiếu Nại Khách Hàng</h2>
         </div>
         <div class="d-flex gap-2">
             <button class="btn btn-gaming-primary d-flex align-items-center" data-bs-toggle="modal" data-bs-target="#createTicketModal">
@@ -222,13 +222,13 @@ require_once __DIR__ . '/includes/header.php';
     <?php endif; ?>
 
     <!-- Cam kết Hỗ trợ Con người & 1 đổi 1 -->
-    <div class="p-3 px-4 mb-4 rounded-4 d-flex flex-wrap align-items-center justify-content-between gap-3" style="background: linear-gradient(90deg, rgba(99,102,241,0.12) 0%, rgba(139,92,246,0.12) 100%); border: 1px solid rgba(99,102,241,0.3);">
+    <div class="p-3 px-4 mb-4 rounded-3 d-flex flex-wrap align-items-center justify-content-between gap-3" style="background: var(--surface-card); border: 1px solid var(--border-default);">
         <div class="d-flex align-items-center gap-3">
             <div class="p-2 px-3 rounded-circle" style="background: rgba(99,102,241,0.25); color: #818cf8; font-size: 1.5rem;">
                 <i class="bi bi-person-check-fill"></i>
             </div>
             <div>
-                <h6 class="fw-bold text-white mb-1"><i class="bi bi-shield-check text-success me-1"></i> Đội Ngũ Kỹ Thuật Viên 24/7 Trực Tiếp Xử Lý (Human Support)</h6>
+                <h6 class="fw-bold mb-1"><i class="bi bi-shield-check text-success me-1"></i> Đội Ngũ Kỹ Thuật Viên 24/7 Trực Tiếp Xử Lý (Human Support)</h6>
                 <p class="text-secondary small mb-0">Mọi yêu cầu hỗ trợ (Ticket) và báo lỗi tài khoản được xử lý bởi nhân viên kỹ thuật thực tế của shop. Cam kết bảo hành 1 đổi 1 ngay nếu tài khoản gặp sự cố đăng nhập.</p>
             </div>
         </div>
@@ -245,53 +245,53 @@ require_once __DIR__ . '/includes/header.php';
     <!-- KPI Summary Row -->
     <div class="row g-3 mb-4">
         <div class="col-6 col-lg-3">
-            <div class="panel-dark p-3 rounded-4 d-flex align-items-center gap-3">
+            <div class="panel-dark p-3 rounded-3 d-flex align-items-center gap-3">
                 <div class="rounded-3 p-3 text-warning" style="background: rgba(245,158,11,0.15);">
                     <i class="bi bi-hourglass-split fs-4"></i>
                 </div>
                 <div>
                     <div class="text-secondary small">Đang xử lý</div>
-                    <h3 class="fw-bold mb-0 text-white"><?php echo $st_open; ?></h3>
+                    <h3 class="fw-bold mb-0"><?php echo $st_open; ?></h3>
                 </div>
             </div>
         </div>
         <div class="col-6 col-lg-3">
-            <div class="panel-dark p-3 rounded-4 d-flex align-items-center gap-3">
+            <div class="panel-dark p-3 rounded-3 d-flex align-items-center gap-3">
                 <div class="rounded-3 p-3 text-info" style="background: rgba(6,182,212,0.15);">
                     <i class="bi bi-chat-dots-fill fs-4"></i>
                 </div>
                 <div>
                     <div class="text-secondary small">Chờ bạn phản hồi</div>
-                    <h3 class="fw-bold mb-0 text-white"><?php echo $st_waiting; ?></h3>
+                    <h3 class="fw-bold mb-0"><?php echo $st_waiting; ?></h3>
                 </div>
             </div>
         </div>
         <div class="col-6 col-lg-3">
-            <div class="panel-dark p-3 rounded-4 d-flex align-items-center gap-3">
+            <div class="panel-dark p-3 rounded-3 d-flex align-items-center gap-3">
                 <div class="rounded-3 p-3 text-success" style="background: rgba(16,185,129,0.15);">
                     <i class="bi bi-check-circle-fill fs-4"></i>
                 </div>
                 <div>
                     <div class="text-secondary small">Đã giải quyết</div>
-                    <h3 class="fw-bold mb-0 text-white"><?php echo $st_resolved; ?></h3>
+                    <h3 class="fw-bold mb-0"><?php echo $st_resolved; ?></h3>
                 </div>
             </div>
         </div>
         <div class="col-6 col-lg-3">
-            <div class="panel-dark p-3 rounded-4 d-flex align-items-center gap-3">
+            <div class="panel-dark p-3 rounded-3 d-flex align-items-center gap-3">
                 <div class="rounded-3 p-3 text-primary" style="background: rgba(99,102,241,0.15);">
                     <i class="bi bi-collection-fill fs-4"></i>
                 </div>
                 <div>
                     <div class="text-secondary small">Tổng yêu cầu</div>
-                    <h3 class="fw-bold mb-0 text-white"><?php echo $st_total; ?></h3>
+                    <h3 class="fw-bold mb-0"><?php echo $st_total; ?></h3>
                 </div>
             </div>
         </div>
     </div>
 
     <!-- Filter & Search Toolbar -->
-    <div class="panel-dark p-3 rounded-4 mb-4">
+    <div class="panel-dark p-3 rounded-3 mb-4">
         <form action="support.php" method="GET" class="row g-2 align-items-center">
             <div class="col-md-6 col-lg-4">
                 <div class="position-relative">
@@ -317,11 +317,11 @@ require_once __DIR__ . '/includes/header.php';
 
     <!-- Ticket List Cards -->
     <?php if (empty($tickets)): ?>
-        <div class="panel-dark text-center py-5 rounded-4" style="border: 1px dashed rgba(255,255,255,0.15);">
+        <div class="panel-dark text-center py-5 rounded-3" style="border: 1px dashed rgba(255,255,255,0.15);">
             <div class="p-4 d-inline-block rounded-circle mb-3" style="background: rgba(139,92,246,0.1);">
                 <i class="bi bi-chat-square-text fs-1 text-secondary"></i>
             </div>
-            <h5 class="fw-bold text-white mb-2">Bạn chưa có yêu cầu hỗ trợ nào</h5>
+            <h5 class="fw-bold mb-2">Bạn chưa có yêu cầu hỗ trợ nào</h5>
             <p class="text-secondary small mb-3">Khi gặp bất kỳ vấn đề nào về tài khoản game hoặc thanh toán, hãy tạo yêu cầu để được hỗ trợ 24/7.</p>
             <button class="btn btn-gaming-primary btn-sm px-4" data-bs-toggle="modal" data-bs-target="#createTicketModal">
                 <i class="bi bi-plus-circle me-1"></i> Gửi Yêu Cầu Hỗ Trợ Ngay
@@ -334,7 +334,7 @@ require_once __DIR__ . '/includes/header.php';
                 $pr_info = get_ticket_priority_info($t['priority']);
                 $cat_info = $categories[$t['category']] ?? ['label' => 'Yêu cầu hỗ trợ', 'icon' => 'bi-chat-dots'];
             ?>
-                <div class="panel-dark p-3 p-md-4 rounded-4 transition-all">
+                <div class="panel-dark p-3 p-md-4 rounded-3 transition-all">
                     <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3">
                         <div class="d-flex align-items-start gap-3">
                             <div class="rounded-3 p-3 d-flex align-items-center justify-content-center flex-shrink-0" style="width: 48px; height: 48px; background: rgba(139,92,246,0.15); color: #a78bfa;">
@@ -351,12 +351,12 @@ require_once __DIR__ . '/includes/header.php';
                                             <i class="bi bi-lightning-fill me-1"></i><?php echo $pr_info['label']; ?>
                                         </span>
                                     <?php endif; ?>
-                                    <span class="badge bg-secondary bg-opacity-25 text-light" style="font-size: 0.7rem;">
+                                    <span class="badge bg-secondary bg-opacity-25" style="font-size: 0.7rem;">
                                         <?php echo $cat_info['label']; ?>
                                     </span>
                                 </div>
-                                <h5 class="fw-bold text-white mb-1">
-                                    <a href="support_detail.php?id=<?php echo $t['ticket_id']; ?>" class="text-white text-decoration-none hover-primary">
+                                <h5 class="fw-bold mb-1">
+                                    <a href="support_detail.php?id=<?php echo $t['ticket_id']; ?>" class=" text-decoration-none hover-primary">
                                         <?php echo htmlspecialchars($t['title']); ?>
                                     </a>
                                 </h5>
@@ -399,7 +399,7 @@ require_once __DIR__ . '/includes/header.php';
 <!-- MODAL TẠO YÊU CẦU HỖ TRỢ -->
 <div class="modal fade" id="createTicketModal" tabindex="-1" aria-labelledby="createTicketModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg">
-        <div class="modal-content panel-dark border border-secondary border-opacity-25 text-white" style="background: #0f121a; border-radius: 20px;">
+        <div class="modal-content panel-dark border border-secondary border-opacity-25" style="background: #0f121a; border-radius: 20px;">
             <div class="modal-header border-bottom border-secondary border-opacity-25 pb-3">
                 <h5 class="modal-title fw-bold" id="createTicketModalLabel">
                     <i class="bi bi-headset text-primary me-2"></i> Gửi Yêu Cầu Hỗ Trợ Cho Đội Ngũ ANPLAY
@@ -441,7 +441,7 @@ require_once __DIR__ . '/includes/header.php';
                             <div class="d-flex flex-wrap gap-3">
                                 <div class="form-check">
                                     <input class="form-check-input" type="radio" name="priority" id="pri_normal" value="normal" checked>
-                                    <label class="form-check-label text-light small" for="pri_normal">Bình thường</label>
+                                    <label class="form-check-label small" for="pri_normal">Bình thường</label>
                                 </div>
                                 <div class="form-check">
                                     <input class="form-check-input" type="radio" name="priority" id="pri_high" value="high">

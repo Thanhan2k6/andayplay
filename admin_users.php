@@ -150,7 +150,7 @@ if ($st_users) {
 }
 ?>
 
-<div class="container-fluid px-lg-5 py-4 my-2 text-white">
+<div class="container-fluid px-lg-5 py-4 my-2">
     <!-- Header -->
     <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 pb-3 border-bottom border-secondary border-opacity-25 gap-3">
         <div>
@@ -159,7 +159,7 @@ if ($st_users) {
                     <i class="bi bi-people-fill me-1"></i> MEMBERSHIP
                 </span>
             </div>
-            <h2 class="fw-extrabold text-white mb-0">Quản Lý Danh Sách Thành Viên</h2>
+            <h2 class="fw-extrabold mb-0">Quản Lý Danh Sách Thành Viên</h2>
             <p class="text-secondary small mb-0">Quản lý tài khoản game thủ, phân quyền quản trị viên và lịch sử tham gia</p>
         </div>
         
@@ -199,7 +199,7 @@ if ($st_users) {
                                     <div class="d-flex align-items-center gap-3">
                                         <img src="https://ui-avatars.com/api/?name=<?php echo urlencode($u['username']); ?>&background=random&color=fff&rounded=true" width="36" height="36" class="rounded-circle shadow-sm">
                                         <div>
-                                            <strong class="text-white">@<?php echo htmlspecialchars($u['username']); ?></strong>
+                                            <strong class="">@<?php echo htmlspecialchars($u['username']); ?></strong>
                                             <?php if ($u['user_id'] == $_SESSION['user_id']): ?>
                                                 <span class="badge ms-1" style="background: rgba(16,185,129,0.2); color: #10b981; font-size: 0.65rem;">BẠN</span>
                                             <?php endif; ?>
@@ -207,7 +207,7 @@ if ($st_users) {
                                     </div>
                                 </td>
                                 <td>
-                                    <span class="text-light small"><?php echo htmlspecialchars($u['email']); ?></span>
+                                    <span class=" small"><?php echo htmlspecialchars($u['email']); ?></span>
                                 </td>
                                 <td class="text-center">
                                     <?php if ($u['role'] == 2): ?>

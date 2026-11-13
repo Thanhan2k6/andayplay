@@ -123,12 +123,12 @@ try {
 
     <!-- Sidebar Footer / Quick User Profile & Exit -->
     <div class="admin-sidebar-footer">
-        <div class="d-flex align-items-center gap-2 mb-2 p-2 rounded-3 bg-dark bg-opacity-50 border border-secondary border-opacity-25">
+        <div class="d-flex align-items-center gap-2 mb-2 p-2 rounded-3 anplay-surface-muted bg-opacity-50 border border-secondary border-opacity-25">
             <div class="admin-avatar-sm">
                 <?php echo strtoupper(substr($_SESSION['username'] ?? 'A', 0, 1)); ?>
             </div>
             <div class="flex-grow-1 text-truncate">
-                <div class="fw-bold text-white small text-truncate">@<?php echo htmlspecialchars($_SESSION['username'] ?? 'Admin'); ?></div>
+                <div class="fw-bold small text-truncate">@<?php echo htmlspecialchars($_SESSION['username'] ?? 'Admin'); ?></div>
                 <div class="text-secondary" style="font-size: 0.72rem;">
                     <?php if ($sidebar_is_super): ?>
                         <span class="text-danger fw-semibold"><i class="bi bi-stars"></i> SUPER ADMIN</span>

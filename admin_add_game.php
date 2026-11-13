@@ -77,19 +77,19 @@ if(isset($_POST['btn_add'])) {
 $csrf_token = generate_csrf_token();
 ?>
 
-<div class="container-fluid px-lg-5 py-4 my-2 text-white">
+<div class="container-fluid px-lg-5 py-4 my-2">
     <!-- Breadcrumb & Title -->
     <nav aria-label="breadcrumb" class="mb-3">
         <ol class="breadcrumb small">
             <li class="breadcrumb-item"><a href="admin_dashboard.php" class="text-decoration-none text-secondary">Admin Console</a></li>
             <li class="breadcrumb-item"><a href="admin_games.php" class="text-decoration-none text-secondary">Quản lý Game</a></li>
-            <li class="breadcrumb-item active text-white" aria-current="page">Thêm Game Mới</li>
+            <li class="breadcrumb-item active" aria-current="page">Thêm Game Mới</li>
         </ol>
     </nav>
 
     <div class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom border-secondary border-opacity-25">
         <div>
-            <h2 class="fw-extrabold text-white mb-1"><i class="bi bi-plus-circle text-primary me-2"></i>Thêm Game Mới Vào Cửa Hàng</h2>
+            <h2 class="fw-extrabold mb-1"><i class="bi bi-plus-circle text-primary me-2"></i>Thêm Game Mới Vào Cửa Hàng</h2>
             <p class="text-secondary small mb-0">Điền đầy đủ thông tin game, gói giá thuê và ảnh bìa để mở bán trên ANPLAY STORE</p>
         </div>
         <a href="admin_games.php" class="btn btn-gaming-secondary">
@@ -98,7 +98,7 @@ $csrf_token = generate_csrf_token();
     </div>
 
     <!-- Form Container -->
-    <div class="p-4 p-md-5 rounded-4 shadow-sm" style="background: var(--bg-card); border: 1px solid var(--border-color);">
+    <div class="p-4 p-md-5 rounded-3 shadow-sm" style="background: var(--bg-card); border: 1px solid var(--border-color);">
         <form method="POST" action="" enctype="multipart/form-data">
             <input type="hidden" name="csrf_token" value="<?php echo $csrf_token; ?>">
             
@@ -109,11 +109,11 @@ $csrf_token = generate_csrf_token();
                 </h5>
                 <div class="row g-3">
                     <div class="col-md-6">
-                        <label class="form-label text-light small fw-bold">Tên Game <span class="text-danger">*</span></label>
+                        <label class="form-label small fw-bold">Tên Game <span class="text-danger">*</span></label>
                         <input type="text" name="title" class="form-control form-control-gaming" placeholder="Ví dụ: Cyberpunk 2077, Black Myth: Wukong..." required>
                     </div>
                     <div class="col-md-3">
-                        <label class="form-label text-light small fw-bold">Thể Loại <span class="text-danger">*</span></label>
+                        <label class="form-label small fw-bold">Thể Loại <span class="text-danger">*</span></label>
                         <select name="category_id" class="form-select form-control-gaming" required>
                             <option value="">-- Chọn thể loại --</option>
                             <?php
@@ -127,22 +127,22 @@ $csrf_token = generate_csrf_token();
                         </select>
                     </div>
                     <div class="col-md-3">
-                        <label class="form-label text-light small fw-bold">Nền Tảng <span class="text-danger">*</span></label>
+                        <label class="form-label small fw-bold">Nền Tảng <span class="text-danger">*</span></label>
                         <select name="platform" class="form-select form-control-gaming" required>
-                            <option value="PC">🖥️ PC (Steam, Epic, EA)</option>
-                            <option value="PlayStation">🎮 PlayStation (PS4/PS5)</option>
-                            <option value="Xbox">💚 Xbox Series</option>
-                            <option value="Nintendo">🕹️ Nintendo Switch</option>
+                            <option value="PC">PC (Steam, Epic, EA)</option>
+                            <option value="PlayStation">PlayStation (PS4/PS5)</option>
+                            <option value="Xbox">Xbox Series</option>
+                            <option value="Nintendo">Nintendo Switch</option>
                         </select>
                     </div>
                     <div class="col-md-6">
-                        <label class="form-label text-light small fw-bold">Mô Hình Kinh Doanh</label>
+                        <label class="form-label small fw-bold">Mô Hình Kinh Doanh</label>
                         <select name="price_type" id="price_type_select" class="form-select form-control-gaming">
-                            <option value="paid" selected>💎 Cho thuê tài khoản game bản quyền</option>
+                            <option value="paid" selected>Cho thuê tài khoản game bản quyền</option>
                         </select>
                     </div>
                     <div class="col-md-6">
-                        <label class="form-label text-light small fw-bold">Ảnh Bìa Game (Cover 16:9)</label>
+                        <label class="form-label small fw-bold">Ảnh Bìa Game (Cover 16:9)</label>
                         <input type="file" name="image" class="form-control form-control-gaming" accept="image/*">
                     </div>
                 </div>
@@ -158,7 +158,7 @@ $csrf_token = generate_csrf_token();
                         <div class="p-3 rounded-3" style="background: var(--surface-secondary); border: 1px solid var(--border-default);">
                             <label class="form-label text-secondary small fw-bold">Gói 1 Giờ (Trải nghiệm)</label>
                             <div class="input-group">
-                                <input type="number" name="price_1h" class="form-control form-control-gaming text-white" value="5000" step="1000">
+                                <input type="number" name="price_1h" class="form-control form-control-gaming" value="5000" step="1000">
                                 <span class="input-group-text" style="background: var(--surface-secondary); border-color: var(--border-default); color: var(--text-muted);">đ</span>
                             </div>
                         </div>
@@ -167,7 +167,7 @@ $csrf_token = generate_csrf_token();
                         <div class="p-3 rounded-3" style="background: var(--surface-secondary); border: 1px solid var(--border-default);">
                             <label class="form-label text-secondary small fw-bold">Gói 1 Ngày (24h)</label>
                             <div class="input-group">
-                                <input type="number" name="price_1d" class="form-control form-control-gaming text-white" value="15000" step="1000">
+                                <input type="number" name="price_1d" class="form-control form-control-gaming" value="15000" step="1000">
                                 <span class="input-group-text" style="background: var(--surface-secondary); border-color: var(--border-default); color: var(--text-muted);">đ</span>
                             </div>
                         </div>
@@ -176,7 +176,7 @@ $csrf_token = generate_csrf_token();
                         <div class="p-3 rounded-3" style="background: var(--surface-secondary); border: 1px solid var(--border-default);">
                             <label class="form-label text-secondary small fw-bold">Gói 7 Ngày (1 Tuần)</label>
                             <div class="input-group">
-                                <input type="number" name="price_7d" class="form-control form-control-gaming text-white" value="30000" step="1000">
+                                <input type="number" name="price_7d" class="form-control form-control-gaming" value="30000" step="1000">
                                 <span class="input-group-text" style="background: var(--surface-secondary); border-color: var(--border-default); color: var(--text-muted);">đ</span>
                             </div>
                         </div>
@@ -185,7 +185,7 @@ $csrf_token = generate_csrf_token();
                         <div class="p-3 rounded-3" style="background: var(--surface-secondary); border: 1px solid var(--border-default);">
                             <label class="form-label text-secondary small fw-bold">Gói 30 Ngày (1 Tháng)</label>
                             <div class="input-group">
-                                <input type="number" name="price_30d" class="form-control form-control-gaming text-white" value="99000" step="1000">
+                                <input type="number" name="price_30d" class="form-control form-control-gaming" value="99000" step="1000">
                                 <span class="input-group-text" style="background: var(--surface-secondary); border-color: var(--border-default); color: var(--text-muted);">đ</span>
                             </div>
                         </div>
@@ -200,15 +200,15 @@ $csrf_token = generate_csrf_token();
                 </h5>
                 <div class="row g-3">
                     <div class="col-12">
-                        <label class="form-label text-light small fw-bold">Mô Tả Ngắn (Hiển thị ở danh sách)</label>
+                        <label class="form-label small fw-bold">Mô Tả Ngắn (Hiển thị ở danh sách)</label>
                         <textarea name="short_description" class="form-control form-control-gaming" rows="2" placeholder="Tóm tắt ngắn gọn 1-2 câu về nội dung trò chơi..."></textarea>
                     </div>
                     <div class="col-md-6">
-                        <label class="form-label text-light small fw-bold">Giới Thiệu Chi Tiết Game</label>
+                        <label class="form-label small fw-bold">Giới Thiệu Chi Tiết Game</label>
                         <textarea name="long_description" class="form-control form-control-gaming" rows="5" placeholder="Cốt truyện, gameplay, các tính năng nổi bật..."></textarea>
                     </div>
                     <div class="col-md-6">
-                        <label class="form-label text-light small fw-bold">Yêu Cầu Cấu Hình Phần Cứng</label>
+                        <label class="form-label small fw-bold">Yêu Cầu Cấu Hình Phần Cứng</label>
                         <textarea name="system_req" class="form-control form-control-gaming" rows="5" placeholder="HĐH: Windows 10/11 64-bit&#10;CPU: Intel Core i5 / AMD Ryzen 5&#10;RAM: 16 GB&#10;GPU: GTX 1660 / RTX 3060..."></textarea>
                     </div>
                 </div>

@@ -143,7 +143,7 @@ $page_title = "Trung Tâm Hỗ Trợ Khách Hàng";
 require_once __DIR__ . '/includes/admin_header.php';
 ?>
 
-<div class="container-fluid px-lg-5 py-4 text-white">
+<div class="container-fluid px-lg-5 py-4">
     <!-- Header Page -->
     <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 pb-3 border-bottom border-secondary border-opacity-25 gap-3">
         <div>
@@ -153,7 +153,7 @@ require_once __DIR__ . '/includes/admin_header.php';
                 </span>
                 <span class="text-secondary small">Trung tâm chăm sóc & giải quyết khiếu nại khách hàng</span>
             </div>
-            <h2 class="fw-extrabold text-white mb-0">Quản Lý Yêu Cầu Hỗ Trợ Khách Hàng</h2>
+            <h2 class="fw-extrabold mb-0">Quản Lý Yêu Cầu Hỗ Trợ Khách Hàng</h2>
         </div>
         <div class="d-flex gap-2">
             <a href="admin_notifications.php" class="btn btn-gaming-secondary d-flex align-items-center">
@@ -168,37 +168,37 @@ require_once __DIR__ . '/includes/admin_header.php';
     <!-- STATS ROW -->
     <div class="row g-3 mb-4">
         <div class="col-6 col-md-4 col-lg-2">
-            <div class="panel-dark p-3 rounded-4 text-center">
+            <div class="panel-dark p-3 rounded-3 text-center">
                 <span class="text-secondary small d-block mb-1">Tổng Ticket</span>
-                <h3 class="fw-bold text-white mb-0"><?php echo $total_tickets; ?></h3>
+                <h3 class="fw-bold mb-0"><?php echo $total_tickets; ?></h3>
             </div>
         </div>
         <div class="col-6 col-md-4 col-lg-2">
-            <div class="panel-dark p-3 rounded-4 text-center border-info border-opacity-25">
+            <div class="panel-dark p-3 rounded-3 text-center border-info border-opacity-25">
                 <span class="text-info small d-block mb-1">Ticket Mới</span>
                 <h3 class="fw-bold text-info mb-0"><?php echo $new_tickets; ?></h3>
             </div>
         </div>
         <div class="col-6 col-md-4 col-lg-2">
-            <div class="panel-dark p-3 rounded-4 text-center border-warning border-opacity-25">
+            <div class="panel-dark p-3 rounded-3 text-center border-warning border-opacity-25">
                 <span class="text-warning small d-block mb-1">Đang Xử Lý</span>
                 <h3 class="fw-bold text-warning mb-0"><?php echo $in_progress_tickets; ?></h3>
             </div>
         </div>
         <div class="col-6 col-md-4 col-lg-2">
-            <div class="panel-dark p-3 rounded-4 text-center">
+            <div class="panel-dark p-3 rounded-3 text-center">
                 <span class="text-secondary small d-block mb-1">Chờ Khách</span>
-                <h3 class="fw-bold text-light mb-0"><?php echo $waiting_customer_tickets; ?></h3>
+                <h3 class="fw-bold mb-0"><?php echo $waiting_customer_tickets; ?></h3>
             </div>
         </div>
         <div class="col-6 col-md-4 col-lg-2">
-            <div class="panel-dark p-3 rounded-4 text-center border-danger border-opacity-25">
+            <div class="panel-dark p-3 rounded-3 text-center border-danger border-opacity-25">
                 <span class="text-danger small d-block mb-1">Ưu Tiên Cao</span>
                 <h3 class="fw-bold text-danger mb-0"><?php echo $urgent_high_tickets; ?></h3>
             </div>
         </div>
         <div class="col-6 col-md-4 col-lg-2">
-            <div class="panel-dark p-3 rounded-4 text-center border-success border-opacity-25">
+            <div class="panel-dark p-3 rounded-3 text-center border-success border-opacity-25">
                 <span class="text-success small d-block mb-1">Đã Giải Quyết</span>
                 <h3 class="fw-bold text-success mb-0"><?php echo $resolved_tickets; ?></h3>
             </div>
@@ -206,7 +206,7 @@ require_once __DIR__ . '/includes/admin_header.php';
     </div>
 
     <!-- FILTER & SEARCH BAR -->
-    <div class="panel-dark p-3 rounded-4 mb-4">
+    <div class="panel-dark p-3 rounded-3 mb-4">
         <form action="admin_support.php" method="GET" class="row g-2 align-items-center">
             <div class="col-lg-4 col-md-6">
                 <div class="position-relative">
@@ -217,20 +217,20 @@ require_once __DIR__ . '/includes/admin_header.php';
             <div class="col-lg-2 col-md-3 col-6">
                 <select name="status" class="form-select form-control-gaming" onchange="this.form.submit()">
                     <option value="all" <?php echo ($filter_status === 'all') ? 'selected' : ''; ?>>Tất cả trạng thái</option>
-                    <option value="new" <?php echo ($filter_status === 'new') ? 'selected' : ''; ?>>🔵 Mới gửi (<?php echo $new_tickets; ?>)</option>
-                    <option value="in_progress" <?php echo ($filter_status === 'in_progress') ? 'selected' : ''; ?>>🟡 Đang xử lý</option>
-                    <option value="waiting" <?php echo ($filter_status === 'waiting') ? 'selected' : ''; ?>>⚪ Chờ khách phản hồi</option>
-                    <option value="resolved" <?php echo ($filter_status === 'resolved') ? 'selected' : ''; ?>>✅ Đã giải quyết</option>
+                    <option value="new" <?php echo ($filter_status === 'new') ? 'selected' : ''; ?>>Mới gửi (<?php echo $new_tickets; ?>)</option>
+                    <option value="in_progress" <?php echo ($filter_status === 'in_progress') ? 'selected' : ''; ?>>Đang xử lý</option>
+                    <option value="waiting" <?php echo ($filter_status === 'waiting') ? 'selected' : ''; ?>>Chờ khách phản hồi</option>
+                    <option value="resolved" <?php echo ($filter_status === 'resolved') ? 'selected' : ''; ?>>Đã giải quyết</option>
                     <option value="closed" <?php echo ($filter_status === 'closed') ? 'selected' : ''; ?>>Đã đóng</option>
                 </select>
             </div>
             <div class="col-lg-2 col-md-3 col-6">
                 <select name="priority" class="form-select form-control-gaming" onchange="this.form.submit()">
                     <option value="all" <?php echo ($filter_priority === 'all') ? 'selected' : ''; ?>>Tất cả ưu tiên</option>
-                    <option value="urgent" <?php echo ($filter_priority === 'urgent') ? 'selected' : ''; ?>>🔴 Khẩn cấp</option>
-                    <option value="high" <?php echo ($filter_priority === 'high') ? 'selected' : ''; ?>>🟠 Ưu tiên cao</option>
-                    <option value="normal" <?php echo ($filter_priority === 'normal') ? 'selected' : ''; ?>>🔵 Bình thường</option>
-                    <option value="low" <?php echo ($filter_priority === 'low') ? 'selected' : ''; ?>>⚪ Thấp</option>
+                    <option value="urgent" <?php echo ($filter_priority === 'urgent') ? 'selected' : ''; ?>>Khẩn cấp</option>
+                    <option value="high" <?php echo ($filter_priority === 'high') ? 'selected' : ''; ?>>Ưu tiên cao</option>
+                    <option value="normal" <?php echo ($filter_priority === 'normal') ? 'selected' : ''; ?>>Bình thường</option>
+                    <option value="low" <?php echo ($filter_priority === 'low') ? 'selected' : ''; ?>>Thấp</option>
                 </select>
             </div>
             <div class="col-lg-2 col-md-6 col-6">
@@ -255,9 +255,9 @@ require_once __DIR__ . '/includes/admin_header.php';
     </div>
 
     <!-- TICKET TABLE -->
-    <div class="panel-dark p-0 rounded-4 overflow-hidden shadow-sm">
+    <div class="panel-dark p-0 rounded-3 overflow-hidden shadow-sm">
         <div class="table-responsive">
-            <table class="table table-dark table-hover align-middle mb-0" style="background: transparent;">
+            <table class="table table-gaming table-hover align-middle mb-0" style="background: transparent;">
                 <thead style="background: rgba(255,255,255,0.04); border-bottom: 1px solid rgba(255,255,255,0.1);">
                     <tr class="text-secondary small">
                         <th class="ps-4 py-3">MÃ & TIÊU ĐỀ</th>
@@ -287,7 +287,7 @@ require_once __DIR__ . '/includes/admin_header.php';
                             <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
                                 <td class="ps-4 py-3">
                                     <div class="fw-bold font-monospace text-primary" style="font-size: 0.85rem;"><?php echo htmlspecialchars($t['ticket_code']); ?></div>
-                                    <a href="admin_support_detail.php?id=<?php echo $t['ticket_id']; ?>" class="fw-bold text-white text-decoration-none hover-primary d-inline-block text-truncate" style="max-width: 280px;">
+                                    <a href="admin_support_detail.php?id=<?php echo $t['ticket_id']; ?>" class="fw-bold text-decoration-none hover-primary d-inline-block text-truncate" style="max-width: 280px;">
                                         <?php echo htmlspecialchars($t['title']); ?>
                                     </a>
                                 </td>
@@ -295,13 +295,13 @@ require_once __DIR__ . '/includes/admin_header.php';
                                     <div class="d-flex align-items-center gap-2">
                                         <img src="https://ui-avatars.com/api/?name=<?php echo urlencode($t['username']); ?>&background=6366f1&color=fff&bold=true&rounded=true" width="28" height="28" class="rounded-circle shadow-sm" alt="Avatar">
                                         <div>
-                                            <div class="fw-bold small text-white">@<?php echo htmlspecialchars($t['username']); ?></div>
+                                            <div class="fw-bold small">@<?php echo htmlspecialchars($t['username']); ?></div>
                                             <div class="text-secondary small" style="font-size: 0.72rem;"><?php echo htmlspecialchars($t['email']); ?></div>
                                         </div>
                                     </div>
                                 </td>
                                 <td class="py-3">
-                                    <span class="badge bg-secondary bg-opacity-25 text-light" style="font-size: 0.72rem;">
+                                    <span class="badge bg-secondary bg-opacity-25" style="font-size: 0.72rem;">
                                         <i class="bi <?php echo $cat_info['icon']; ?> me-1"></i><?php echo $cat_info['label']; ?>
                                     </span>
                                 </td>
@@ -331,7 +331,7 @@ require_once __DIR__ . '/includes/admin_header.php';
                                         </span>
                                     <?php endif; ?>
                                     <?php if (!empty($t['order_code'])): ?>
-                                        <span class="badge bg-dark border border-secondary text-warning" style="font-size: 0.68rem;">
+                                        <span class="badge anplay-surface-muted border border-secondary text-warning" style="font-size: 0.68rem;">
                                             #<?php echo htmlspecialchars($t['order_code']); ?>
                                         </span>
                                     <?php endif; ?>

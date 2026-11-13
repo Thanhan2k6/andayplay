@@ -32,7 +32,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['btn_comment'])) {
 require_once __DIR__ . '/includes/header.php'; 
 
 if ($game_id <= 0) {
-    echo "<div class='container mt-5 text-center text-white'><div class='panel-dark p-5'><h3>Không tìm thấy tựa game yêu cầu.</h3><a href='index.php' class='btn btn-gaming-primary mt-3'>Về Cửa Hàng</a></div></div>";
+    echo "<div class='container mt-5 text-center'><div class='panel-dark p-5'><h3>Không tìm thấy tựa game yêu cầu.</h3><a href='index.php' class='btn btn-gaming-primary mt-3'>Về Cửa Hàng</a></div></div>";
     include 'includes/footer.php';
     exit();
 }
@@ -48,7 +48,7 @@ try {
 } catch (Throwable $e) {}
 
 if (!$game) {
-    echo "<div class='container mt-5 text-center text-white'><div class='panel-dark p-5'><h3>Trò chơi không tồn tại hoặc đã bị ẩn.</h3><a href='index.php' class='btn btn-gaming-primary mt-3'>Về Cửa Hàng</a></div></div>";
+    echo "<div class='container mt-5 text-center'><div class='panel-dark p-5'><h3>Trò chơi không tồn tại hoặc đã bị ẩn.</h3><a href='index.php' class='btn btn-gaming-primary mt-3'>Về Cửa Hàng</a></div></div>";
     include 'includes/footer.php';
     exit();
 }
@@ -113,7 +113,7 @@ if (empty($packages) && ($game['price_type'] ?? 'paid') == 'paid') {
         <ol class="breadcrumb" style="font-size: 0.88rem;">
             <li class="breadcrumb-item"><a href="index.php" class="text-secondary"><i class="bi bi-house me-1"></i> Trang chủ</a></li>
             <li class="breadcrumb-item"><a href="index.php?category=<?php echo intval($game['category_id'] ?? 0); ?>" class="text-secondary"><?php echo htmlspecialchars($game['cate_name'] ?? 'Thể loại'); ?></a></li>
-            <li class="breadcrumb-item active text-white" aria-current="page"><?php echo htmlspecialchars($game['title']); ?></li>
+            <li class="breadcrumb-item active" aria-current="page"><?php echo htmlspecialchars($game['title']); ?></li>
         </ol>
     </nav>
 
@@ -122,7 +122,7 @@ if (empty($packages) && ($game['price_type'] ?? 'paid') == 'paid') {
         <div class="row g-4 align-items-start">
             <!-- Cột 1: Ảnh Bìa Game -->
             <div class="col-lg-5 col-md-6 text-center">
-                <div class="position-relative rounded-4 overflow-hidden shadow-lg border game-preview-cover-wrapper">
+                <div class="position-relative rounded-3 overflow-hidden shadow-lg border game-preview-cover-wrapper">
                     <?php if (!empty($game['image_url']) && file_exists($game['image_url'])): ?>
                         <img src="<?php echo htmlspecialchars($game['image_url']); ?>" class="img-fluid w-100" alt="<?php echo htmlspecialchars($game['title']); ?>" style="max-height: 480px; object-fit: cover;">
                     <?php else: ?>
@@ -146,11 +146,11 @@ if (empty($packages) && ($game['price_type'] ?? 'paid') == 'paid') {
                     <span class="text-secondary small fw-bold"><i class="bi bi-box-seam me-1"></i> Trạng thái kho:</span>
                     <?php if ($available_accounts > 0): ?>
                         <span class="badge bg-success bg-opacity-25 text-success border border-success border-opacity-50 px-3 py-2 fw-bold">
-                            🟢 Sẵn sàng cấp (Còn <?php echo $available_accounts; ?> tài khoản)
+                            <i class="bi bi-check-circle-fill me-1"></i>Sẵn sàng cấp (Còn <?php echo $available_accounts; ?> tài khoản)
                         </span>
                     <?php else: ?>
                         <span class="badge bg-danger bg-opacity-25 text-danger border border-danger border-opacity-50 px-3 py-2 fw-bold">
-                            🔴 Tạm hết tài khoản
+                            <i class="bi bi-x-circle-fill me-1"></i>Tạm hết tài khoản
                         </span>
                     <?php endif; ?>
                 </div>
@@ -158,7 +158,7 @@ if (empty($packages) && ($game['price_type'] ?? 'paid') == 'paid') {
             
             <!-- Cột 2: Thông tin chi tiết & Gói giá -->
             <div class="col-lg-7 col-md-6 d-flex flex-column">
-                <h1 class="fw-bold text-white mb-2" style="font-size: 2.2rem; line-height: 1.25;">
+                <h1 class="fw-bold mb-2" style="font-size: 2.2rem; line-height: 1.25;">
                     <?php echo htmlspecialchars($game['title']); ?>
                 </h1>
 
@@ -183,9 +183,9 @@ if (empty($packages) && ($game['price_type'] ?? 'paid') == 'paid') {
                 <?php endif; ?>
 
                 <!-- BẢNG BÁO GIÁ CÁC GÓI THUÊ -->
-                <div class="my-3 p-3 rounded-4" style="background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border-subtle);">
+                <div class="my-3 p-3 rounded-3" style="background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border-subtle);">
                     <div class="d-flex justify-content-between align-items-center mb-3">
-                        <span class="fw-bold text-white small text-uppercase tracking-wider">
+                        <span class="fw-bold small text-uppercase tracking-wider">
                             <i class="bi bi-clock-history text-warning me-1"></i> Bảng Giá Gói Thuê Theo Thời Gian
                         </span>
                         <span class="text-success small fw-bold"><i class="bi bi-check-circle me-1"></i> Bảo hành trọn thời hạn</span>
@@ -207,7 +207,7 @@ if (empty($packages) && ($game['price_type'] ?? 'paid') == 'paid') {
                     <?php if ($is_rented): ?>
                         <div class="alert alert-success d-flex flex-column flex-sm-row justify-content-between align-items-center gap-3 p-3 rounded-3 mb-3 border-0 shadow" style="background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.4) !important;">
                             <div>
-                                <strong class="fs-6 text-white"><i class="bi bi-check-circle-fill text-success me-2 fs-5"></i> Bạn đang thuê tài khoản trò chơi này!</strong>
+                                <strong class="fs-6"><i class="bi bi-check-circle-fill text-success me-2 fs-5"></i> Bạn đang thuê tài khoản trò chơi này!</strong>
                                 <div class="text-secondary small mt-1">Hết hạn vào: <strong class="text-warning"><?php echo date('d/m/Y H:i', strtotime($active_order['due_date'])); ?></strong></div>
                             </div>
                             <a href="my_library.php" class="btn btn-gaming-primary py-2 px-4 text-nowrap">
@@ -240,10 +240,10 @@ if (empty($packages) && ($game['price_type'] ?? 'paid') == 'paid') {
         <div class="col-lg-7">
             <!-- Mô tả chi tiết -->
             <div class="panel-dark p-4 mb-4">
-                <h4 class="fw-bold text-white mb-3 d-flex align-items-center gap-2">
+                <h4 class="fw-bold mb-3 d-flex align-items-center gap-2">
                     <i class="bi bi-file-text-fill text-primary"></i> Chi Tiết Trò Chơi
                 </h4>
-                <div class="text-light" style="line-height: 1.8; font-size: 0.95rem;">
+                <div class="" style="line-height: 1.8; font-size: 0.95rem;">
                     <?php 
                     if (!empty($game['long_description'])) {
                         echo nl2br(htmlspecialchars($game['long_description'])); 
@@ -259,7 +259,7 @@ if (empty($packages) && ($game['price_type'] ?? 'paid') == 'paid') {
             <!-- Cấu hình yêu cầu -->
             <?php if (!empty($game['system_req'])): ?>
             <div class="panel-dark p-4 mb-4">
-                <h4 class="fw-bold text-white mb-3 d-flex align-items-center gap-2">
+                <h4 class="fw-bold mb-3 d-flex align-items-center gap-2">
                     <i class="bi bi-cpu-fill text-info"></i> Yêu Cầu Cấu Hình Thiết Bị
                 </h4>
                 <div class="p-3 rounded-3 system-requirements-box" style="font-family: monospace; font-size: 0.9rem; line-height: 1.7;">
@@ -270,7 +270,7 @@ if (empty($packages) && ($game['price_type'] ?? 'paid') == 'paid') {
 
             <!-- Điều khoản sử dụng tài khoản -->
             <div class="panel-dark p-4" style="border-left: 4px solid var(--primary);">
-                <h5 class="fw-bold text-white mb-2"><i class="bi bi-shield-exclamation text-warning me-2"></i> Quy Định Khi Thuê Tài Khoản Game</h5>
+                <h5 class="fw-bold mb-2"><i class="bi bi-shield-exclamation text-warning me-2"></i> Quy Định Khi Thuê Tài Khoản Game</h5>
                 <ul class="text-secondary small mb-0 ps-3" style="line-height: 1.7;">
                     <li>Không tự ý đổi mật khẩu, email hoặc bất kỳ thông tin bảo mật nào của tài khoản được cấp.</li>
                     <li>Không sử dụng phần mềm thứ ba gian lận (hack/cheat) làm ảnh hưởng đến độ uy tín của tài khoản.</li>
@@ -282,7 +282,7 @@ if (empty($packages) && ($game['price_type'] ?? 'paid') == 'paid') {
         <!-- Cột phải: Đánh giá & Bình luận -->
         <div class="col-lg-5" id="commentsSection">
             <div class="panel-dark p-4">
-                <h4 class="fw-bold text-white mb-3 d-flex align-items-center justify-content-between">
+                <h4 class="fw-bold mb-3 d-flex align-items-center justify-content-between">
                     <span><i class="bi bi-chat-left-text-fill text-info me-2"></i> Đánh Giá Từ Game Thủ</span>
                 </h4>
                 
@@ -313,7 +313,7 @@ if (empty($packages) && ($game['price_type'] ?? 'paid') == 'paid') {
                             <img src="https://ui-avatars.com/api/?name=<?php echo urlencode($cmt['username'] ?? 'Gamer'); ?>&background=1e293b&color=38bdf8&bold=true&rounded=true" width="40" height="40" class="rounded-circle flex-shrink-0" alt="Avatar">
                             <div class="w-100">
                                 <div class="d-flex justify-content-between align-items-center mb-1">
-                                    <strong class="text-white small">@<?php echo htmlspecialchars($cmt['username'] ?? 'Gamer'); ?></strong>
+                                    <strong class=" small">@<?php echo htmlspecialchars($cmt['username'] ?? 'Gamer'); ?></strong>
                                     <span class="text-secondary" style="font-size: 0.75rem;">
                                         <?php 
                                         $ctime = isset($cmt['created_at']) ? strtotime($cmt['created_at']) : (isset($cmt['comment_date']) ? strtotime($cmt['comment_date']) : time());
@@ -321,7 +321,7 @@ if (empty($packages) && ($game['price_type'] ?? 'paid') == 'paid') {
                                         ?>
                                     </span>
                                 </div>
-                                <p class="text-light mb-0" style="font-size: 0.9rem; line-height: 1.5;"><?php echo nl2br(htmlspecialchars($cmt['content'] ?? '')); ?></p>
+                                <p class=" mb-0" style="font-size: 0.9rem; line-height: 1.5;"><?php echo nl2br(htmlspecialchars($cmt['content'] ?? '')); ?></p>
                             </div>
                         </div>
                     <?php 

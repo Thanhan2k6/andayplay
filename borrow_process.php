@@ -194,7 +194,7 @@ if (!empty($borrow_error)) {
 require_once __DIR__ . '/includes/header.php'; 
 
 if (!$game) {
-    echo "<div class='container my-5 text-center text-white'><div class='panel-dark p-5'><h3 class='text-danger'>Tựa game không tồn tại hoặc không hỗ trợ cho thuê tài khoản.</h3><a href='index.php' class='btn btn-gaming-primary mt-3'>Về Cửa Hàng</a></div></div>";
+    echo "<div class='container my-5 text-center'><div class='panel-dark p-5'><h3 class='text-danger'>Tựa game không tồn tại hoặc không hỗ trợ cho thuê tài khoản.</h3><a href='index.php' class='btn btn-gaming-primary mt-3'>Về Cửa Hàng</a></div></div>";
     include 'includes/footer.php';
     exit();
 }
@@ -220,7 +220,7 @@ $csrf_token = generate_csrf_token();
                     <?php if(!empty($game['image_url']) && file_exists($game['image_url'])) { ?>
                         <img src="<?php echo htmlspecialchars($game['image_url']); ?>" alt="<?php echo htmlspecialchars($game['title']); ?>" class="w-100 object-fit-cover" style="height: 200px;">
                     <?php } else { ?>
-                        <div class="d-flex align-items-center justify-content-center bg-dark text-muted" style="height: 200px;">
+                        <div class="d-flex align-items-center justify-content-center anplay-surface-muted text-muted" style="height: 200px;">
                             <i class="bi bi-controller fs-1"></i>
                         </div>
                     <?php } ?>
@@ -243,7 +243,7 @@ $csrf_token = generate_csrf_token();
                     <div class="d-flex justify-content-between small mb-2">
                         <span class="summary-label">Kho tài khoản:</span>
                         <strong class="<?php echo ($available_accounts > 0) ? 'text-success' : 'text-danger'; ?>">
-                            <?php echo ($available_accounts > 0) ? "🟢 Sẵn sàng ($available_accounts TK)" : "🔴 Hết tài khoản"; ?>
+                            <?php echo ($available_accounts > 0) ? "<i class='bi bi-check-circle-fill me-1'></i>Sẵn sàng ($available_accounts TK)" : "<i class='bi bi-x-circle-fill me-1'></i>Hết tài khoản"; ?>
                         </strong>
                     </div>
                     <div class="d-flex justify-content-between small mb-2">

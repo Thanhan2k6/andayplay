@@ -54,22 +54,22 @@ if (!$is_allowed) {
         <ol class="breadcrumb small">
             <li class="breadcrumb-item"><a href="index.php" class="text-decoration-none text-secondary"><i class="bi bi-house me-1"></i>Trang chủ</a></li>
             <li class="breadcrumb-item"><a href="my_library.php" class="text-decoration-none text-secondary">Thư viện của tôi</a></li>
-            <li class="breadcrumb-item active text-white" aria-current="page"><?php echo htmlspecialchars($game['title']); ?></li>
+            <li class="breadcrumb-item active" aria-current="page"><?php echo htmlspecialchars($game['title']); ?></li>
         </ol>
     </nav>
 
     <div class="row justify-content-center">
         <div class="col-lg-7">
-            <div class="p-4 p-md-5 rounded-4 shadow-lg text-white" style="background: var(--bg-card); border: 1px solid var(--border-color); position: relative; overflow: hidden;">
+            <div class="p-4 p-md-5 rounded-3 shadow-lg" style="background: var(--bg-card); border: 1px solid var(--border-color); position: relative; overflow: hidden;">
                 <!-- Glowing Top Stripe -->
                 <div style="position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, var(--primary), var(--accent-cyan));"></div>
 
                 <div class="text-center mb-4">
-                    <div class="d-inline-flex p-3 rounded-4 mb-3" style="background: rgba(99, 102, 241, 0.15); border: 1px solid rgba(99, 102, 241, 0.3);">
+                    <div class="d-inline-flex p-3 rounded-3 mb-3" style="background: rgba(99, 102, 241, 0.15); border: 1px solid rgba(99, 102, 241, 0.3);">
                         <i class="bi bi-shield-check fs-2" style="color: var(--primary);"></i>
                     </div>
                     <span class="d-block text-secondary small text-uppercase fw-bold letter-spacing-1 mb-1">TRUNG TÂM TÀI KHOẢN & BỘ CÀI ĐẶT</span>
-                    <h2 class="fw-extrabold text-white mb-2"><?php echo htmlspecialchars($game['title']); ?></h2>
+                    <h2 class="fw-extrabold mb-2"><?php echo htmlspecialchars($game['title']); ?></h2>
                     <div class="d-flex justify-content-center gap-2">
                         <span class="platform-pill"><i class="bi bi-display me-1"></i><?php echo htmlspecialchars($game['platform'] ?? 'PC'); ?></span>
                         <span class="status-pill status-pill-success"><span class="status-dot"></span> ĐANG KÍCH HOẠT</span>
@@ -201,7 +201,7 @@ function togglePass(inputId, btn) {
 <!-- MODAL: CHÍNH SÁCH & QUYỀN ĐỔI MẬT KHẨU TÀI KHOẢN -->
 <div class="modal fade" id="dlPassPolicyModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content modal-gaming shadow-lg text-white" style="background: var(--bg-card); border: 1px solid var(--border-color);">
+        <div class="modal-content modal-gaming shadow-lg" style="background: var(--bg-card); border: 1px solid var(--border-color);">
             <div class="modal-header border-secondary border-opacity-25">
                 <h5 class="modal-title fw-bold text-warning d-flex align-items-center">
                     <i class="bi bi-shield-lock-fill me-2 fs-5"></i> Chính Sách Mật Khẩu Tài Khoản Game
@@ -211,14 +211,14 @@ function togglePass(inputId, btn) {
             <div class="modal-body p-4">
                 <div class="p-3 rounded-3 mb-3" style="background: rgba(239, 68, 68, 0.12); border: 1px solid rgba(239, 68, 68, 0.3);">
                     <div class="d-flex align-items-center gap-2 mb-1">
-                        <span class="badge bg-danger text-white"><i class="bi bi-slash-circle me-1"></i> KHÔNG ĐƯỢC PHÉP ĐỔI MẬT KHẨU</span>
+                        <span class="badge bg-danger"><i class="bi bi-slash-circle me-1"></i> KHÔNG ĐƯỢC PHÉP ĐỔI MẬT KHẨU</span>
                     </div>
                     <small class="text-danger fw-semibold">
                         Tài khoản game <strong><?php echo htmlspecialchars($game['account_username'] ?? 'cho thuê'); ?></strong> thuộc quyền sở hữu của ANPLAY STORE.
                     </small>
                 </div>
 
-                <h6 class="fw-bold text-light mb-2">Quy định và giới hạn bảo mật:</h6>
+                <h6 class="fw-bold mb-2">Quy định và giới hạn bảo mật:</h6>
                 <ul class="text-secondary small mb-3 ps-3" style="line-height: 1.7;">
                     <li><strong>Chính sách thuê chia sẻ:</strong> Khách hàng chỉ được cấp quyền đăng nhập chơi game trong thời gian thuê. <em>Tuyệt đối không tự ý đổi mật khẩu, email hoặc cài Steam Guard cá nhân</em>.</li>
                     <li><strong>Phát hiện vi phạm:</strong> Việc cố tình can thiệp mật khẩu sẽ khiến tài khoản bị thu hồi vĩnh viễn và chấm dứt quyền sử dụng dịch vụ.</li>
@@ -238,7 +238,7 @@ function togglePass(inputId, btn) {
 <!-- MODAL: KIỂM TRA LƯU TIẾN TRÌNH (SAVE GAME) & TIẾP TỤC CHƠI -->
 <div class="modal fade" id="dlSaveGameModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content modal-gaming shadow-lg text-white" style="background: var(--bg-card); border: 1px solid var(--border-color);">
+        <div class="modal-content modal-gaming shadow-lg" style="background: var(--bg-card); border: 1px solid var(--border-color);">
             <div class="modal-header border-secondary border-opacity-25">
                 <h5 class="modal-title fw-bold text-info d-flex align-items-center">
                     <i class="bi bi-cloud-check-fill me-2 fs-5"></i> Lưu Tiến Trình Game (Save Game)
@@ -248,14 +248,14 @@ function togglePass(inputId, btn) {
             <div class="modal-body p-4">
                 <div class="p-3 rounded-3 mb-3" style="background: rgba(16, 185, 129, 0.12); border: 1px solid rgba(16, 185, 129, 0.3);">
                     <div class="d-flex align-items-center gap-2 mb-1">
-                        <span class="badge bg-success text-white"><i class="bi bi-check-circle-fill me-1"></i> SAVE GAME: HOẠT ĐỘNG HOÀN HẢO</span>
+                        <span class="badge bg-success"><i class="bi bi-check-circle-fill me-1"></i> SAVE GAME: HOẠT ĐỘNG HOÀN HẢO</span>
                     </div>
                     <small class="text-success fw-semibold">
                         Tựa game <strong><?php echo htmlspecialchars($game['title']); ?></strong> hỗ trợ lưu tiến trình qua Steam Cloud & lưu cục bộ trên máy tính.
                     </small>
                 </div>
 
-                <h6 class="fw-bold text-light mb-2">Cách thức lưu và tiếp tục chơi:</h6>
+                <h6 class="fw-bold mb-2">Cách thức lưu và tiếp tục chơi:</h6>
                 <ul class="text-secondary small mb-3 ps-3" style="line-height: 1.7;">
                     <li><strong>Đồng bộ đám mây (Cloud Save):</strong> Tiến trình game được nền tảng tự động lưu lên máy chủ bản quyền gắn với tài khoản <code><?php echo htmlspecialchars($game['account_username'] ?? ''); ?></code>.</li>
                     <li><strong>Lưu máy tính (Local Save):</strong> Tệp lưu game còn được lưu tự động tại <code>%USERPROFILE%\Documents</code> hoặc <code>Saved Games</code>. Bạn có thể sao lưu tệp này bất cứ lúc nào.</li>

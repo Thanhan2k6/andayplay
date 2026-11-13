@@ -177,7 +177,7 @@ if (isset($_SESSION['user_id'])) {
             </button>
 
             <!-- Nút hỗ trợ khách hàng nhanh -->
-            <a href="support.php" class="topbar-action-btn" title="Trung tâm hỗ trợ 24/7">
+            <a href="support.php" class="topbar-action-btn d-none d-sm-inline-flex" title="Trung tâm hỗ trợ 24/7">
                 <i class="bi bi-headset"></i>
             </a>
 
@@ -196,7 +196,7 @@ if (isset($_SESSION['user_id'])) {
                             <?php echo $header_unread_notifs; ?>
                         </span>
                     </button>
-                    <div class="dropdown-menu dropdown-menu-end shadow-lg mt-2 p-0 rounded-4 topbar-custom-dropdown" aria-labelledby="notifDropdownBtn" style="width: 360px; max-width: 92vw; background-color: var(--surface-bg); border: 1px solid var(--border-subtle); box-shadow: var(--shadow-elevated);">
+                    <div class="dropdown-menu dropdown-menu-end shadow-lg mt-2 p-0 rounded-3 topbar-custom-dropdown" aria-labelledby="notifDropdownBtn" style="width: 360px; max-width: 92vw; background-color: var(--surface-bg); border: 1px solid var(--border-subtle); box-shadow: var(--shadow-elevated);">
                         <!-- Header -->
                         <div class="p-3 border-bottom border-secondary border-opacity-25 d-flex justify-content-between align-items-center">
                             <div class="d-flex align-items-center gap-2">
@@ -339,9 +339,9 @@ if (isset($_SESSION['user_id'])) {
                     </ul>
                 </div>
             <?php else: ?>
-                <div class="d-flex align-items-center gap-2">
-                    <a href="login.php" class="btn btn-gaming-secondary py-1 px-3" style="font-size: 0.85rem; min-height: 38px;">Đăng nhập</a>
-                    <a href="register.php" class="btn btn-gaming-primary py-1 px-3" style="font-size: 0.85rem; min-height: 38px;">Đăng ký</a>
+                <div class="d-flex align-items-center gap-2 topbar-auth-actions">
+                    <a href="login.php" class="btn btn-gaming-secondary py-1 px-3 text-nowrap" style="font-size: 0.85rem; min-height: 38px;">Đăng nhập</a>
+                    <a href="register.php" class="btn btn-gaming-primary py-1 px-3 text-nowrap" style="font-size: 0.85rem; min-height: 38px;">Đăng ký</a>
                 </div>
             <?php endif; ?>
         </div>
@@ -488,7 +488,7 @@ if (isset($_SESSION['user_id'])) {
                         '</div>' +
                         '<div class="flex-grow-1 overflow-hidden">' +
                             '<div class="d-flex align-items-center justify-content-between gap-1 mb-1">' +
-                                '<a href="' + linkUrl + '" class="text-white text-decoration-none small text-truncate fw-bold ' + (isUnread ? 'text-primary' : '') + '" style="max-width: 210px;">' + escapeHtml(item.title) + '</a>' +
+                                '<a href="' + linkUrl + '" class=" text-decoration-none small text-truncate fw-bold ' + (isUnread ? 'text-primary' : '') + '" style="max-width: 210px;">' + escapeHtml(item.title) + '</a>' +
                                 '<div class="d-flex align-items-center gap-1">' +
                                     (isUnread ? '<span class="p-1 bg-primary rounded-circle" style="width: 6px; height: 6px;"></span>' : '') +
                                     '<button type="button" class="btn btn-link text-secondary p-0 ms-1 opacity-50 hover-danger" style="font-size: 0.8rem;" title="Xóa thông báo" onclick="deleteNotificationQuick(event, ' + item.id + ')"><i class="bi bi-x-lg"></i></button>' +
@@ -641,8 +641,8 @@ if (isset($_SESSION['user_id'])) {
                                 let html = '';
                                 data.results.forEach(item => {
                                     const availBadge = (item.available_acc > 0) 
-                                        ? `<span class="badge bg-success bg-opacity-25 text-success" style="font-size:0.68rem;">🟢 Còn ${item.available_acc} TK</span>` 
-                                        : `<span class="badge bg-danger bg-opacity-25 text-danger" style="font-size:0.68rem;">🔴 Hết TK</span>`;
+                                        ? `<span class="badge bg-success bg-opacity-25 text-success" style="font-size:0.68rem;"><i class="bi bi-check-circle-fill me-1"></i>Còn ${item.available_acc} TK</span>` 
+                                        : `<span class="badge bg-danger bg-opacity-25 text-danger" style="font-size:0.68rem;"><i class="bi bi-x-circle-fill me-1"></i>Hết TK</span>`;
 
                                     html += `
                                         <a href="${item.url}" class="search-live-item">

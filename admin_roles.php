@@ -145,7 +145,7 @@ $page_title = "Quản Trị Phân Quyền & Vai Trò";
 require_once __DIR__ . '/includes/admin_header.php';
 ?>
 
-<div class="container-fluid px-lg-5 py-4 text-white">
+<div class="container-fluid px-lg-5 py-4">
     <!-- Header -->
     <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 pb-3 border-bottom border-secondary border-opacity-25 gap-3">
         <div>
@@ -154,11 +154,11 @@ require_once __DIR__ . '/includes/admin_header.php';
                     <i class="bi bi-shield-shaded me-1"></i> SUPER ADMIN EXCLUSIVE
                 </span>
             </div>
-            <h2 class="fw-extrabold text-white mb-0">Quản Lý Phân Quyền & Ban Quản Trị</h2>
+            <h2 class="fw-extrabold mb-0">Quản Lý Phân Quyền & Ban Quản Trị</h2>
             <p class="text-secondary small mb-0">Trung tâm phân cấp quyền cao nhất toàn sàn: Phân quyền Super Admin, Admin và kiểm soát bảo mật hệ thống.</p>
         </div>
         <div class="d-flex gap-2">
-            <a href="admin_management.php" class="btn btn-primary py-2 px-3 small fw-bold" style="background: linear-gradient(135deg, #a855f7, #6366f1); border: none;">
+            <a href="admin_management.php" class="btn btn-gaming-primary py-2 px-3 small">
                 <i class="bi bi-person-gear me-1"></i> Quản Trị Admin & Permissions
             </a>
             <a href="admin_system.php" class="btn btn-gaming-secondary py-2 px-3 small">
@@ -171,14 +171,14 @@ require_once __DIR__ . '/includes/admin_header.php';
     </div>
 
     <?php if (!empty($success_msg)): ?>
-        <div class="alert alert-success alert-dismissible fade show mb-4 text-white" style="background: rgba(16,185,129,0.2); border: 1px solid #10b981;" role="alert">
+        <div class="alert alert-success alert-dismissible fade show mb-4" style="background: rgba(16,185,129,0.2); border: 1px solid #10b981;" role="alert">
             <i class="bi bi-check-circle-fill me-2 text-success"></i> <?php echo htmlspecialchars($success_msg); ?>
             <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
     <?php endif; ?>
 
     <?php if (!empty($error_msg)): ?>
-        <div class="alert alert-danger alert-dismissible fade show mb-4 text-white" style="background: rgba(244,63,94,0.2); border: 1px solid #f43f5e;" role="alert">
+        <div class="alert alert-danger alert-dismissible fade show mb-4" style="background: rgba(244,63,94,0.2); border: 1px solid #f43f5e;" role="alert">
             <i class="bi bi-exclamation-triangle-fill me-2 text-danger"></i> <?php echo htmlspecialchars($error_msg); ?>
             <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
@@ -187,35 +187,35 @@ require_once __DIR__ . '/includes/admin_header.php';
     <!-- THỐNG KÊ NHANH CÁC TẦNG QUYỀN -->
     <div class="row g-3 mb-4">
         <div class="col-md-4">
-            <div class="panel-dark p-3 rounded-4 border border-danger border-opacity-25 d-flex align-items-center gap-3">
+            <div class="panel-dark p-3 rounded-3 border border-danger border-opacity-25 d-flex align-items-center gap-3">
                 <div class="p-3 rounded-3" style="background: rgba(244,63,94,0.15); color: #f43f5e; font-size: 1.8rem;">
                     <i class="bi bi-shield-shaded"></i>
                 </div>
                 <div>
                     <div class="text-secondary small fw-bold text-uppercase">Super Admin (Tối cao)</div>
-                    <div class="fs-3 fw-bold text-white"><?php echo $count_super; ?> <span class="fs-6 text-secondary fw-normal">tài khoản</span></div>
+                    <div class="fs-3 fw-bold"><?php echo $count_super; ?> <span class="fs-6 text-secondary fw-normal">tài khoản</span></div>
                 </div>
             </div>
         </div>
         <div class="col-md-4">
-            <div class="panel-dark p-3 rounded-4 border border-primary border-opacity-25 d-flex align-items-center gap-3">
+            <div class="panel-dark p-3 rounded-3 border border-primary border-opacity-25 d-flex align-items-center gap-3">
                 <div class="p-3 rounded-3" style="background: rgba(99,102,241,0.15); color: #6366f1; font-size: 1.8rem;">
                     <i class="bi bi-shield-check"></i>
                 </div>
                 <div>
                     <div class="text-secondary small fw-bold text-uppercase">Admin Quản Trị</div>
-                    <div class="fs-3 fw-bold text-white"><?php echo $count_admin; ?> <span class="fs-6 text-secondary fw-normal">tài khoản</span></div>
+                    <div class="fs-3 fw-bold"><?php echo $count_admin; ?> <span class="fs-6 text-secondary fw-normal">tài khoản</span></div>
                 </div>
             </div>
         </div>
         <div class="col-md-4">
-            <div class="panel-dark p-3 rounded-4 border border-secondary border-opacity-25 d-flex align-items-center gap-3">
+            <div class="panel-dark p-3 rounded-3 border border-secondary border-opacity-25 d-flex align-items-center gap-3">
                 <div class="p-3 rounded-3" style="background: rgba(6,182,212,0.15); color: #06b6d4; font-size: 1.8rem;">
                     <i class="bi bi-people-fill"></i>
                 </div>
                 <div>
                     <div class="text-secondary small fw-bold text-uppercase">Khách Hàng (User)</div>
-                    <div class="fs-3 fw-bold text-white"><?php echo $count_user; ?> <span class="fs-6 text-secondary fw-normal">tài khoản</span></div>
+                    <div class="fs-3 fw-bold"><?php echo $count_user; ?> <span class="fs-6 text-secondary fw-normal">tài khoản</span></div>
                 </div>
             </div>
         </div>
@@ -248,17 +248,17 @@ require_once __DIR__ . '/includes/admin_header.php';
     </div>
 
     <!-- BẢNG DANH SÁCH & ĐIỀU HÀNH PHÂN QUYỀN -->
-    <div class="panel-dark p-0 rounded-4 overflow-hidden shadow-sm">
+    <div class="panel-dark p-0 rounded-3 overflow-hidden shadow-sm">
         <div class="table-responsive">
-            <table class="table table-dark table-hover align-middle mb-0" style="background: transparent;">
+            <table class="table table-gaming table-hover align-middle mb-0" style="background: transparent;">
                 <thead style="background: rgba(255,255,255,0.04); border-bottom: 1px solid rgba(255,255,255,0.1);">
                     <tr class="text-secondary small">
-                        <th class="ps-4 py-3">ID & THÀNH VIÊN</th>
+                        <th class="ps-3 py-3">THÀNH VIÊN</th>
                         <th class="py-3">EMAIL</th>
-                        <th class="py-3 text-center">TẦNG QUYỀN HIỆN TẠI</th>
+                        <th class="py-3 text-center">VAI TRÒ</th>
                         <th class="py-3 text-center">TRẠNG THÁI</th>
                         <th class="py-3">NGÀY TẠO</th>
-                        <th class="pe-4 py-3 text-end">QUẢN LÝ PHÂN QUYỀN (SUPER ADMIN)</th>
+                        <th class="pe-3 py-3 text-end">THAO TÁC</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -275,11 +275,11 @@ require_once __DIR__ . '/includes/admin_header.php';
                             $is_current_super = ($u['user_id'] == $super_admin_id);
                         ?>
                             <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
-                                <td class="ps-4 py-3">
+                                <td class="ps-3 py-3">
                                     <div class="d-flex align-items-center gap-2">
                                         <img src="https://ui-avatars.com/api/?name=<?php echo urlencode($u['username']); ?>&background=6366f1&color=fff&bold=true&rounded=true" width="32" height="32" class="rounded-circle shadow-sm" alt="Avatar">
                                         <div>
-                                            <div class="fw-bold text-white small">
+                                            <div class="fw-bold small">
                                                 @<?php echo htmlspecialchars($u['username']); ?>
                                                 <?php if ($is_current_super): ?>
                                                     <span class="badge ms-1" style="background: rgba(16,185,129,0.2); color: #10b981; font-size: 0.65rem;">BẠN</span>
@@ -289,8 +289,8 @@ require_once __DIR__ . '/includes/admin_header.php';
                                         </div>
                                     </div>
                                 </td>
-                                <td>
-                                    <span class="text-light small"><?php echo htmlspecialchars($u['email']); ?></span>
+                                <td style="max-width: 220px; overflow-wrap: anywhere;">
+                                    <span class="small"><?php echo htmlspecialchars($u['email']); ?></span>
                                 </td>
                                 <td class="text-center">
                                     <span class="badge" style="background: <?php echo $r_info['bg']; ?>; color: <?php echo $r_info['color']; ?>; border: 1px solid <?php echo $r_info['color']; ?>; padding: 6px 12px; font-size: 0.75rem;">
@@ -304,11 +304,11 @@ require_once __DIR__ . '/includes/admin_header.php';
                                 <td>
                                     <span class="text-secondary small"><?php echo date('d/m/Y H:i', strtotime($u['created_at'] ?? 'now')); ?></span>
                                 </td>
-                                <td class="text-end pe-4">
+                                <td class="text-end pe-3">
                                     <?php if ($is_current_super): ?>
                                         <span class="badge bg-secondary bg-opacity-25 text-secondary small py-2 px-3">Tài khoản hiện tại</span>
                                     <?php else: ?>
-                                        <div class="d-inline-flex gap-1">
+                                        <div class="d-inline-flex flex-wrap justify-content-end gap-1">
                                             <!-- FORM THĂNG / HẠ QUYỀN AN TOÀN BẰNG POST -->
                                             <?php if ($u['role'] == 0): ?>
                                                 <form action="admin_roles.php" method="POST" class="d-inline" onsubmit="return confirm('Bạn có chắc muốn thăng cấp người này làm Quản Trị Viên (Admin)?');">

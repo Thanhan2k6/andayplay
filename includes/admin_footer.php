@@ -98,7 +98,7 @@
                     '</div>' +
                     '<div class="flex-grow-1 min-w-0">' +
                         '<div class="d-flex justify-content-between align-items-center mb-1">' +
-                            '<a href="' + linkUrl + '" class="text-white text-decoration-none small text-truncate fw-bold ' + (isUnread ? 'text-primary' : '') + '" style="max-width: 200px;">' + escapeAdminHtml(item.title) + '</a>' +
+                            '<a href="' + linkUrl + '" class=" text-decoration-none small text-truncate fw-bold ' + (isUnread ? 'text-primary' : '') + '" style="max-width: 200px;">' + escapeAdminHtml(item.title) + '</a>' +
                             '<div class="d-flex align-items-center gap-1">' +
                                 (isUnread ? '<span class="p-1 bg-primary rounded-circle" style="width: 6px; height: 6px;"></span>' : '') +
                                 '<button type="button" class="btn btn-link text-secondary p-0 ms-1 opacity-50 hover-danger" style="font-size: 0.75rem;" title="Xóa thông báo" onclick="deleteAdminNotificationQuick(event, ' + item.id + ')"><i class="bi bi-x-lg"></i></button>' +

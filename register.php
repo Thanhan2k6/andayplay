@@ -127,10 +127,26 @@ if (isset($_POST['btn_register'])) {
             --border-color: #cbd5e1;
             --primary: #4f46e5;
             --primary-glow: rgba(79, 70, 229, 0.16);
-            --accent-cyan: #0284c7;
-            --accent-success: #059669;
+            --accent-cyan: #0369a1;
+            --accent-success: #047857;
             --text-main: #0f172a;
-            --text-muted: #64748b;
+            --text-muted: #475569;
+        }
+
+        :root:not([data-theme="light"]) .text-secondary,
+        :root:not([data-theme="light"]) .text-muted {
+            color: #a3b3c6 !important;
+        }
+
+        :root:not([data-theme="light"]) a:not(.btn) {
+            color: #a5b4fc;
+        }
+
+        .btn-gaming-primary,
+        .btn-primary {
+            background: #4f46e5 !important;
+            border-color: #4f46e5 !important;
+            color: #ffffff !important;
         }
 
         body {
@@ -252,7 +268,9 @@ if (isset($_POST['btn_register'])) {
             border-radius: 8px;
         }
 
-        [data-theme="light"] .text-white {
+        [data-theme="light"] .,
+        [data-theme="light"] .,
+        [data-theme="light"] .auth-card .form-label {
             color: var(--text-main) !important;
         }
 
@@ -303,14 +321,14 @@ if (isset($_POST['btn_register'])) {
             <div class="brand-box">
                 <i class="bi bi-person-plus-fill fs-3"></i>
             </div>
-            <h3 class="fw-extrabold text-white mb-1" style="letter-spacing: -0.5px;">TẠO TÀI KHOẢN MỚI</h3>
+            <h3 class="fw-extrabold mb-1" style="letter-spacing: -0.5px;">TẠO TÀI KHOẢN MỚI</h3>
         </a>
         <p class="text-secondary small mb-4">Gia nhập ANPLAY STORE để trải nghiệm các siêu phẩm game giá rẻ</p>
 
         <form method="POST" action="" class="text-start">
             <!-- Username Input -->
             <div class="mb-3">
-                <label class="form-label text-light small fw-bold mb-1">Tên đăng nhập</label>
+                <label class="form-label small fw-bold mb-1">Tên đăng nhập</label>
                 <div class="input-group">
                     <span class="input-group-text"><i class="bi bi-person"></i></span>
                     <input type="text" name="username" class="form-control form-control-gaming" placeholder="Ví dụ: gamer_pro99" value="<?php echo isset($_POST['username']) ? htmlspecialchars($_POST['username']) : ''; ?>" required autocomplete="username">
@@ -319,7 +337,7 @@ if (isset($_POST['btn_register'])) {
 
             <!-- Email Input -->
             <div class="mb-3">
-                <label class="form-label text-light small fw-bold mb-1">Địa chỉ Email</label>
+                <label class="form-label small fw-bold mb-1">Địa chỉ Email</label>
                 <div class="input-group">
                     <span class="input-group-text"><i class="bi bi-envelope"></i></span>
                     <input type="email" name="email" class="form-control form-control-gaming" placeholder="name@example.com" value="<?php echo isset($_POST['email']) ? htmlspecialchars($_POST['email']) : ''; ?>" required autocomplete="email">
@@ -328,7 +346,7 @@ if (isset($_POST['btn_register'])) {
 
             <!-- Password Input -->
             <div class="mb-3">
-                <label class="form-label text-light small fw-bold mb-1">Mật khẩu</label>
+                <label class="form-label small fw-bold mb-1">Mật khẩu</label>
                 <div class="input-group">
                     <span class="input-group-text"><i class="bi bi-key"></i></span>
                     <input type="password" name="password" id="reg_pass" class="form-control form-control-gaming" placeholder="Tối thiểu 6 ký tự" required autocomplete="new-password">
@@ -340,7 +358,7 @@ if (isset($_POST['btn_register'])) {
 
             <!-- Re-password Input -->
             <div class="mb-4">
-                <label class="form-label text-light small fw-bold mb-1">Xác nhận mật khẩu</label>
+                <label class="form-label small fw-bold mb-1">Xác nhận mật khẩu</label>
                 <div class="input-group">
                     <span class="input-group-text"><i class="bi bi-shield-check"></i></span>
                     <input type="password" name="re_password" id="reg_repass" class="form-control form-control-gaming" placeholder="Nhập lại mật khẩu" required autocomplete="new-password">

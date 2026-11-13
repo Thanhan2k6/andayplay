@@ -102,7 +102,7 @@ $page_title = "Cấu Hình Hệ Thống & Nhật Ký Kiểm Toán";
 require_once __DIR__ . '/includes/admin_header.php';
 ?>
 
-<div class="container-fluid px-lg-5 py-4 text-white">
+<div class="container-fluid px-lg-5 py-4">
     <!-- Header -->
     <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 pb-3 border-bottom border-secondary border-opacity-25 gap-3">
         <div>
@@ -111,7 +111,7 @@ require_once __DIR__ . '/includes/admin_header.php';
                     <i class="bi bi-shield-shaded me-1"></i> SUPER ADMIN EXCLUSIVE
                 </span>
             </div>
-            <h2 class="fw-extrabold text-white mb-0">Cấu Hình Toàn Sàn & Audit Logs</h2>
+            <h2 class="fw-extrabold mb-0">Cấu Hình Toàn Sàn & Audit Logs</h2>
             <p class="text-secondary small mb-0">Kiểm soát tham số hoạt động, chế độ bảo mật và theo dõi toàn bộ nhật ký kiểm toán hệ thống.</p>
         </div>
         <div class="d-flex gap-2">
@@ -125,14 +125,14 @@ require_once __DIR__ . '/includes/admin_header.php';
     </div>
 
     <?php if (!empty($success_msg)): ?>
-        <div class="alert alert-success alert-dismissible fade show mb-4 text-white" style="background: rgba(16,185,129,0.2); border: 1px solid #10b981;" role="alert">
+        <div class="alert alert-success alert-dismissible fade show mb-4" style="background: rgba(16,185,129,0.2); border: 1px solid #10b981;" role="alert">
             <i class="bi bi-check-circle-fill me-2 text-success"></i> <?php echo htmlspecialchars($success_msg); ?>
             <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
     <?php endif; ?>
 
     <?php if (!empty($error_msg)): ?>
-        <div class="alert alert-danger alert-dismissible fade show mb-4 text-white" style="background: rgba(244,63,94,0.2); border: 1px solid #f43f5e;" role="alert">
+        <div class="alert alert-danger alert-dismissible fade show mb-4" style="background: rgba(244,63,94,0.2); border: 1px solid #f43f5e;" role="alert">
             <i class="bi bi-exclamation-triangle-fill me-2 text-danger"></i> <?php echo htmlspecialchars($error_msg); ?>
             <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
@@ -141,8 +141,8 @@ require_once __DIR__ . '/includes/admin_header.php';
     <div class="row g-4 mb-4">
         <!-- CỘT TRÁI: CẤU HÌNH HỆ THỐNG -->
         <div class="col-lg-5">
-            <div class="panel-dark p-4 rounded-4 shadow-sm h-100">
-                <h5 class="fw-bold text-white mb-3 pb-2 border-bottom border-secondary border-opacity-25">
+            <div class="panel-dark p-4 rounded-3 shadow-sm h-100">
+                <h5 class="fw-bold mb-3 pb-2 border-bottom border-secondary border-opacity-25">
                     <i class="bi bi-sliders me-2 text-warning"></i> Cài Đặt Hệ Thống Toàn Sàn
                 </h5>
 
@@ -167,16 +167,16 @@ require_once __DIR__ . '/includes/admin_header.php';
                     <div class="mb-3">
                         <label class="form-label text-secondary small fw-bold">Cho Phép Khách Hàng Đăng Ký Mới</label>
                         <select name="settings[allow_registrations]" class="form-select form-control-gaming">
-                            <option value="1" <?php echo (($settings_map['allow_registrations']['setting_value'] ?? '1') == '1') ? 'selected' : ''; ?>>✅ Bật - Cho phép đăng ký tự do</option>
-                            <option value="0" <?php echo (($settings_map['allow_registrations']['setting_value'] ?? '1') == '0') ? 'selected' : ''; ?>>⛔ Tạm khóa đăng ký thành viên mới</option>
+                            <option value="1" <?php echo (($settings_map['allow_registrations']['setting_value'] ?? '1') == '1') ? 'selected' : ''; ?>>Bật - Cho phép đăng ký tự do</option>
+                            <option value="0" <?php echo (($settings_map['allow_registrations']['setting_value'] ?? '1') == '0') ? 'selected' : ''; ?>>Tạm khóa đăng ký thành viên mới</option>
                         </select>
                     </div>
 
                     <div class="mb-4">
                         <label class="form-label text-secondary small fw-bold">Chế Độ Bảo Trì Hệ Thống</label>
                         <select name="settings[maintenance_mode]" class="form-select form-control-gaming">
-                            <option value="0" <?php echo (($settings_map['maintenance_mode']['setting_value'] ?? '0') == '0') ? 'selected' : ''; ?>>🟢 Bình thường (Hoạt động 24/7)</option>
-                            <option value="1" <?php echo (($settings_map['maintenance_mode']['setting_value'] ?? '0') == '1') ? 'selected' : ''; ?>>🔴 Bật bảo trì (Chỉ Super Admin vào được)</option>
+                            <option value="0" <?php echo (($settings_map['maintenance_mode']['setting_value'] ?? '0') == '0') ? 'selected' : ''; ?>>Bình thường (Hoạt động 24/7)</option>
+                            <option value="1" <?php echo (($settings_map['maintenance_mode']['setting_value'] ?? '0') == '1') ? 'selected' : ''; ?>>Bật bảo trì (Chỉ Super Admin vào được)</option>
                         </select>
                     </div>
 
@@ -189,16 +189,16 @@ require_once __DIR__ . '/includes/admin_header.php';
 
         <!-- CỘT PHẢI: AUDIT LOGS -->
         <div class="col-lg-7">
-            <div class="panel-dark p-4 rounded-4 shadow-sm h-100">
+            <div class="panel-dark p-4 rounded-3 shadow-sm h-100">
                 <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom border-secondary border-opacity-25">
-                    <h5 class="fw-bold text-white mb-0">
+                    <h5 class="fw-bold mb-0">
                         <i class="bi bi-journal-text me-2 text-primary"></i> Nhật Ký Kiểm Toán (Audit Logs)
                     </h5>
                     <span class="badge bg-secondary bg-opacity-25 text-secondary" style="font-size: 0.75rem;">30 sự kiện gần nhất</span>
                 </div>
 
                 <div class="table-responsive" style="max-height: 480px; overflow-y: auto;">
-                    <table class="table table-dark table-sm table-hover align-middle mb-0" style="background: transparent;">
+                    <table class="table table-gaming table-sm table-hover align-middle mb-0" style="background: transparent;">
                         <thead style="background: rgba(255,255,255,0.04);">
                             <tr class="text-secondary small" style="font-size: 0.72rem;">
                                 <th class="py-2">THỜI GIAN</th>
@@ -220,15 +220,15 @@ require_once __DIR__ . '/includes/admin_header.php';
                                     <tr style="font-size: 0.76rem; border-bottom: 1px solid rgba(255,255,255,0.04);">
                                         <td class="text-secondary text-nowrap"><?php echo date('d/m H:i:s', strtotime($log['created_at'])); ?></td>
                                         <td>
-                                            <span class="fw-bold text-white">@<?php echo htmlspecialchars($log['username'] ?? 'System'); ?></span>
+                                            <span class="fw-bold">@<?php echo htmlspecialchars($log['username'] ?? 'System'); ?></span>
                                             <?php if (intval($log['role'] ?? 0) === 2): ?>
                                                 <span class="badge" style="background: rgba(244,63,94,0.15); color: #f43f5e; font-size: 0.60rem;">SUPER</span>
                                             <?php endif; ?>
                                         </td>
                                         <td>
-                                            <span class="badge bg-dark border border-secondary text-info"><?php echo htmlspecialchars($log['action']); ?></span>
+                                            <span class="badge anplay-surface-muted border border-secondary text-info"><?php echo htmlspecialchars($log['action']); ?></span>
                                         </td>
-                                        <td class="text-light small text-truncate" style="max-width: 200px;" title="<?php echo htmlspecialchars($log['details'] ?? ''); ?>">
+                                        <td class=" small text-truncate" style="max-width: 200px;" title="<?php echo htmlspecialchars($log['details'] ?? ''); ?>">
                                             <?php echo htmlspecialchars($log['details'] ?? '-'); ?>
                                         </td>
                                         <td class="text-secondary small font-monospace"><?php echo htmlspecialchars($log['ip_address'] ?? '127.0.0.1'); ?></td>

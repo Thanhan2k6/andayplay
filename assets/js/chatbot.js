@@ -10,21 +10,21 @@
         const closeBtn = document.getElementById('anplay-chat-close');
         const clearBtn = document.getElementById('anplay-chat-clear');
 
-        if (toggleBtn && !toggleBtn.hasAttribute('data-bound')) {
+        if (toggleBtn && !toggleBtn.hasAttribute('data-bound') && !toggleBtn.hasAttribute('onclick')) {
             toggleBtn.setAttribute('data-bound', 'true');
             toggleBtn.addEventListener('click', (e) => {
                 if (window.anplayToggleChat) window.anplayToggleChat(e);
             });
         }
 
-        if (closeBtn && !closeBtn.hasAttribute('data-bound')) {
+        if (closeBtn && !closeBtn.hasAttribute('data-bound') && !closeBtn.hasAttribute('onclick')) {
             closeBtn.setAttribute('data-bound', 'true');
             closeBtn.addEventListener('click', (e) => {
                 if (window.anplayToggleChat) window.anplayToggleChat(e);
             });
         }
 
-        if (clearBtn && !clearBtn.hasAttribute('data-bound')) {
+        if (clearBtn && !clearBtn.hasAttribute('data-bound') && !clearBtn.hasAttribute('onclick')) {
             clearBtn.setAttribute('data-bound', 'true');
             clearBtn.addEventListener('click', (e) => {
                 if (window.anplayClearChat) window.anplayClearChat(e);

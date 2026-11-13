@@ -54,7 +54,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_id'])) {
 }
 ?>
 
-<div class="container-fluid px-lg-5 py-4 my-2 text-white">
+<div class="container-fluid px-lg-5 py-4 my-2">
     <!-- Header -->
     <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 pb-3 border-bottom border-secondary border-opacity-25 gap-3">
         <div>
@@ -63,7 +63,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_id'])) {
                     <i class="bi bi-controller me-1"></i> STORE MANAGEMENT
                 </span>
             </div>
-            <h2 class="fw-extrabold text-white mb-0">Quản Lý Danh Sách & Giá Game</h2>
+            <h2 class="fw-extrabold mb-0">Quản Lý Danh Sách & Giá Game</h2>
             <p class="text-secondary small mb-0">Quản lý tựa game, thiết lập gói giá thuê theo giờ/ngày/tuần/tháng và theo dõi tồn kho</p>
         </div>
         <div class="d-flex gap-2">
@@ -163,7 +163,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_id'])) {
                                         <div style="width: 50px; height: 35px; background: #151824; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 0.65rem; color: #64748b; border: 1px solid var(--border-color);">COVER</div>
                                     <?php endif; ?>
                                     <div>
-                                        <a href="game_detail.php?id=<?php echo $row['game_id']; ?>" target="_blank" class="text-white text-decoration-none fw-bold hover-info">
+                                        <a href="game_detail.php?id=<?php echo $row['game_id']; ?>" target="_blank" class=" text-decoration-none fw-bold hover-info">
                                             <?php echo htmlspecialchars($row['title']); ?>
                                         </a>
                                         <div class="mt-1">
@@ -175,7 +175,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_id'])) {
                                 </div>
                             </td>
                             <td>
-                                <span class="text-light small"><?php echo $row['cate_name'] ? htmlspecialchars($row['cate_name']) : '<span class="text-secondary">Chưa phân loại</span>'; ?></span>
+                                <span class=" small"><?php echo $row['cate_name'] ? htmlspecialchars($row['cate_name']) : '<span class="text-secondary">Chưa phân loại</span>'; ?></span>
                             </td>
                             <td>
                                 <span class="status-pill status-pill-success"><span class="status-dot"></span> Cho thuê tài khoản</span>

@@ -215,10 +215,10 @@ require_once __DIR__ . '/includes/header.php';
 
 // Nếu không có đơn hàng hợp lệ
 if (!$order) {
-    echo "<div class='container my-5 text-center text-white'>
+    echo "<div class='container my-5 text-center'>
             <div class='panel-dark p-5 mx-auto' style='max-width: 600px;'>
                 <i class='bi bi-receipt-cutoff fs-1 text-warning d-block mb-3'></i>
-                <h3 class='fw-bold text-white mb-2'>Chưa có thông tin đơn thuê hợp lệ</h3>
+                <h3 class='fw-bold mb-2'>Chưa có thông tin đơn thuê hợp lệ</h3>
                 <p class='text-secondary small mb-4'>Vui lòng vào Thư viện hoặc Cửa hàng để tiến hành thuê hoặc gia hạn thời gian chơi game.</p>
                 <div class='d-flex justify-content-center gap-2'>
                     <a href='my_library.php' class='btn btn-gaming-secondary px-4 py-2'>Thư viện của tôi</a>
@@ -262,7 +262,7 @@ $csrf_token = generate_csrf_token();
                 <span class="badge bg-success bg-opacity-20 text-success border border-success border-opacity-30 px-3 py-2 fw-bold mb-2">
                     <i class="bi bi-patch-check-fill me-1"></i> THANH TOÁN THÀNH CÔNG — TÀI KHOẢN ĐÃ CẤP PHÁT
                 </span>
-                <h3 class="fw-bold text-white mb-1">🎉 Chúc Bạn Chơi Game Vui Vẻ!</h3>
+                <h3 class="fw-bold mb-1"><i class="bi bi-controller text-success me-2"></i>Chúc Bạn Chơi Game Vui Vẻ!</h3>
                 <p class="text-secondary small mb-0">
                     Đơn hàng <strong>#<?php echo htmlspecialchars($order_code); ?></strong> đã hoàn tất xác nhận thanh toán tự động 24/7.
                 </p>
@@ -271,7 +271,7 @@ $csrf_token = generate_csrf_token();
             <div class="row g-4 align-items-stretch">
                 <!-- Cột Trái: Thông tin Đơn hàng & Tựa Game -->
                 <div class="col-md-5">
-                    <div class="p-3 rounded-4 h-100 d-flex flex-column justify-content-between borrow-summary-card">
+                    <div class="p-3 rounded-3 h-100 d-flex flex-column justify-content-between borrow-summary-card">
                         <div>
                             <?php if (!empty($order['image_url'])): ?>
                                 <img src="<?php echo htmlspecialchars($order['image_url']); ?>" alt="<?php echo htmlspecialchars($order['title']); ?>" class="w-100 rounded-3 mb-3 object-fit-cover" style="height: 180px;">
@@ -281,7 +281,7 @@ $csrf_token = generate_csrf_token();
                                 <span class="badge bg-primary bg-opacity-20 text-primary border border-primary border-opacity-25">
                                     <i class="bi bi-clock me-1"></i> <?php echo intval($order['duration_hours'] ?? 24); ?> Giờ
                                 </span>
-                                <span class="badge bg-secondary bg-opacity-25 text-light border border-secondary border-opacity-25">
+                                <span class="badge bg-secondary bg-opacity-25 border border-secondary border-opacity-25">
                                     <i class="bi bi-windows me-1"></i> <?php echo htmlspecialchars($order['platform'] ?? 'Steam'); ?>
                                 </span>
                                 <span class="badge bg-info bg-opacity-20 text-info border border-info border-opacity-25">
@@ -292,7 +292,7 @@ $csrf_token = generate_csrf_token();
                             <ul class="list-unstyled text-secondary small mb-0" style="font-size: 0.82rem;">
                                 <li class="d-flex justify-content-between py-1 border-bottom border-secondary border-opacity-10">
                                     <span>Gói thuê:</span>
-                                    <strong class="text-light"><?php echo htmlspecialchars($order['package_name'] ?? 'Gói Tiêu Chuẩn'); ?></strong>
+                                    <strong class=""><?php echo htmlspecialchars($order['package_name'] ?? 'Gói Tiêu Chuẩn'); ?></strong>
                                 </li>
                                 <li class="d-flex justify-content-between py-1 border-bottom border-secondary border-opacity-10">
                                     <span>Giá thanh toán:</span>
@@ -300,7 +300,7 @@ $csrf_token = generate_csrf_token();
                                 </li>
                                 <li class="d-flex justify-content-between py-1 border-bottom border-secondary border-opacity-10">
                                     <span>Thời gian bắt đầu:</span>
-                                    <strong class="text-light"><?php echo !empty($order['borrow_date']) ? date('H:i d/m/Y', strtotime($order['borrow_date'])) : date('H:i d/m/Y'); ?></strong>
+                                    <strong class=""><?php echo !empty($order['borrow_date']) ? date('H:i d/m/Y', strtotime($order['borrow_date'])) : date('H:i d/m/Y'); ?></strong>
                                 </li>
                                 <li class="d-flex justify-content-between py-1">
                                     <span>Hạn kết thúc:</span>
@@ -313,9 +313,9 @@ $csrf_token = generate_csrf_token();
 
                 <!-- Cột Phải: Thông tin Đăng nhập Game An toàn -->
                 <div class="col-md-7">
-                    <div class="p-3 p-md-4 rounded-4 h-100 account-credentials-card">
+                    <div class="p-3 p-md-4 rounded-3 h-100 account-credentials-card">
                         <div class="d-flex justify-content-between align-items-center mb-3">
-                            <span class="text-white fw-bold d-flex align-items-center">
+                            <span class=" fw-bold d-flex align-items-center">
                                 <i class="bi bi-key-fill text-warning me-2"></i> THÔNG TIN TÀI KHOẢN GAME
                             </span>
                             <span class="badge bg-success bg-opacity-20 text-success border border-success border-opacity-25 small">
@@ -328,7 +328,7 @@ $csrf_token = generate_csrf_token();
                             <div class="mb-3">
                                 <label class="small text-secondary d-block mb-1">Tên đăng nhập / Email Game:</label>
                                 <div class="input-group">
-                                    <input type="text" class="form-control form-control-gaming text-white fw-bold font-monospace user-select-all" 
+                                    <input type="text" class="form-control form-control-gaming fw-bold font-monospace user-select-all" 
                                            id="game_user_field" value="<?php echo htmlspecialchars($order['account_username']); ?>" readonly>
                                     <button class="btn btn-gaming-secondary" type="button" onclick="copyPlain('<?php echo htmlspecialchars($order['account_username'], ENT_QUOTES); ?>', this)">
                                         <i class="bi bi-clipboard"></i> Sao chép
@@ -433,7 +433,7 @@ $csrf_token = generate_csrf_token();
             <?php endif; ?>
 
             <!-- ĐỒNG HỒ ĐẾM NGƯỢC 15 PHÚT -->
-            <div class="countdown-banner-box p-3 rounded-4 mb-4 text-center">
+            <div class="countdown-banner-box p-3 rounded-3 mb-4 text-center">
                 <small class="text-danger fw-bold d-block mb-1"><i class="bi bi-stopwatch-fill me-1"></i> MÃ QR CÓ HIỆU LỰC TRONG:</small>
                 <h4 class="fw-bold mb-0 font-monospace countdown-timer-text" id="countdown_clock">15:00</h4>
             </div>
@@ -441,7 +441,7 @@ $csrf_token = generate_csrf_token();
             <div class="row g-4 align-items-center">
                 <!-- Cột 1: Mã QR VietQR -->
                 <div class="col-md-6 text-center">
-                    <div class="p-3 bg-white rounded-4 shadow-lg d-inline-block border">
+                    <div class="p-3 bg-white rounded-3 shadow-lg d-inline-block border">
                         <img src="<?php echo $qr_url; ?>" alt="VietQR Payment" class="img-fluid rounded-3" style="max-width: 280px; width: 100%;">
                     </div>
                     <div class="mt-3">
@@ -476,12 +476,12 @@ $csrf_token = generate_csrf_token();
                     <div class="mb-3">
                         <small class="text-secondary d-block mb-1">Số tài khoản MB Bank:</small>
                         <div class="input-group">
-                            <input type="text" class="form-control form-control-gaming text-white fw-bold font-monospace user-select-all" value="<?php echo $account_no; ?>" readonly id="acc_no_val">
+                            <input type="text" class="form-control form-control-gaming fw-bold font-monospace user-select-all" value="<?php echo $account_no; ?>" readonly id="acc_no_val">
                             <button class="btn btn-gaming-secondary" type="button" onclick="copyPlain('<?php echo $account_no; ?>', this)">
                                 <i class="bi bi-clipboard"></i> Sao chép
                             </button>
                         </div>
-                        <small class="text-secondary d-block mt-1">Chủ TK: <strong class="text-light"><?php echo $account_name; ?></strong></small>
+                        <small class="text-secondary d-block mt-1">Chủ TK: <strong class=""><?php echo $account_name; ?></strong></small>
                     </div>
 
                     <!-- Nội dung chuyển khoản -->

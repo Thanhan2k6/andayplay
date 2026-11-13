@@ -205,7 +205,7 @@ if ($st_list) {
     <?php endif; ?>
 
     <!-- THANH TÌM KIẾM VÀ LỌC -->
-    <div class="p-3 mb-4 rounded-4" style="background: var(--bg-card); border: 1px solid var(--border-color);">
+    <div class="p-3 mb-4 rounded-3" style="background: var(--bg-card); border: 1px solid var(--border-color);">
         <form method="GET" action="" class="row g-3 align-items-end">
             <div class="col-md-5">
                 <label class="form-label text-secondary small fw-bold mb-1">Tìm kiếm từ khóa:</label>
@@ -265,13 +265,13 @@ if ($st_list) {
                             <div class="d-flex align-items-center gap-2">
                                 <img src="https://ui-avatars.com/api/?name=<?php echo urlencode($row['username']); ?>&background=random&color=fff&rounded=true" width="28" height="28" class="rounded-circle">
                                 <div>
-                                    <strong class="text-white small">@<?php echo htmlspecialchars($row['username']); ?></strong>
+                                    <strong class=" small">@<?php echo htmlspecialchars($row['username']); ?></strong>
                                     <div class="text-secondary small" style="font-size: 0.72rem;"><?php echo htmlspecialchars($row['email']); ?></div>
                                 </div>
                             </div>
                         </td>
                         <td>
-                            <strong class="text-light"><?php echo htmlspecialchars($row['title']); ?></strong>
+                            <strong class=""><?php echo htmlspecialchars($row['title']); ?></strong>
                             <div class="small text-secondary" style="font-size: 0.72rem;">
                                 <?php echo htmlspecialchars($row['package_name'] ?? 'Chuẩn'); ?> (<?php echo intval($row['duration_hours'] ?? 24); ?>h)
                             </div>
@@ -287,12 +287,12 @@ if ($st_list) {
                         </td>
                         <td>
                             <?php if (!empty($row['due_date'])): ?>
-                                <span class="small text-light d-block"><?php echo date('d/m/Y H:i', strtotime($row['due_date'])); ?></span>
+                                <span class="small d-block"><?php echo date('d/m/Y H:i', strtotime($row['due_date'])); ?></span>
                             <?php else: ?>
                                 <span class="small text-secondary d-block">Chờ kích hoạt</span>
                             <?php endif; ?>
                             <?php if ($is_overdue): ?>
-                                <span class="badge bg-danger bg-opacity-75 text-white" style="font-size: 0.68rem;">ĐÃ QUÁ HẠN</span>
+                                <span class="badge bg-danger bg-opacity-75" style="font-size: 0.68rem;">ĐÃ QUÁ HẠN</span>
                             <?php endif; ?>
                         </td>
                         <td>

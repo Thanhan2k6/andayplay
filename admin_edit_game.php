@@ -111,13 +111,13 @@ $packages = $conn->query("SELECT * FROM rental_packages WHERE game_id = $game_id
 $csrf_token = generate_csrf_token();
 ?>
 
-<div class="container-fluid px-lg-5 py-4 my-2 text-white">
+<div class="container-fluid px-lg-5 py-4 my-2">
     <!-- Breadcrumb & Title -->
     <nav aria-label="breadcrumb" class="mb-3">
         <ol class="breadcrumb small">
             <li class="breadcrumb-item"><a href="admin_dashboard.php" class="text-decoration-none text-secondary">Admin Console</a></li>
             <li class="breadcrumb-item"><a href="admin_games.php" class="text-decoration-none text-secondary">Quản lý Game</a></li>
-            <li class="breadcrumb-item active text-white" aria-current="page">Chỉnh Sửa</li>
+            <li class="breadcrumb-item active" aria-current="page">Chỉnh Sửa</li>
         </ol>
     </nav>
 
@@ -128,7 +128,7 @@ $csrf_token = generate_csrf_token();
                     GAME ID: #<?php echo $game_id; ?>
                 </span>
             </div>
-            <h2 class="fw-extrabold text-white mb-0">Chỉnh Sửa Game: <span class="text-info"><?php echo htmlspecialchars($game['title']); ?></span></h2>
+            <h2 class="fw-extrabold mb-0">Chỉnh Sửa Game: <span class="text-info"><?php echo htmlspecialchars($game['title']); ?></span></h2>
         </div>
         <div class="d-flex gap-2">
             <a href="admin_accounts.php?filter_game=<?php echo $game_id; ?>" class="btn btn-gaming-secondary">
@@ -141,7 +141,7 @@ $csrf_token = generate_csrf_token();
     </div>
 
     <!-- Form Container -->
-    <div class="p-4 p-md-5 rounded-4 shadow-sm" style="background: var(--bg-card); border: 1px solid var(--border-color);">
+    <div class="p-4 p-md-5 rounded-3 shadow-sm" style="background: var(--bg-card); border: 1px solid var(--border-color);">
         <form method="POST" action="" enctype="multipart/form-data">
             <input type="hidden" name="csrf_token" value="<?php echo $csrf_token; ?>">
             
@@ -152,11 +152,11 @@ $csrf_token = generate_csrf_token();
                 </h5>
                 <div class="row g-3">
                     <div class="col-md-6">
-                        <label class="form-label text-light small fw-bold">Tên Game <span class="text-danger">*</span></label>
+                        <label class="form-label small fw-bold">Tên Game <span class="text-danger">*</span></label>
                         <input type="text" name="title" class="form-control form-control-gaming" value="<?php echo htmlspecialchars($game['title']); ?>" required>
                     </div>
                     <div class="col-md-3">
-                        <label class="form-label text-light small fw-bold">Thể Loại</label>
+                        <label class="form-label small fw-bold">Thể Loại</label>
                         <select name="category_id" class="form-select form-control-gaming" required>
                             <?php
                             $cates = $conn->query("SELECT * FROM categories");
@@ -170,23 +170,23 @@ $csrf_token = generate_csrf_token();
                         </select>
                     </div>
                     <div class="col-md-3">
-                        <label class="form-label text-light small fw-bold">Nền Tảng</label>
+                        <label class="form-label small fw-bold">Nền Tảng</label>
                         <select name="platform" class="form-select form-control-gaming" required>
-                            <option value="PC" <?php echo ($game['platform'] == 'PC') ? 'selected' : ''; ?>>🖥️ PC</option>
-                            <option value="PlayStation" <?php echo ($game['platform'] == 'PlayStation') ? 'selected' : ''; ?>>🎮 PlayStation</option>
-                            <option value="Xbox" <?php echo ($game['platform'] == 'Xbox') ? 'selected' : ''; ?>>💚 Xbox</option>
-                            <option value="Nintendo" <?php echo ($game['platform'] == 'Nintendo') ? 'selected' : ''; ?>>🕹️ Nintendo</option>
+                            <option value="PC" <?php echo ($game['platform'] == 'PC') ? 'selected' : ''; ?>>PC</option>
+                            <option value="PlayStation" <?php echo ($game['platform'] == 'PlayStation') ? 'selected' : ''; ?>>PlayStation</option>
+                            <option value="Xbox" <?php echo ($game['platform'] == 'Xbox') ? 'selected' : ''; ?>>Xbox</option>
+                            <option value="Nintendo" <?php echo ($game['platform'] == 'Nintendo') ? 'selected' : ''; ?>>Nintendo</option>
                         </select>
                     </div>
 
                     <div class="col-md-6">
-                        <label class="form-label text-light small fw-bold">Mô Hình Kinh Doanh</label>
-                        <input type="text" class="form-control form-control-gaming text-success fw-bold" value="💎 Cho thuê tài khoản game bản quyền" readonly>
+                        <label class="form-label small fw-bold">Mô Hình Kinh Doanh</label>
+                        <input type="text" class="form-control form-control-gaming text-success fw-bold" value="Cho thuê tài khoản game bản quyền" readonly>
                         <input type="hidden" name="price_type" value="paid">
                     </div>
 
                     <div class="col-md-6">
-                        <label class="form-label text-light small fw-bold">Ảnh Bìa Game (Chọn để thay mới)</label>
+                        <label class="form-label small fw-bold">Ảnh Bìa Game (Chọn để thay mới)</label>
                         <input type="file" name="image" class="form-control form-control-gaming" accept="image/*">
                         <?php if(!empty($game['image_url'])): ?>
                             <div class="mt-2 d-flex align-items-center gap-2">
@@ -214,7 +214,7 @@ $csrf_token = generate_csrf_token();
                                     <?php echo htmlspecialchars($pkg['package_name']); ?>
                                 </label>
                                 <div class="input-group">
-                                    <input type="number" name="pkg_price[<?php echo $pkg['package_id']; ?>]" class="form-control form-control-gaming text-white" value="<?php echo floatval($pkg['price']); ?>" step="1000">
+                                    <input type="number" name="pkg_price[<?php echo $pkg['package_id']; ?>]" class="form-control form-control-gaming" value="<?php echo floatval($pkg['price']); ?>" step="1000">
                                     <span class="input-group-text" style="background: var(--surface-secondary); border-color: var(--border-default); color: var(--text-muted);">đ</span>
                                 </div>
                             </div>
@@ -224,7 +224,7 @@ $csrf_token = generate_csrf_token();
                     else: 
                     ?>
                         <div class="col-12 mb-2">
-                            <div class="alert text-white" style="background: rgba(245, 158, 11, 0.15); border: 1px solid #f59e0b;">
+                            <div class="alert" style="background: rgba(245, 158, 11, 0.15); border: 1px solid #f59e0b;">
                                 <i class="bi bi-info-circle me-1"></i> Tựa game này chưa có bảng giá thuê cụ thể. Bạn hãy thiết lập giá cho các gói thời hạn bên dưới để lưu vào hệ thống:
                             </div>
                         </div>
@@ -232,7 +232,7 @@ $csrf_token = generate_csrf_token();
                             <div class="p-3 rounded-3" style="background: var(--surface-secondary); border: 1px solid var(--border-default);">
                                 <label class="form-label text-secondary small fw-bold mb-1">1 Giờ (Trải nghiệm nhanh)</label>
                                 <div class="input-group">
-                                    <input type="number" name="new_pkg_1h" class="form-control form-control-gaming text-white" value="5000" step="1000">
+                                    <input type="number" name="new_pkg_1h" class="form-control form-control-gaming" value="5000" step="1000">
                                     <span class="input-group-text" style="background: var(--surface-secondary); border-color: var(--border-default); color: var(--text-muted);">đ</span>
                                 </div>
                             </div>
@@ -241,7 +241,7 @@ $csrf_token = generate_csrf_token();
                             <div class="p-3 rounded-3" style="background: var(--surface-secondary); border: 1px solid var(--border-default);">
                                 <label class="form-label text-secondary small fw-bold mb-1">1 Ngày (24 Giờ)</label>
                                 <div class="input-group">
-                                    <input type="number" name="new_pkg_1d" class="form-control form-control-gaming text-white" value="15000" step="1000">
+                                    <input type="number" name="new_pkg_1d" class="form-control form-control-gaming" value="15000" step="1000">
                                     <span class="input-group-text" style="background: var(--surface-secondary); border-color: var(--border-default); color: var(--text-muted);">đ</span>
                                 </div>
                             </div>
@@ -250,7 +250,7 @@ $csrf_token = generate_csrf_token();
                             <div class="p-3 rounded-3" style="background: var(--surface-secondary); border: 1px solid var(--border-default);">
                                 <label class="form-label text-secondary small fw-bold mb-1">7 Ngày (1 Tuần)</label>
                                 <div class="input-group">
-                                    <input type="number" name="new_pkg_7d" class="form-control form-control-gaming text-white" value="30000" step="1000">
+                                    <input type="number" name="new_pkg_7d" class="form-control form-control-gaming" value="30000" step="1000">
                                     <span class="input-group-text" style="background: var(--surface-secondary); border-color: var(--border-default); color: var(--text-muted);">đ</span>
                                 </div>
                             </div>
@@ -259,7 +259,7 @@ $csrf_token = generate_csrf_token();
                             <div class="p-3 rounded-3" style="background: var(--surface-secondary); border: 1px solid var(--border-default);">
                                 <label class="form-label text-secondary small fw-bold mb-1">30 Ngày (1 Tháng)</label>
                                 <div class="input-group">
-                                    <input type="number" name="new_pkg_30d" class="form-control form-control-gaming text-white" value="99000" step="1000">
+                                    <input type="number" name="new_pkg_30d" class="form-control form-control-gaming" value="99000" step="1000">
                                     <span class="input-group-text" style="background: var(--surface-secondary); border-color: var(--border-default); color: var(--text-muted);">đ</span>
                                 </div>
                             </div>
@@ -275,15 +275,15 @@ $csrf_token = generate_csrf_token();
                 </h5>
                 <div class="row g-3">
                     <div class="col-12">
-                        <label class="form-label text-light small fw-bold">Mô Tả Ngắn</label>
+                        <label class="form-label small fw-bold">Mô Tả Ngắn</label>
                         <textarea name="description" class="form-control form-control-gaming" rows="2"><?php echo htmlspecialchars($game['description'] ?? ''); ?></textarea>
                     </div>
                     <div class="col-md-6">
-                        <label class="form-label text-light small fw-bold">Giới Thiệu Chi Tiết Game</label>
+                        <label class="form-label small fw-bold">Giới Thiệu Chi Tiết Game</label>
                         <textarea name="long_description" class="form-control form-control-gaming" rows="6"><?php echo htmlspecialchars($game['long_description'] ?? ''); ?></textarea>
                     </div>
                     <div class="col-md-6">
-                        <label class="form-label text-light small fw-bold">Yêu Cầu Cấu Hình Phần Cứng</label>
+                        <label class="form-label small fw-bold">Yêu Cầu Cấu Hình Phần Cứng</label>
                         <textarea name="system_req" class="form-control form-control-gaming" rows="6"><?php echo htmlspecialchars($game['system_req'] ?? ''); ?></textarea>
                     </div>
                 </div>

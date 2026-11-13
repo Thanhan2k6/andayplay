@@ -10,10 +10,10 @@
                     Nền tảng cho thuê tài khoản game bản quyền hàng đầu Việt Nam. Trải nghiệm game đỉnh cao bản quyền Steam, EA, Epic Games với chi phí tiết kiệm đến 90%.
                 </p>
                 <div class="d-flex align-items-center gap-2 mt-3">
-                    <span class="badge bg-dark border border-secondary text-light px-3 py-2">
+                    <span class="badge anplay-surface-muted border border-secondary px-3 py-2">
                         <i class="bi bi-shield-lock-fill text-success me-1"></i> Mã hóa AES-256
                     </span>
-                    <span class="badge bg-dark border border-secondary text-light px-3 py-2">
+                    <span class="badge anplay-surface-muted border border-secondary px-3 py-2">
                         <i class="bi bi-lightning-charge-fill text-warning me-1"></i> Cấp tài khoản 24/7
                     </span>
                 </div>
@@ -42,9 +42,9 @@
                 <div class="footer-heading">Thanh Toán An Toàn</div>
                 <p class="text-secondary small mb-3">Hỗ trợ quét mã QR tự động xác thực qua mọi ngân hàng và ví điện tử Việt Nam.</p>
                 <div class="d-flex flex-wrap gap-2">
-                    <span class="badge bg-secondary bg-opacity-25 border border-secondary text-white px-2 py-2 fw-normal">VietQR 24/7</span>
-                    <span class="badge bg-secondary bg-opacity-25 border border-secondary text-white px-2 py-2 fw-normal">Napas 247</span>
-                    <span class="badge bg-secondary bg-opacity-25 border border-secondary text-white px-2 py-2 fw-normal">Momo / VNPay</span>
+                    <span class="badge bg-secondary bg-opacity-25 border border-secondary px-2 py-2 fw-normal">VietQR 24/7</span>
+                    <span class="badge bg-secondary bg-opacity-25 border border-secondary px-2 py-2 fw-normal">Napas 247</span>
+                    <span class="badge bg-secondary bg-opacity-25 border border-secondary px-2 py-2 fw-normal">Momo / VNPay</span>
                 </div>
             </div>
         </div>
@@ -104,7 +104,7 @@ if (empty($_SESSION['chat_csrf_token'])) {
                 <div class="anplay-chat-title-text">
                     <h4>
                         ANPLAY ASSISTANT 
-                        <span class="anplay-chat-badge" style="background: rgba(99, 102, 241, 0.2); color: #818cf8; border: 1px solid rgba(99, 102, 241, 0.3);">Trợ lý ảo AI</span>
+                        <span class="anplay-chat-badge" style="background: rgba(255, 255, 255, 0.16); color: #ffffff; border: 1px solid rgba(255, 255, 255, 0.3);">Trợ lý ảo AI</span>
                     </h4>
                     <p class="anplay-chat-subtitle">
                         <span class="anplay-status-pill"></span> Tư vấn & Hướng dẫn tự động 24/7
@@ -123,8 +123,8 @@ if (empty($_SESSION['chat_csrf_token'])) {
 
         <!-- Gợi ý câu hỏi nhanh (Quick Suggestion Chips) -->
         <div class="anplay-chat-suggestions" id="anplay-chat-suggestions">
-            <a href="support.php" class="anplay-suggestion-chip text-decoration-none" style="background: rgba(239, 68, 68, 0.15); border-color: rgba(239, 68, 68, 0.35); color: #f87171;">
-                <i class="bi bi-headset text-danger"></i> Gặp nhân viên hỗ trợ
+            <a href="support.php" class="anplay-suggestion-chip anplay-suggestion-chip-support text-decoration-none">
+                <i class="bi bi-headset"></i> Gặp nhân viên hỗ trợ
             </a>
             <button class="anplay-suggestion-chip" type="button" data-question="Tôi có thể lưu game (Save Game) và chơi tiếp không?" onclick="anplayQuickAsk(this)">
                 <i class="bi bi-cloud-check text-info"></i> Lưu Game & Chơi tiếp?
@@ -147,10 +147,10 @@ if (empty($_SESSION['chat_csrf_token'])) {
                 <div class="anplay-msg-avatar"><i class="bi bi-robot"></i></div>
                 <div class="anplay-msg-content">
                     <div class="anplay-msg bot">
-                        Xin chào bạn! 👋 Tôi là <strong>Trợ lý ảo tự động của ANPLAY STORE</strong>. 
+                        Xin chào bạn! Tôi là <strong>Trợ lý ảo tự động của ANPLAY STORE</strong>. 
                         Tôi có thể giúp bạn tra cứu danh mục game, báo giá gói thuê từ <strong>5.000đ</strong> và hướng dẫn các bước thuê tài khoản.
                         <div class="mt-2 pt-2 border-top border-secondary border-opacity-25" style="font-size:0.8rem;">
-                            👨‍💻 <em>Nếu cần hỗ trợ kỹ thuật, cấp đổi tài khoản lỗi hoặc khiếu nại, vui lòng bấm nút:</em><br>
+                            <i class="bi bi-headset text-primary me-1"></i><em>Nếu cần hỗ trợ kỹ thuật, cấp đổi tài khoản lỗi hoặc khiếu nại, vui lòng bấm nút:</em><br>
                             <a href="support.php" class="btn btn-sm btn-outline-danger py-1 px-2 mt-1 text-decoration-none" style="font-size:0.75rem;">
                                 <i class="bi bi-headset me-1"></i> Gặp nhân viên hỗ trợ (Ticket)
                             </a>
@@ -253,7 +253,7 @@ window.ANPLAY_CHAT_CSRF = "<?php echo htmlspecialchars($_SESSION['chat_csrf_toke
         let safe = escapeHtml(text);
         safe = safe.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
         safe = safe.replace(/\*(.*?)\*/g, '<em>$1</em>');
-        safe = safe.replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" class="btn btn-sm btn-gaming-primary py-1 px-2 text-white text-decoration-none mt-1 d-inline-block" style="font-size:0.75rem;">$1</a>');
+        safe = safe.replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" class="btn btn-sm btn-gaming-primary py-1 px-2 text-decoration-none mt-1 d-inline-block" style="font-size:0.75rem;">$1</a>');
         safe = safe.replace(/\n/g, '<br>');
         return safe;
     }

@@ -249,7 +249,7 @@ $csrf_token = generate_csrf_token();
     <?php endif; ?>
 
     <!-- THANH LỌC VÀ TÌM KIẾM -->
-    <div class="p-3 mb-4 rounded-4" style="background: var(--bg-card); border: 1px solid var(--border-color);">
+    <div class="p-3 mb-4 rounded-3" style="background: var(--bg-card); border: 1px solid var(--border-color);">
         <form method="GET" action="" class="row g-3 align-items-end">
             <div class="col-md-5">
                 <label class="form-label text-secondary small fw-bold mb-1">Lọc theo Tựa Game:</label>
@@ -271,11 +271,11 @@ $csrf_token = generate_csrf_token();
                 <label class="form-label text-secondary small fw-bold mb-1">Lọc theo Trạng Thái Kho:</label>
                 <select name="filter_status" class="form-select form-control-gaming">
                     <option value="">-- Tất cả trạng thái --</option>
-                    <option value="AVAILABLE" <?php echo ($filter_status == 'AVAILABLE') ? 'selected' : ''; ?>>🟢 AVAILABLE (Sẵn sàng cho thuê)</option>
-                    <option value="RENTED" <?php echo ($filter_status == 'RENTED') ? 'selected' : ''; ?>>🔵 RENTED (Đang cho khách thuê)</option>
-                    <option value="EXPIRED" <?php echo ($filter_status == 'EXPIRED') ? 'selected' : ''; ?>>🔴 EXPIRED (Hết hạn)</option>
-                    <option value="MAINTENANCE" <?php echo ($filter_status == 'MAINTENANCE') ? 'selected' : ''; ?>>🟡 MAINTENANCE (Bảo trì/Báo lỗi)</option>
-                    <option value="DISABLED" <?php echo ($filter_status == 'DISABLED') ? 'selected' : ''; ?>>⚪ DISABLED (Vô hiệu)</option>
+                    <option value="AVAILABLE" <?php echo ($filter_status == 'AVAILABLE') ? 'selected' : ''; ?>>AVAILABLE (Sẵn sàng cho thuê)</option>
+                    <option value="RENTED" <?php echo ($filter_status == 'RENTED') ? 'selected' : ''; ?>>RENTED (Đang cho khách thuê)</option>
+                    <option value="EXPIRED" <?php echo ($filter_status == 'EXPIRED') ? 'selected' : ''; ?>>EXPIRED (Hết hạn)</option>
+                    <option value="MAINTENANCE" <?php echo ($filter_status == 'MAINTENANCE') ? 'selected' : ''; ?>>MAINTENANCE (Bảo trì/Báo lỗi)</option>
+                    <option value="DISABLED" <?php echo ($filter_status == 'DISABLED') ? 'selected' : ''; ?>>DISABLED (Vô hiệu)</option>
                 </select>
             </div>
             <div class="col-md-3 d-flex gap-2">
@@ -317,9 +317,9 @@ $csrf_token = generate_csrf_token();
                     ?>
                         <tr>
                             <td class="text-secondary fw-bold">#<?php echo $acc['account_id']; ?></td>
-                            <td class="fw-bold text-white"><?php echo htmlspecialchars($acc['title']); ?></td>
+                            <td class="fw-bold"><?php echo htmlspecialchars($acc['title']); ?></td>
                             <td>
-                                <span class="text-light fw-bold user-select-all"><?php echo htmlspecialchars($acc['account_username']); ?></span>
+                                <span class=" fw-bold user-select-all"><?php echo htmlspecialchars($acc['account_username']); ?></span>
                                 <div class="small text-secondary" style="font-size: 0.72rem;">Khu vực: <?php echo htmlspecialchars($acc['server_region'] ?? 'Global'); ?></div>
                             </td>
                             <td>
@@ -493,7 +493,7 @@ $csrf_token = generate_csrf_token();
                     <div class="mb-3">
                         <label class="form-label text-info small fw-bold">Chọn phạm vi game:</label>
                         <select name="batch_game_id" class="form-select form-control-gaming" required>
-                            <option value="0">⭐ TẤT CẢ GAME CHO THUÊ</option>
+                            <option value="0">Tất cả game cho thuê</option>
                             <?php 
                             if ($games_list && $games_list->num_rows > 0):
                                 $games_list->data_seek(0);

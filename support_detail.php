@@ -50,7 +50,7 @@ if (!$ticket) {
 if (!$is_admin && intval($ticket['user_id']) !== $user_id) {
     http_response_code(403);
     die("<div style='font-family:sans-serif; text-align:center; padding:50px; background:#0f121a; color:#fff;'>
-        <h2 style='color:#ef4444;'>🚫 Truy Cập Bị Từ Chối (403 Forbidden)</h2>
+        <h2 style='color:#ef4444;'>Truy Cập Bị Từ Chối (403 Forbidden)</h2>
         <p>Bạn không có quyền xem hoặc can thiệp vào yêu cầu hỗ trợ của khách hàng khác.</p>
         <a href='support.php' style='color:#6366f1; text-decoration:underline;'>Quay lại Trung tâm hỗ trợ của bạn</a>
     </div>");
@@ -163,7 +163,7 @@ $cat_info = $categories[$ticket['category']] ?? ['label' => 'Hỗ trợ chung', 
 require_once __DIR__ . '/includes/header.php';
 ?>
 
-<div class="container-fluid px-lg-5 py-4 text-white">
+<div class="container-fluid px-lg-5 py-4">
     <!-- Breadcrumb & Back button -->
     <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
         <a href="<?php echo $is_admin ? 'admin_support.php' : 'support.php'; ?>" class="btn btn-gaming-secondary btn-sm py-2 px-3">
@@ -196,7 +196,7 @@ require_once __DIR__ . '/includes/header.php';
     <div class="row g-4">
         <!-- CỘT TRÁI: KHUNG HỘI THOẠI TRÒ CHUYỆN (CONVERSATION) -->
         <div class="col-lg-8">
-            <div class="panel-dark p-4 rounded-4 shadow-sm mb-4">
+            <div class="panel-dark p-4 rounded-3 shadow-sm mb-4">
                 <!-- Header của Ticket -->
                 <div class="pb-3 mb-3 border-bottom border-secondary border-opacity-25">
                     <div class="d-flex align-items-center gap-2 text-secondary small mb-1">
@@ -206,7 +206,7 @@ require_once __DIR__ . '/includes/header.php';
                         <span>•</span>
                         <span>Tạo lúc: <?php echo date('d/m/Y H:i', strtotime($ticket['created_at'])); ?></span>
                     </div>
-                    <h3 class="fw-bold text-white mb-2"><?php echo htmlspecialchars($ticket['title']); ?></h3>
+                    <h3 class="fw-bold mb-2"><?php echo htmlspecialchars($ticket['title']); ?></h3>
                 </div>
 
                 <!-- DÒNG THỜI GIAN TIN NHẮN (MESSAGES THREAD) -->
@@ -240,7 +240,7 @@ require_once __DIR__ . '/includes/header.php';
                                     <span class="text-secondary small" style="font-size: 0.72rem;"><?php echo format_time_ago($m['created_at']); ?></span>
                                 </div>
 
-                                <div class="p-3 rounded-4 shadow-sm" style="background: <?php echo $is_msg_admin ? 'rgba(239, 68, 68, 0.08)' : 'rgba(255,255,255,0.04)'; ?>; border: 1px solid <?php echo $is_msg_admin ? 'rgba(239,68,68,0.25)' : 'rgba(255,255,255,0.08)'; ?>; color: #e2e8f0; font-size: 0.92rem; line-height: 1.6;">
+                                <div class="p-3 rounded-3 shadow-sm" style="background: <?php echo $is_msg_admin ? 'rgba(239, 68, 68, 0.08)' : 'rgba(255,255,255,0.04)'; ?>; border: 1px solid <?php echo $is_msg_admin ? 'rgba(239,68,68,0.25)' : 'rgba(255,255,255,0.08)'; ?>; color: #e2e8f0; font-size: 0.92rem; line-height: 1.6;">
                                     <?php echo nl2br(htmlspecialchars($m['message'])); ?>
 
                                     <!-- ĐÍNH KÈM NẾU CÓ -->
@@ -267,7 +267,7 @@ require_once __DIR__ . '/includes/header.php';
 
                 <!-- KHU VỰC ĐÁNH GIÁ NẾU TICKET ĐÃ GIẢI QUYẾT -->
                 <?php if ($ticket['status'] === 'resolved'): ?>
-                    <div class="panel-dark p-3 rounded-4 mb-4 border border-success border-opacity-40" id="rating_section" style="background: rgba(16,185,129,0.06);">
+                    <div class="panel-dark p-3 rounded-3 mb-4 border border-success border-opacity-40" id="rating_section" style="background: rgba(16,185,129,0.06);">
                         <div class="d-flex align-items-center justify-content-between mb-2">
                             <h6 class="fw-bold text-success mb-0">
                                 <i class="bi bi-check-circle-fill me-2"></i> Yêu cầu đã được giải quyết
@@ -299,7 +299,7 @@ require_once __DIR__ . '/includes/header.php';
                                         <?php echo str_repeat('★', intval($ticket['rating'])) . str_repeat('☆', 5 - intval($ticket['rating'])); ?>
                                     </span>
                                     <?php if (!empty($ticket['rating_comment'])): ?>
-                                        <p class="mt-1 fst-italic text-light small mb-0">"<?php echo htmlspecialchars($ticket['rating_comment']); ?>"</p>
+                                        <p class="mt-1 fst-italic small mb-0">"<?php echo htmlspecialchars($ticket['rating_comment']); ?>"</p>
                                     <?php endif; ?>
                                 </div>
                             <?php else: ?>
@@ -356,8 +356,8 @@ require_once __DIR__ . '/includes/header.php';
         <!-- CỘT PHẢI: THÔNG TIN CHI TIẾT & BỐI CẢNH (CONTEXT PANEL) -->
         <div class="col-lg-4">
             <!-- Panel thông tin sự cố -->
-            <div class="panel-dark p-4 rounded-4 shadow-sm mb-4">
-                <h5 class="fw-bold text-white mb-3 pb-2 border-bottom border-secondary border-opacity-25">
+            <div class="panel-dark p-4 rounded-3 shadow-sm mb-4">
+                <h5 class="fw-bold mb-3 pb-2 border-bottom border-secondary border-opacity-25">
                     <i class="bi bi-info-circle me-2 text-info"></i> Thông Tin Yêu Cầu
                 </h5>
 
@@ -400,8 +400,8 @@ require_once __DIR__ . '/includes/header.php';
 
             <!-- Panel thông tin Game / Đơn thuê liên quan -->
             <?php if (!empty($ticket['game_title']) || !empty($ticket['order_code'])): ?>
-                <div class="panel-dark p-4 rounded-4 shadow-sm mb-4">
-                    <h5 class="fw-bold text-white mb-3 pb-2 border-bottom border-secondary border-opacity-25">
+                <div class="panel-dark p-4 rounded-3 shadow-sm mb-4">
+                    <h5 class="fw-bold mb-3 pb-2 border-bottom border-secondary border-opacity-25">
                         <i class="bi bi-controller me-2 text-success"></i> Dịch Vụ Liên Quan
                     </h5>
 
@@ -411,7 +411,7 @@ require_once __DIR__ . '/includes/header.php';
                                 <img src="<?php echo htmlspecialchars($ticket['game_img']); ?>" width="55" height="55" class="rounded-3 object-fit-cover shadow-sm" alt="Game">
                             <?php endif; ?>
                             <div>
-                                <h6 class="fw-bold mb-1 text-white"><?php echo htmlspecialchars($ticket['game_title']); ?></h6>
+                                <h6 class="fw-bold mb-1"><?php echo htmlspecialchars($ticket['game_title']); ?></h6>
                                 <span class="badge bg-secondary bg-opacity-25 text-info">Bản quyền Steam / PC</span>
                             </div>
                         </div>
@@ -440,11 +440,11 @@ require_once __DIR__ . '/includes/header.php';
             <?php endif; ?>
 
             <!-- Panel hỗ trợ nhanh 24/7 -->
-            <div class="panel-dark p-4 rounded-4 shadow-sm text-center" style="border: 1px dashed rgba(99,102,241,0.3);">
+            <div class="panel-dark p-4 rounded-3 shadow-sm text-center" style="border: 1px dashed rgba(99,102,241,0.3);">
                 <i class="bi bi-shield-check fs-2 text-primary mb-2 d-block"></i>
-                <h6 class="fw-bold text-white mb-1">Cam Kết ANPLAY STORE</h6>
+                <h6 class="fw-bold mb-1">Cam Kết ANPLAY STORE</h6>
                 <p class="text-secondary small mb-3">Mọi khiếu nại tài khoản lỗi đều được giải quyết trong vòng 15-30 phút hoặc đổi mới ngay lập tức.</p>
-                <div class="badge bg-dark border border-secondary text-secondary p-2 w-100">
+                <div class="badge anplay-surface-muted border border-secondary text-secondary p-2 w-100">
                     <i class="bi bi-headset me-1 text-success"></i> Kỹ thuật viên trực tuyến 24/7
                 </div>
             </div>

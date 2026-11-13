@@ -127,7 +127,7 @@ $page_title = "Trung Tâm Thông Báo Quản Trị";
 require_once __DIR__ . '/includes/admin_header.php';
 ?>
 
-<div class="container-fluid px-lg-5 py-4 text-white">
+<div class="container-fluid px-lg-5 py-4">
     <!-- Header -->
     <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 pb-3 border-bottom border-secondary border-opacity-25 gap-3">
         <div>
@@ -137,7 +137,7 @@ require_once __DIR__ . '/includes/admin_header.php';
                 </span>
                 <span class="text-secondary small">Gửi thông báo toàn sàn & khuyến mãi</span>
             </div>
-            <h2 class="fw-extrabold text-white mb-0">Hệ Thống Phát Thông Báo & Khuyến Mãi</h2>
+            <h2 class="fw-extrabold mb-0">Hệ Thống Phát Thông Báo & Khuyến Mãi</h2>
         </div>
         <div class="d-flex gap-2">
             <a href="admin_support.php" class="btn btn-gaming-secondary d-flex align-items-center">
@@ -167,7 +167,7 @@ require_once __DIR__ . '/includes/admin_header.php';
         <!-- CỘT TRÁI: FORM GỬI THÔNG BÁO -->
         <div class="col-lg-5">
             <div class="panel-dark p-4 rounded-3 shadow-sm">
-                <h5 class="fw-bold text-white mb-3 pb-2 border-bottom border-secondary border-opacity-25">
+                <h5 class="fw-bold mb-3 pb-2 border-bottom border-secondary border-opacity-25">
                     <i class="bi bi-send-check-fill me-2 text-warning"></i> Soạn Thông Báo Mới
                 </h5>
 
@@ -178,10 +178,10 @@ require_once __DIR__ . '/includes/admin_header.php';
                     <div class="mb-3">
                         <label class="form-label text-secondary small fw-bold">Đối Tượng Nhận Thông Báo <span class="text-danger">*</span></label>
                         <select name="target" id="targetSelect" class="form-select form-control-gaming" onchange="toggleSpecificUser(this.value)" required>
-                            <option value="all">○ Tất cả người dùng trên hệ thống</option>
-                            <option value="customers">○ Toàn bộ khách hàng (Thành viên / VIP)</option>
-                            <option value="admins">○ Chỉ Quản trị viên (Admin)</option>
-                            <option value="specific">○ Khách hàng cụ thể (Nhập Username hoặc ID)</option>
+                            <option value="all">Tất cả người dùng trên hệ thống</option>
+                            <option value="customers">Toàn bộ khách hàng (Thành viên / VIP)</option>
+                            <option value="admins">Chỉ Quản trị viên (Admin)</option>
+                            <option value="specific">Khách hàng cụ thể (Nhập Username hoặc ID)</option>
                         </select>
                     </div>
 
@@ -195,17 +195,17 @@ require_once __DIR__ . '/includes/admin_header.php';
                     <div class="mb-3">
                         <label class="form-label text-secondary small fw-bold">Phân Loại Thông Báo <span class="text-danger">*</span></label>
                         <select name="type" class="form-select form-control-gaming" required>
-                            <option value="promotion">🎁 Khuyến mãi & Giảm giá</option>
-                            <option value="game">🎮 Cập nhật kho game mới</option>
-                            <option value="system">🛡️ Hệ thống & Bảo trì</option>
-                            <option value="account">🔐 Tài khoản & Bảo mật</option>
+                            <option value="promotion">Khuyến mãi & Giảm giá</option>
+                            <option value="game">Cập nhật kho game mới</option>
+                            <option value="system">Hệ thống & Bảo trì</option>
+                            <option value="account">Tài khoản & Bảo mật</option>
                         </select>
                     </div>
 
                     <!-- Tiêu đề -->
                     <div class="mb-3">
                         <label class="form-label text-secondary small fw-bold">Tiêu Đề Thông Báo <span class="text-danger">*</span></label>
-                        <input type="text" name="title" class="form-control form-control-gaming" placeholder="VD: 🎉 Siêu Flash Sale cuối tuần: Thuê Black Myth Wukong chỉ 10K!" required maxlength="255">
+                        <input type="text" name="title" class="form-control form-control-gaming" placeholder="VD: Siêu Flash Sale cuối tuần: Thuê Black Myth Wukong chỉ 10K!" required maxlength="255">
                     </div>
 
                     <!-- Nội dung -->
@@ -231,7 +231,7 @@ require_once __DIR__ . '/includes/admin_header.php';
         <!-- CỘT PHẢI: LỊCH SỬ THÔNG BÁO VỪA PHÁT -->
         <div class="col-lg-7">
             <div class="panel-dark p-4 rounded-3 shadow-sm">
-                <h5 class="fw-bold text-white mb-3 pb-2 border-bottom border-secondary border-opacity-25">
+                <h5 class="fw-bold mb-3 pb-2 border-bottom border-secondary border-opacity-25">
                     <i class="bi bi-clock-history me-2 text-info"></i> Lịch Sử Thông Báo Gần Đây
                 </h5>
 
@@ -248,10 +248,10 @@ require_once __DIR__ . '/includes/admin_header.php';
                             <div class="p-3 rounded-3" style="background: var(--surface-secondary); border: 1px solid var(--border-default);">
                                 <div class="d-flex align-items-start justify-content-between gap-2 mb-1">
                                     <div class="d-flex align-items-center gap-2">
-                                        <span class="badge" style="background: <?php echo $ic['bg']; ?>; color: <?php echo $ic['color']; ?>; font-size: 0.68rem;">
-                                            <?php echo $ic['label']; ?>
+                                        <span class="badge d-inline-flex align-items-center" style="background: <?php echo $ic['bg']; ?>; color: <?php echo $ic['color']; ?>; font-size: 0.68rem;">
+                                            <i class="bi <?php echo htmlspecialchars($ic['icon'] ?? 'bi-bell'); ?> me-1"></i><?php echo htmlspecialchars(trim(preg_replace('/^[^\p{L}\p{N}]+/u', '', $ic['label'] ?? ''))); ?>
                                         </span>
-                                        <strong class="text-white small"><?php echo htmlspecialchars($rn['title']); ?></strong>
+                                        <strong class=" small"><?php echo htmlspecialchars($rn['title']); ?></strong>
                                     </div>
                                     <span class="text-secondary small" style="font-size: 0.72rem;"><?php echo format_time_ago($rn['created_at']); ?></span>
                                 </div>

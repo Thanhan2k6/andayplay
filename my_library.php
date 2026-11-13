@@ -191,7 +191,7 @@ require_once __DIR__ . '/includes/header.php';
     <nav aria-label="breadcrumb" class="mb-3">
         <ol class="breadcrumb small">
             <li class="breadcrumb-item"><a href="index.php" class="text-decoration-none text-secondary"><i class="bi bi-house me-1"></i>Trang chủ</a></li>
-            <li class="breadcrumb-item active text-white" aria-current="page">Kho Game & Tài Khoản Thuê</li>
+            <li class="breadcrumb-item active" aria-current="page">Kho Game & Tài Khoản Thuê</li>
         </ol>
     </nav>
 
@@ -199,11 +199,11 @@ require_once __DIR__ . '/includes/header.php';
     <div class="row align-items-center mb-4 g-3">
         <div class="col-lg-7">
             <div class="d-flex align-items-center gap-3">
-                <div class="p-3 rounded-4 d-inline-flex align-items-center justify-content-center" style="background: rgba(99,102,241,0.15); border: 1px solid rgba(99,102,241,0.3);">
+                <div class="p-3 rounded-3 d-inline-flex align-items-center justify-content-center" style="background: rgba(99,102,241,0.15); border: 1px solid rgba(99,102,241,0.3);">
                     <i class="bi bi-controller fs-2" style="color: var(--primary);"></i>
                 </div>
                 <div>
-                    <h2 class="fw-bold text-white mb-1">Kho Game & Tài Khoản Thuê</h2>
+                    <h2 class="fw-bold mb-1">Kho Game & Tài Khoản Thuê</h2>
                     <p class="text-secondary small mb-0">Quản lý các tài khoản game đang thuê, đồng hồ đếm ngược, lấy mật khẩu và gia hạn nhanh.</p>
                 </div>
             </div>
@@ -211,7 +211,7 @@ require_once __DIR__ . '/includes/header.php';
         <div class="col-lg-5 text-lg-end">
             <div class="d-inline-flex gap-2 align-items-center p-2 px-3 rounded-pill" style="background: var(--bg-card); border: 1px solid var(--border-color);">
                 <img src="https://ui-avatars.com/api/?name=<?php echo urlencode($_SESSION['username']); ?>&background=6366f1&color=fff&rounded=true" width="28" height="28" class="rounded-circle">
-                <span class="text-light small fw-bold">@<?php echo htmlspecialchars($_SESSION['username']); ?></span>
+                <span class=" small fw-bold">@<?php echo htmlspecialchars($_SESSION['username']); ?></span>
                 <span class="badge" style="background: rgba(99,102,241,0.2); color: var(--primary); font-size: 0.72rem;">VIP MEMBER</span>
             </div>
         </div>
@@ -220,10 +220,10 @@ require_once __DIR__ . '/includes/header.php';
     <!-- KPI Metric Quick Summary -->
     <div class="row g-3 mb-4">
         <div class="col-md-4">
-            <div class="p-3 rounded-4 h-100 d-flex align-items-center justify-content-between" style="background: var(--bg-card); border: 1px solid var(--border-color);">
+            <div class="p-3 rounded-3 h-100 d-flex align-items-center justify-content-between" style="background: var(--bg-card); border: 1px solid var(--border-color);">
                 <div>
                     <span class="text-secondary small text-uppercase fw-bold">Tổng lượt thuê</span>
-                    <h3 class="fw-bold text-white mb-0 mt-1"><?php echo $total_orders; ?></h3>
+                    <h3 class="fw-bold mb-0 mt-1"><?php echo $total_orders; ?></h3>
                 </div>
                 <div class="p-3 rounded-3" style="background: rgba(255,255,255,0.05); color: #cbd5e1;">
                     <i class="bi bi-collection-play fs-4"></i>
@@ -231,7 +231,7 @@ require_once __DIR__ . '/includes/header.php';
             </div>
         </div>
         <div class="col-md-4">
-            <div class="p-3 rounded-4 h-100 d-flex align-items-center justify-content-between" style="background: var(--bg-card); border: 1px solid rgba(16,185,129,0.3);">
+            <div class="p-3 rounded-3 h-100 d-flex align-items-center justify-content-between" style="background: var(--bg-card); border: 1px solid rgba(16,185,129,0.3);">
                 <div>
                     <span class="text-secondary small text-uppercase fw-bold">Đang hiệu lực</span>
                     <h3 class="fw-bold text-success mb-0 mt-1"><?php echo $active_orders; ?></h3>
@@ -242,7 +242,7 @@ require_once __DIR__ . '/includes/header.php';
             </div>
         </div>
         <div class="col-md-4">
-            <div class="p-3 rounded-4 h-100 d-flex align-items-center justify-content-between" style="background: var(--bg-card); border: 1px solid rgba(239,68,68,0.25);">
+            <div class="p-3 rounded-3 h-100 d-flex align-items-center justify-content-between" style="background: var(--bg-card); border: 1px solid rgba(239,68,68,0.25);">
                 <div>
                     <span class="text-secondary small text-uppercase fw-bold">Đã hoàn tất / Hết hạn</span>
                     <h3 class="fw-bold text-secondary mb-0 mt-1"><?php echo $expired_orders; ?></h3>
@@ -255,14 +255,14 @@ require_once __DIR__ . '/includes/header.php';
     </div>
 
     <?php if ($report_message): ?>
-        <div class="alert alert-dismissible fade show mb-4 text-white" style="background: rgba(16,185,129,0.15); border: 1px solid #10b981;" role="alert">
+        <div class="alert alert-dismissible fade show mb-4" style="background: rgba(16,185,129,0.15); border: 1px solid #10b981;" role="alert">
             <div class="d-flex align-items-center">
                 <i class="bi bi-check-circle-fill text-success fs-5 me-2"></i>
                 <div>
                     <div><?php echo $report_message; ?></div>
                     <?php if (!empty($report_ticket_id)): ?>
                         <div class="mt-2 small">
-                            <a href="support_detail.php?id=<?php echo $report_ticket_id; ?>" class="btn btn-sm btn-outline-info text-white fw-bold py-1 px-3">
+                            <a href="support_detail.php?id=<?php echo $report_ticket_id; ?>" class="btn btn-sm btn-outline-info fw-bold py-1 px-3">
                                 <i class="bi bi-headset me-1"></i> Theo dõi xử lý tại Yêu cầu #<?php echo $report_ticket_id; ?> &rarr;
                             </a>
                         </div>
@@ -274,7 +274,7 @@ require_once __DIR__ . '/includes/header.php';
     <?php endif; ?>
 
     <?php if ($report_error): ?>
-        <div class="alert alert-dismissible fade show mb-4 text-white" style="background: rgba(239,68,68,0.15); border: 1px solid #ef4444;" role="alert">
+        <div class="alert alert-dismissible fade show mb-4" style="background: rgba(239,68,68,0.15); border: 1px solid #ef4444;" role="alert">
             <div class="d-flex align-items-center">
                 <i class="bi bi-exclamation-triangle-fill text-danger fs-5 me-2"></i>
                 <div><?php echo htmlspecialchars($report_error); ?></div>
@@ -307,7 +307,7 @@ require_once __DIR__ . '/includes/header.php';
                     <?php if (!empty($row['image_url']) && file_exists($row['image_url'])): ?>
                         <img src="<?php echo htmlspecialchars($row['image_url']); ?>" class="gaming-card-img" alt="<?php echo htmlspecialchars($row['title']); ?>">
                     <?php else: ?>
-                        <div class="w-100 h-100 d-flex flex-column align-items-center justify-content-center bg-dark text-secondary">
+                        <div class="w-100 h-100 d-flex flex-column align-items-center justify-content-center anplay-surface-muted text-secondary">
                             <i class="bi bi-image fs-1 mb-2"></i>
                             <span class="small fw-bold">ANPLAY GAME</span>
                         </div>
@@ -339,13 +339,13 @@ require_once __DIR__ . '/includes/header.php';
                 <!-- Card Body -->
                 <div class="card-body p-4 d-flex flex-column flex-grow-1">
                     <div class="d-flex justify-content-between align-items-start mb-2">
-                        <h4 class="fw-bold text-white mb-0 text-truncate" title="<?php echo htmlspecialchars($row['title']); ?>">
+                        <h4 class="fw-bold mb-0 text-truncate" title="<?php echo htmlspecialchars($row['title']); ?>">
                             <?php echo htmlspecialchars($row['title']); ?>
                         </h4>
                     </div>
 
                     <div class="d-flex justify-content-between text-secondary small mb-3">
-                        <span><i class="bi bi-calendar-event me-1"></i> Thuê: <span class="text-light"><?php echo date('d/m/Y H:i', strtotime($row['borrow_date'])); ?></span></span>
+                        <span><i class="bi bi-calendar-event me-1"></i> Thuê: <span class=""><?php echo date('d/m/Y H:i', strtotime($row['borrow_date'])); ?></span></span>
                         <span>Hạn: <strong class="text-warning"><?php echo date('d/m/Y H:i', $due_timestamp); ?></strong></span>
                     </div>
 
@@ -363,7 +363,7 @@ require_once __DIR__ . '/includes/header.php';
                             <div class="mb-2">
                                 <label class="small text-secondary d-block mb-1" style="font-size: 0.75rem;">Tài khoản / Email:</label>
                                 <div class="input-group input-group-sm">
-                                    <input type="text" class="form-control form-control-sm form-control-gaming text-white fw-bold user-select-all" value="<?php echo htmlspecialchars($row['account_username']); ?>" readonly id="user_<?php echo $row['borrow_id']; ?>">
+                                    <input type="text" class="form-control form-control-sm form-control-gaming fw-bold user-select-all" value="<?php echo htmlspecialchars($row['account_username']); ?>" readonly id="user_<?php echo $row['borrow_id']; ?>">
                                     <button class="btn btn-sm btn-gaming-secondary copy-btn" type="button" data-clipboard-target="#user_<?php echo $row['borrow_id']; ?>" onclick="copyText('user_<?php echo $row['borrow_id']; ?>', this)">
                                         <i class="bi bi-clipboard"></i>
                                     </button>
@@ -453,12 +453,12 @@ require_once __DIR__ . '/includes/header.php';
                         <form method="POST" action="checkout_qr.php" class="p-2 rounded-3 mb-2" style="background: rgba(255,255,255,0.03); border: 1px solid var(--border-color);">
                             <input type="hidden" name="borrow_id_to_extend" value="<?php echo $row['borrow_id']; ?>">
                             <div class="d-flex justify-content-between align-items-center mb-1">
-                                <small class="text-light fw-bold" style="font-size: 0.75rem;">
-                                    <i class="bi bi-arrow-repeat text-warning me-1"></i> <?php echo $is_active ? 'Gia hạn thêm giờ chơi:' : '⚡ Kích hoạt lại / Gia hạn tiếp:'; ?>
+                                <small class=" fw-bold" style="font-size: 0.75rem;">
+                                    <i class="bi bi-arrow-repeat text-warning me-1"></i> <?php echo $is_active ? 'Gia hạn thêm giờ chơi:' : 'Kích hoạt lại / Gia hạn tiếp:'; ?>
                                 </small>
                             </div>
                             <div class="input-group input-group-sm">
-                                <select name="extend_pkg_id" class="form-select form-select-sm form-control-gaming text-white">
+                                <select name="extend_pkg_id" class="form-select form-select-sm form-control-gaming">
                                     <?php
                                     $pkgs_cur = false;
                                     try {
@@ -533,11 +533,11 @@ require_once __DIR__ . '/includes/header.php';
                         </div>
                         <div class="modal-body">
                             <p class="text-secondary small mb-3">
-                                Bạn đang báo lỗi cho game <strong class="text-white"><?php echo htmlspecialchars($row['title']); ?></strong>. 
+                                Bạn đang báo lỗi cho game <strong class=""><?php echo htmlspecialchars($row['title']); ?></strong>. 
                                 Đội ngũ kỹ thuật ANPLAY STORE cam kết hỗ trợ đổi tài khoản ngay nếu phát hiện lỗi sai mật khẩu, bị khóa Steam Guard hoặc tài khoản bị ban.
                             </p>
                             
-                            <label class="form-label text-light small fw-bold">Chi tiết sự cố gặp phải:</label>
+                            <label class="form-label small fw-bold">Chi tiết sự cố gặp phải:</label>
                             <textarea name="issue_description" class="form-control form-control-gaming" rows="4" placeholder="Ví dụ: Báo sai mật khẩu, Steam yêu cầu mã OTP, tài khoản đang có người khác đăng nhập..." required></textarea>
                             
                             <div class="mt-3 p-2 rounded" style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.2);">
@@ -560,7 +560,7 @@ require_once __DIR__ . '/includes/header.php';
         <!-- MODAL: CHÍNH SÁCH & QUYỀN ĐỔI MẬT KHẨU TÀI KHOẢN -->
         <div class="modal fade" id="passPolicyModal_<?php echo $row['borrow_id']; ?>" tabindex="-1" aria-hidden="true">
             <div class="modal-dialog modal-dialog-centered">
-                <div class="modal-content modal-gaming shadow-lg text-white" style="background: var(--bg-card); border: 1px solid var(--border-color);">
+                <div class="modal-content modal-gaming shadow-lg" style="background: var(--bg-card); border: 1px solid var(--border-color);">
                     <div class="modal-header border-secondary border-opacity-25">
                         <h5 class="modal-title fw-bold text-warning d-flex align-items-center">
                             <i class="bi bi-shield-lock-fill me-2 fs-5"></i> Chính Sách Mật Khẩu Tài Khoản Game
@@ -570,14 +570,14 @@ require_once __DIR__ . '/includes/header.php';
                     <div class="modal-body p-4">
                         <div class="p-3 rounded-3 mb-3" style="background: rgba(239, 68, 68, 0.12); border: 1px solid rgba(239, 68, 68, 0.3);">
                             <div class="d-flex align-items-center gap-2 mb-1">
-                                <span class="badge bg-danger text-white"><i class="bi bi-slash-circle me-1"></i> KHÔNG ĐƯỢC PHÉP ĐỔI MẬT KHẨU</span>
+                                <span class="badge bg-danger"><i class="bi bi-slash-circle me-1"></i> KHÔNG ĐƯỢC PHÉP ĐỔI MẬT KHẨU</span>
                             </div>
                             <small class="text-danger fw-semibold">
                                 Tài khoản game <strong><?php echo htmlspecialchars($row['account_username'] ?? 'cho thuê'); ?></strong> thuộc quyền sở hữu độc quyền của ANPLAY STORE.
                             </small>
                         </div>
 
-                        <h6 class="fw-bold text-light mb-2">Quy định và giới hạn bảo mật:</h6>
+                        <h6 class="fw-bold mb-2">Quy định và giới hạn bảo mật:</h6>
                         <ul class="text-secondary small mb-3 ps-3" style="line-height: 1.7;">
                             <li><strong>Chính sách thuê chia sẻ:</strong> Tài khoản được cấp quyền đăng nhập trong thời gian thuê. Khách hàng <em>không được phép tự ý thay đổi mật khẩu, email hoặc thêm Steam Guard cá nhân</em>.</li>
                             <li><strong>Phát hiện vi phạm:</strong> Bất kỳ hành vi đổi mật khẩu nào sẽ bị hệ thống quét tự động phát hiện, khóa quyền truy cập ngay lập tức và hủy bỏ bảo hành.</li>
@@ -597,7 +597,7 @@ require_once __DIR__ . '/includes/header.php';
         <!-- MODAL: KIỂM TRA LƯU TIẾN TRÌNH (SAVE GAME) & TIẾP TỤC CHƠI -->
         <div class="modal fade" id="saveGameModal_<?php echo $row['borrow_id']; ?>" tabindex="-1" aria-hidden="true">
             <div class="modal-dialog modal-dialog-centered">
-                <div class="modal-content modal-gaming shadow-lg text-white" style="background: var(--bg-card); border: 1px solid var(--border-color);">
+                <div class="modal-content modal-gaming shadow-lg" style="background: var(--bg-card); border: 1px solid var(--border-color);">
                     <div class="modal-header border-secondary border-opacity-25">
                         <h5 class="modal-title fw-bold text-info d-flex align-items-center">
                             <i class="bi bi-cloud-check-fill me-2 fs-5"></i> Lưu Tiến Trình Game (Save Game)
@@ -607,14 +607,14 @@ require_once __DIR__ . '/includes/header.php';
                     <div class="modal-body p-4">
                         <div class="p-3 rounded-3 mb-3" style="background: rgba(16, 185, 129, 0.12); border: 1px solid rgba(16, 185, 129, 0.3);">
                             <div class="d-flex align-items-center gap-2 mb-1">
-                                <span class="badge bg-success text-white"><i class="bi bi-check-circle-fill me-1"></i> SAVE GAME: HOẠT ĐỘNG HOÀN HẢO</span>
+                                <span class="badge bg-success"><i class="bi bi-check-circle-fill me-1"></i> SAVE GAME: HOẠT ĐỘNG HOÀN HẢO</span>
                             </div>
                             <small class="text-success fw-semibold">
                                 Tựa game <strong><?php echo htmlspecialchars($row['title']); ?></strong> hỗ trợ đầy đủ tính năng lưu tiến trình chơi qua Steam Cloud & máy tính cá nhân.
                             </small>
                         </div>
 
-                        <h6 class="fw-bold text-light mb-2">Cách thức lưu và tiếp tục chơi:</h6>
+                        <h6 class="fw-bold mb-2">Cách thức lưu và tiếp tục chơi:</h6>
                         <ul class="text-secondary small mb-3 ps-3" style="line-height: 1.7;">
                             <li><strong>Cloud Save tự động:</strong> Khi bạn chơi, tiến trình sẽ được nền tảng (Steam/Epic) tự động lưu đồng bộ với tài khoản <code><?php echo htmlspecialchars($row['account_username'] ?? ''); ?></code>.</li>
                             <li><strong>Local Save dự phòng:</strong> File save vật lý được lưu trong máy bạn tại <code>%USERPROFILE%\Documents</code> hoặc <code>AppData</code>. Bạn hoàn toàn có thể backup file này bất cứ lúc nào.</li>
@@ -639,11 +639,11 @@ require_once __DIR__ . '/includes/header.php';
         <?php endforeach; else: ?>
         <!-- EMPTY STATE -->
         <div class="col-12 py-5 text-center">
-            <div class="p-5 rounded-4 mx-auto" style="max-width: 600px; background: var(--bg-card); border: 1px solid var(--border-color);">
+            <div class="p-5 rounded-3 mx-auto" style="max-width: 600px; background: var(--bg-card); border: 1px solid var(--border-color);">
                 <div class="mb-3 d-inline-flex p-4 rounded-circle" style="background: rgba(99,102,241,0.1); border: 1px solid rgba(99,102,241,0.25);">
                     <i class="bi bi-controller fs-1" style="color: var(--primary);"></i>
                 </div>
-                <h3 class="fw-bold text-white mb-2">Thư Viện Trống Trải!</h3>
+                <h3 class="fw-bold mb-2">Thư Viện Trống Trải!</h3>
                 <p class="text-secondary mb-4">Bạn chưa thuê bất kỳ tài khoản game nào. Hãy khám phá ngay kho game AAA bản quyền của ANPLAY với giá chỉ từ 5.000đ.</p>
                 <a href="index.php" class="btn btn-gaming-primary px-4 py-2 text-decoration-none">
                     <i class="bi bi-compass me-1"></i> Khám Phá Cửa Hàng Game

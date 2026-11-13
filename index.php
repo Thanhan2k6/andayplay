@@ -195,7 +195,7 @@ if (!$result) {
         </div>
         <div class="col-lg-5 d-none d-lg-block">
             <!-- Hero Stats Card -->
-            <div class="p-4 rounded-4 hero-stats-box">
+            <div class="p-4 rounded-3 hero-stats-box">
                 <div class="row g-3">
                     <div class="col-6">
                         <div class="p-3 rounded-3 text-center hero-stat-card hero-stat-price">
@@ -288,9 +288,9 @@ if (!$result) {
             <?php if(isset($_GET['platform'])): ?><input type="hidden" name="platform" value="<?php echo htmlspecialchars($_GET['platform']); ?>"><?php endif; ?>
             <?php if(isset($_GET['sort'])): ?><input type="hidden" name="sort" value="<?php echo htmlspecialchars($_GET['sort']); ?>"><?php endif; ?>
             <select name="stock" class="form-select form-select-sm py-2 px-3 border-secondary" onchange="this.form.submit()" style="min-width: 145px;">
-                <option value="">🎯 Tất cả kho game</option>
-                <option value="available" <?php echo (isset($_GET['stock']) && $_GET['stock']=='available')?'selected':''; ?>>🟢 Còn tài khoản sẵn</option>
-                <option value="out" <?php echo (isset($_GET['stock']) && $_GET['stock']=='out')?'selected':''; ?>>🔴 Tạm hết tài khoản</option>
+                <option value="">Tất cả kho game</option>
+                <option value="available" <?php echo (isset($_GET['stock']) && $_GET['stock']=='available')?'selected':''; ?>>Còn tài khoản sẵn</option>
+                <option value="out" <?php echo (isset($_GET['stock']) && $_GET['stock']=='out')?'selected':''; ?>>Tạm hết tài khoản</option>
             </select>
         </form>
 
@@ -302,8 +302,8 @@ if (!$result) {
             <?php if(isset($_GET['sort'])): ?><input type="hidden" name="sort" value="<?php echo htmlspecialchars($_GET['sort']); ?>"><?php endif; ?>
             <select name="platform" class="form-select form-select-sm py-2 px-3 border-secondary" onchange="this.form.submit()" style="min-width: 120px;">
                 <option value="">Tất cả thiết bị</option>
-                <option value="PC" <?php echo (isset($_GET['platform']) && $_GET['platform']=='PC')?'selected':''; ?>>🖥️ Game PC</option>
-                <option value="Mobile" <?php echo (isset($_GET['platform']) && $_GET['platform']=='Mobile')?'selected':''; ?>>📱 Mobile</option>
+                <option value="PC" <?php echo (isset($_GET['platform']) && $_GET['platform']=='PC')?'selected':''; ?>>Game PC</option>
+                <option value="Mobile" <?php echo (isset($_GET['platform']) && $_GET['platform']=='Mobile')?'selected':''; ?>>Mobile</option>
             </select>
         </form>
 
@@ -392,7 +392,7 @@ if (!$result) {
                     <div>
                         <?php if ($min_price > 0): ?>
                             <span class="gaming-card-price-label">Giá thuê từ</span>
-                            <span class="gaming-card-price-val text-warning fw-bold"><?php echo number_format($min_price, 0, ',', '.'); ?>đ<small class="text-secondary fw-normal ms-1" style="font-size: 0.72rem; -webkit-text-fill-color: #94a3b8;">/giờ</small></span>
+                            <span class="gaming-card-price-val text-warning fw-bold"><?php echo number_format($min_price, 0, ',', '.'); ?>đ<small class="text-secondary fw-normal ms-1" style="font-size: 0.72rem;">/giờ</small></span>
                         <?php else: ?>
                             <span class="gaming-card-price-label">Giá thuê</span>
                             <span class="badge bg-warning bg-opacity-20 text-warning" style="font-size: 0.75rem;">Chưa cấu hình</span>
@@ -424,7 +424,7 @@ if (!$result) {
         <div class="col-12 text-center py-5">
             <div class="panel-dark p-5">
                 <i class="bi bi-search fs-1 mb-3 text-secondary d-block"></i>
-                <h4 class="text-white fw-bold mb-2">Không tìm thấy tựa game nào phù hợp!</h4>
+                <h4 class=" fw-bold mb-2">Không tìm thấy tựa game nào phù hợp!</h4>
                 <p class="text-secondary mb-4">Vui lòng thử lại với từ khóa khác hoặc xóa bộ lọc để hiển thị toàn bộ game.</p>
                 <a href="index.php" class="btn btn-gaming-primary px-4 py-2">Xem Tất Cả Trò Chơi</a>
             </div>
@@ -483,7 +483,7 @@ if (!$result) {
         <div class="row align-items-center g-4">
             <div class="col-lg-5">
                 <span class="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25 px-3 py-2 text-uppercase fw-bold" style="font-size: 0.75rem;">Hỗ trợ khách hàng</span>
-                <h3 class="fw-bold text-white mt-2 mb-3">Câu Hỏi Thường Gặp</h3>
+                <h3 class="fw-bold mt-2 mb-3">Câu Hỏi Thường Gặp</h3>
                 <p class="text-secondary">Những thắc mắc phổ biến nhất khi khách hàng trải nghiệm dịch vụ thuê tài khoản game tại ANPLAY STORE.</p>
                 <div class="d-flex align-items-center gap-2 text-info mt-3">
                     <i class="bi bi-headset fs-4"></i>
@@ -497,7 +497,7 @@ if (!$result) {
                     <div class="accordion-item bg-transparent border-secondary border-opacity-25 mb-3" style="border-radius: 12px; overflow: hidden; border: 1px solid var(--border-color);">
                         <h2 class="accordion-header" id="headingFaq1">
                             <button class="accordion-button collapsed bg-transparent fw-bold shadow-none py-3 px-3" type="button" data-bs-toggle="collapse" data-bs-target="#faq1" aria-expanded="false" aria-controls="faq1" style="color: var(--text-heading) !important; font-size: 1rem;">
-                                <i class="bi bi-cloud-arrow-down text-info me-2 fs-5"></i> 🎮 Tôi có thể lưu game (Save Game) và chơi tiếp không?
+                                <i class="bi bi-cloud-arrow-down text-info me-2 fs-5"></i> Tôi có thể lưu game (Save Game) và chơi tiếp không?
                             </button>
                         </h2>
                         <div id="faq1" class="accordion-collapse collapse" aria-labelledby="headingFaq1" data-bs-parent="#faqAccordion">
@@ -510,7 +510,7 @@ if (!$result) {
                                         <i class="bi bi-steam me-1"></i> Steam Cloud & Local AppData
                                     </span>
                                 </div>
-                                <p class="mb-2 text-light" style="line-height: 1.6;">
+                                <p class="mb-2" style="line-height: 1.6;">
                                     <strong>Hoàn toàn được!</strong> Các tựa game bản quyền trên Steam, EA, Epic Games đều tự động kích hoạt tính năng lưu tiến trình màn chơi:
                                 </p>
                                 <ul class="mb-3 ps-3 text-secondary" style="line-height: 1.7;">
@@ -532,7 +532,7 @@ if (!$result) {
                     <div class="accordion-item bg-transparent border-secondary border-opacity-25 mb-3" style="border-radius: 12px; overflow: hidden; border: 1px solid var(--border-color);">
                         <h2 class="accordion-header" id="headingFaq2">
                             <button class="accordion-button collapsed bg-transparent fw-bold shadow-none py-3 px-3" type="button" data-bs-toggle="collapse" data-bs-target="#faq2" aria-expanded="false" aria-controls="faq2" style="color: var(--text-heading) !important; font-size: 1rem;">
-                                <i class="bi bi-shield-lock text-warning me-2 fs-5"></i> 🔒 Tôi có được phép đổi mật khẩu tài khoản game không?
+                                <i class="bi bi-shield-lock text-warning me-2 fs-5"></i> Tôi có được phép đổi mật khẩu tài khoản game không?
                             </button>
                         </h2>
                         <div id="faq2" class="accordion-collapse collapse" aria-labelledby="headingFaq2" data-bs-parent="#faqAccordion">
@@ -545,7 +545,7 @@ if (!$result) {
                                         <i class="bi bi-shield-check me-1"></i> Bảo Hành Đổi Trả 1 Đổi 1
                                     </span>
                                 </div>
-                                <p class="mb-2 text-light" style="line-height: 1.6;">
+                                <p class="mb-2" style="line-height: 1.6;">
                                     <strong class="text-danger">Tuyệt đối không!</strong> Tài khoản game thuộc quyền sở hữu bản quyền của hệ thống ANPLAY STORE được cung cấp theo hình thức cho thuê thời hạn:
                                 </p>
                                 <ul class="mb-3 ps-3 text-secondary" style="line-height: 1.7;">
@@ -569,7 +569,7 @@ if (!$result) {
                         </h2>
                         <div id="faq3" class="accordion-collapse collapse" aria-labelledby="headingFaq3" data-bs-parent="#faqAccordion">
                             <div class="accordion-body text-secondary small pt-1 pb-3 px-3">
-                                <p class="mb-2 text-light" style="line-height: 1.6;">
+                                <p class="mb-2" style="line-height: 1.6;">
                                     Khi hết thời hạn thuê, hệ thống tự động khóa hiển thị mật khẩu trên website để hoàn tất phiên thuê:
                                 </p>
                                 <ul class="mb-3 ps-3 text-secondary" style="line-height: 1.7;">

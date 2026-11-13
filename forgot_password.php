@@ -13,11 +13,11 @@ $hide_form = false;
 <div class="container py-5 my-4">
     <div class="row justify-content-center">
         <div class="col-md-6 col-lg-5">
-            <div class="p-4 p-md-5 rounded-3 shadow-lg text-white" style="background: var(--surface-card); border: 1px solid var(--border-default); position: relative; overflow: hidden;">
+            <div class="p-4 p-md-5 rounded-3 shadow-lg" style="background: var(--surface-card); border: 1px solid var(--border-default); position: relative; overflow: hidden;">
                 <div style="position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, var(--primary), var(--accent-cyan));"></div>
                 
                 <div class="text-center mb-4">
-                    <div class="d-inline-flex p-3 rounded-4 mb-3" style="background: rgba(99, 102, 241, 0.15); border: 1px solid rgba(99, 102, 241, 0.3);">
+                    <div class="d-inline-flex p-3 rounded-3 mb-3" style="background: rgba(99, 102, 241, 0.15); border: 1px solid rgba(99, 102, 241, 0.3);">
                         <i class="bi bi-shield-lock-fill fs-2" style="color: var(--primary);"></i>
                     </div>
                     <h3 class="fw-bold mb-1">Khôi Phục Mật Khẩu</h3>
@@ -100,7 +100,7 @@ $hide_form = false;
                                 $conn->commit();
                                 clear_rate_limit($conn, 'pwd_reset_verify', $client_ip);
 
-                                echo '<div class="alert alert-dismissible fade show text-white mb-4" style="background: rgba(16,185,129,0.15); border: 1px solid #10b981;">
+                                echo '<div class="alert alert-dismissible fade show mb-4" style="background: rgba(16,185,129,0.15); border: 1px solid #10b981;">
                                         <i class="bi bi-check-circle-fill text-success me-2"></i><strong>Thành công!</strong> Đổi mật khẩu thành công. Bạn có thể đăng nhập lại ngay bây giờ.
                                       </div>';
                                 echo '<div class="text-center"><a href="login.php" class="btn btn-gaming-primary w-100 py-2">ĐI ĐẾN ĐĂNG NHẬP</a></div>';
@@ -188,7 +188,7 @@ $hide_form = false;
                                   </div>';
                         } else {
                             // Luôn trả thông báo trung lập để không lộ email nào đã đăng ký
-                            echo '<div class="alert text-white mb-4" style="background: rgba(6,182,212,0.15); border: 1px solid #06b6d4;">
+                            echo '<div class="alert mb-4" style="background: rgba(6,182,212,0.15); border: 1px solid #06b6d4;">
                                     <i class="bi bi-envelope-check me-1 text-info"></i> Nếu địa chỉ email tồn tại trong hệ thống ANPLAY, hướng dẫn và liên kết đặt lại mật khẩu (hiệu lực 15 phút) đã được gửi tới hộp thư của bạn.
                                   </div>';
                         }
@@ -215,7 +215,7 @@ $hide_form = false;
                             <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($csrf_token); ?>">
                             <input type="hidden" name="reset_token" value="<?php echo htmlspecialchars($url_token); ?>">
                             <div class="mb-3">
-                                <label class="form-label text-light small fw-bold">Mật khẩu mới (tối thiểu 8 ký tự)</label>
+                                <label class="form-label small fw-bold">Mật khẩu mới (tối thiểu 8 ký tự)</label>
                                 <div class="input-group">
                                     <span class="input-group-text" style="background: var(--surface-secondary); border-color: var(--border-default); color: var(--text-muted);"><i class="bi bi-key"></i></span>
                                     <input type="password" name="new_password" id="reset_pass_input" class="form-control form-control-gaming" required minlength="8" placeholder="Nhập mật khẩu mới">
@@ -225,7 +225,7 @@ $hide_form = false;
                                 </div>
                             </div>
                             <div class="mb-4">
-                                <label class="form-label text-light small fw-bold">Xác nhận mật khẩu mới</label>
+                                <label class="form-label small fw-bold">Xác nhận mật khẩu mới</label>
                                 <div class="input-group">
                                     <span class="input-group-text" style="background: var(--surface-secondary); border-color: var(--border-default); color: var(--text-muted);"><i class="bi bi-key-fill"></i></span>
                                     <input type="password" name="confirm_password" id="reset_confirm_input" class="form-control form-control-gaming" required minlength="8" placeholder="Nhập lại mật khẩu mới">
@@ -251,7 +251,7 @@ $hide_form = false;
                     <form method="POST" action="forgot_password.php">
                         <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($csrf_token); ?>">
                         <div class="mb-4">
-                            <label class="form-label text-light small fw-bold">Email tài khoản</label>
+                            <label class="form-label small fw-bold">Email tài khoản</label>
                             <div class="input-group">
                                 <span class="input-group-text" style="background: var(--surface-secondary); border-color: var(--border-default); color: var(--text-muted);"><i class="bi bi-envelope"></i></span>
                                 <input type="email" name="email" class="form-control form-control-gaming" required placeholder="name@example.com">

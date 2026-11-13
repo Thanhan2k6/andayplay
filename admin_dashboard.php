@@ -95,73 +95,65 @@ try {
     <!-- 4 KPI SaaS Cards -->
     <div class="row g-3 mb-4">
         <!-- Doanh Thu -->
-        <div class="col-sm-6 col-xl-3">
-            <div class="kpi-stat-card p-3 p-md-4 rounded-3 h-100 d-flex flex-column justify-content-between" style="background: var(--bg-card); border: 1px solid var(--admin-border);">
-                <div class="d-flex justify-content-between align-items-start gap-2">
-                    <div class="min-w-0">
-                        <span class="text-secondary small text-uppercase fw-bold" style="letter-spacing: 0.04em; font-size: 0.72rem;">Tổng Doanh Thu</span>
-                        <h3 class="fw-extrabold text-success mt-2 mb-1 fs-4"><?php echo number_format($total_revenue, 0, ',', '.'); ?> đ</h3>
-                    </div>
-                    <div class="p-2 rounded-2 flex-shrink-0" style="background: rgba(16, 185, 129, 0.12); color: #10b981;">
-                        <i class="bi bi-cash-stack fs-4"></i>
-                    </div>
+        <div class="col-12 col-sm-6 col-xxl-3">
+            <div class="kpi-stat-card p-3 rounded-3 h-100 d-flex flex-column justify-content-between" style="background: var(--bg-card); border: 1px solid var(--admin-border);">
+                <div class="d-flex justify-content-between align-items-center gap-2 mb-2">
+                    <span class="text-secondary small text-uppercase fw-bold" style="letter-spacing: 0.04em; font-size: 0.72rem;">Tổng Doanh Thu</span>
+                    <span class="d-inline-flex align-items-center justify-content-center rounded-2 flex-shrink-0" style="width: 34px; height: 34px; background: var(--surface-secondary); border: 1px solid var(--admin-border); color: #10b981;">
+                        <i class="bi bi-cash-stack"></i>
+                    </span>
                 </div>
-                <div class="mt-2 pt-2 border-top border-secondary border-opacity-10 small text-secondary">
-                    <span class="text-success fw-semibold"><i class="bi bi-check-circle me-1"></i>Thanh toán tự động</span>
+                <div class="fw-extrabold text-success fs-4 tabular-nums text-nowrap mb-2"><?php echo number_format($total_revenue, 0, ',', '.'); ?> đ</div>
+                <div class="pt-2 border-top border-secondary border-opacity-10 small text-secondary">
+                    <i class="bi bi-check-circle text-success me-1"></i>Thanh toán tự động
                 </div>
             </div>
         </div>
 
         <!-- Kho Tài Khoản (Sẵn / Tổng) -->
-        <div class="col-sm-6 col-xl-3">
-            <div class="kpi-stat-card p-3 p-md-4 rounded-3 h-100 d-flex flex-column justify-content-between" style="background: var(--bg-card); border: 1px solid var(--admin-border);">
-                <div class="d-flex justify-content-between align-items-start gap-2">
-                    <div class="min-w-0">
-                        <span class="text-secondary small text-uppercase fw-bold" style="letter-spacing: 0.04em; font-size: 0.72rem;">Kho Tài Khoản</span>
-                        <h3 class="fw-extrabold text-info mt-2 mb-1 fs-4"><?php echo $available_accounts; ?> <span class="fs-6 text-secondary fw-normal">/ <?php echo $total_accounts; ?> TK</span></h3>
-                    </div>
-                    <div class="p-2 rounded-2 flex-shrink-0" style="background: rgba(6, 182, 212, 0.12); color: var(--accent-cyan);">
-                        <i class="bi bi-box-seam fs-4"></i>
-                    </div>
+        <div class="col-12 col-sm-6 col-xxl-3">
+            <div class="kpi-stat-card p-3 rounded-3 h-100 d-flex flex-column justify-content-between" style="background: var(--bg-card); border: 1px solid var(--admin-border);">
+                <div class="d-flex justify-content-between align-items-center gap-2 mb-2">
+                    <span class="text-secondary small text-uppercase fw-bold" style="letter-spacing: 0.04em; font-size: 0.72rem;">Kho Tài Khoản</span>
+                    <span class="d-inline-flex align-items-center justify-content-center rounded-2 flex-shrink-0" style="width: 34px; height: 34px; background: var(--surface-secondary); border: 1px solid var(--admin-border); color: var(--accent-cyan);">
+                        <i class="bi bi-box-seam"></i>
+                    </span>
                 </div>
-                <div class="mt-2 pt-2 border-top border-secondary border-opacity-10 small text-secondary">
-                    Đang cho thuê: <strong class="text-info"><?php echo $rented_accounts; ?></strong>
+                <div class="fw-extrabold text-info fs-4 tabular-nums text-nowrap mb-2"><?php echo $available_accounts; ?> <span class="fs-6 text-secondary fw-normal">/ <?php echo $total_accounts; ?> TK</span></div>
+                <div class="pt-2 border-top border-secondary border-opacity-10 small text-secondary">
+                    Đang cho thuê: <strong class="text-info tabular-nums"><?php echo $rented_accounts; ?></strong>
                 </div>
             </div>
         </div>
 
         <!-- Đơn Đang Hoạt Động -->
-        <div class="col-sm-6 col-xl-3">
-            <div class="kpi-stat-card p-3 p-md-4 rounded-3 h-100 d-flex flex-column justify-content-between" style="background: var(--bg-card); border: 1px solid var(--admin-border);">
-                <div class="d-flex justify-content-between align-items-start gap-2">
-                    <div class="min-w-0">
-                        <span class="text-secondary small text-uppercase fw-bold" style="letter-spacing: 0.04em; font-size: 0.72rem;">Đơn Đang Hoạt Động</span>
-                        <h3 class="fw-extrabold text-warning mt-2 mb-1 fs-4"><?php echo $active_borrows; ?></h3>
-                    </div>
-                    <div class="p-2 rounded-2 flex-shrink-0" style="background: rgba(245, 158, 11, 0.12); color: #f59e0b;">
-                        <i class="bi bi-clock-history fs-4"></i>
-                    </div>
+        <div class="col-12 col-sm-6 col-xxl-3">
+            <div class="kpi-stat-card p-3 rounded-3 h-100 d-flex flex-column justify-content-between" style="background: var(--bg-card); border: 1px solid var(--admin-border);">
+                <div class="d-flex justify-content-between align-items-center gap-2 mb-2">
+                    <span class="text-secondary small text-uppercase fw-bold" style="letter-spacing: 0.04em; font-size: 0.72rem;">Đơn Đang Hoạt Động</span>
+                    <span class="d-inline-flex align-items-center justify-content-center rounded-2 flex-shrink-0" style="width: 34px; height: 34px; background: var(--surface-secondary); border: 1px solid var(--admin-border); color: #f59e0b;">
+                        <i class="bi bi-clock-history"></i>
+                    </span>
                 </div>
-                <div class="mt-2 pt-2 border-top border-secondary border-opacity-10 small text-secondary">
-                    Sắp hết hạn trong 24h: <strong class="text-warning"><?php echo $expiring_soon; ?></strong>
+                <div class="fw-extrabold text-warning fs-4 tabular-nums text-nowrap mb-2"><?php echo $active_borrows; ?></div>
+                <div class="pt-2 border-top border-secondary border-opacity-10 small text-secondary">
+                    Sắp hết hạn trong 24h: <strong class="text-warning tabular-nums"><?php echo $expiring_soon; ?></strong>
                 </div>
             </div>
         </div>
 
         <!-- Tài Khoản Bảo Trì & Sự Cố -->
-        <div class="col-sm-6 col-xl-3">
-            <div class="kpi-stat-card p-3 p-md-4 rounded-3 h-100 d-flex flex-column justify-content-between" style="background: var(--bg-card); border: 1px solid var(--admin-border);">
-                <div class="d-flex justify-content-between align-items-start gap-2">
-                    <div class="min-w-0">
-                        <span class="text-secondary small text-uppercase fw-bold" style="letter-spacing: 0.04em; font-size: 0.72rem;">Bảo Trì / Cần Kiểm Tra</span>
-                        <h3 class="fw-extrabold text-danger mt-2 mb-1 fs-4"><?php echo $maintenance_accounts; ?> <span class="fs-6 text-secondary fw-normal">TK</span></h3>
-                    </div>
-                    <div class="p-2 rounded-2 flex-shrink-0" style="background: rgba(239, 68, 68, 0.12); color: #ef4444;">
-                        <i class="bi bi-exclamation-octagon fs-4"></i>
-                    </div>
+        <div class="col-12 col-sm-6 col-xxl-3">
+            <div class="kpi-stat-card p-3 rounded-3 h-100 d-flex flex-column justify-content-between" style="background: var(--bg-card); border: 1px solid var(--admin-border);">
+                <div class="d-flex justify-content-between align-items-center gap-2 mb-2">
+                    <span class="text-secondary small text-uppercase fw-bold" style="letter-spacing: 0.04em; font-size: 0.72rem;">Bảo Trì / Cần Kiểm Tra</span>
+                    <span class="d-inline-flex align-items-center justify-content-center rounded-2 flex-shrink-0" style="width: 34px; height: 34px; background: var(--surface-secondary); border: 1px solid var(--admin-border); color: #ef4444;">
+                        <i class="bi bi-exclamation-octagon"></i>
+                    </span>
                 </div>
-                <div class="mt-2 pt-2 border-top border-secondary border-opacity-10 small text-secondary">
-                    Lỗi cấp phát: <strong class="text-danger"><?php echo $failed_allocations; ?></strong>
+                <div class="fw-extrabold text-danger fs-4 tabular-nums text-nowrap mb-2"><?php echo $maintenance_accounts; ?> <span class="fs-6 text-secondary fw-normal">TK</span></div>
+                <div class="pt-2 border-top border-secondary border-opacity-10 small text-secondary">
+                    Lỗi cấp phát: <strong class="text-danger tabular-nums"><?php echo $failed_allocations; ?></strong>
                 </div>
             </div>
         </div>
@@ -208,70 +200,70 @@ try {
         </div>
     </div>
 
-    <!-- Biểu đồ & Tác Vụ Cần Xử Lý -->
-    <div class="row g-4">
+    <!-- Biểu đồ & Tác Vụ Cần Xử Lý (~2:1 on xl+) -->
+    <div class="row g-3">
         <!-- Revenue Chart (8 cols) -->
-        <div class="col-lg-8">
-            <div class="p-4 rounded-3 h-100 chart-container-box" style="background: var(--bg-card); border: 1px solid var(--admin-border);">
+        <div class="col-12 col-xl-8 min-w-0">
+            <div class="p-4 rounded-3 h-100 w-100 chart-container-box" style="background: var(--bg-card); border: 1px solid var(--admin-border);">
                 <div class="d-flex justify-content-between align-items-center mb-4">
                     <div>
                         <h5 class="fw-bold mb-1"><i class="bi bi-graph-up text-info me-2"></i>Doanh Thu Thuê Tài Khoản Game (Năm <?php echo $current_year; ?>)</h5>
                         <p class="text-secondary small mb-0">Biểu đồ tổng hợp doanh thu theo từng tháng dựa trên giao dịch thực tế</p>
                     </div>
-                    <span class="badge period-badge" style="background: rgba(99,102,241,0.15); color: var(--primary);">12 THÁNG</span>
+                    <span class="badge period-badge flex-shrink-0" style="background: rgba(99,102,241,0.15); color: var(--primary);">12 THÁNG</span>
                 </div>
-                <div style="height: 330px;">
+                <div style="height: 330px; position: relative; width: 100%;">
                     <canvas id="revenueChart"></canvas>
                 </div>
             </div>
         </div>
 
         <!-- Tasks & Alerts (4 cols) -->
-        <div class="col-lg-4">
-            <div class="p-4 rounded-3 h-100 d-flex flex-column tasks-container-box" style="background: var(--bg-card); border: 1px solid var(--admin-border);">
+        <div class="col-12 col-xl-4 min-w-0">
+            <div class="p-4 rounded-3 h-100 w-100 d-flex flex-column tasks-container-box" style="background: var(--bg-card); border: 1px solid var(--admin-border);">
                 <h5 class="fw-bold mb-3"><i class="bi bi-bell text-warning me-2"></i>Tác Vụ Cần Chú Ý</h5>
                 
                 <div class="d-flex flex-column gap-3 mb-4">
                     <!-- Item 1 -->
-                    <div class="task-item-card p-3 rounded-3 d-flex justify-content-between align-items-center">
-                        <div>
+                    <div class="task-item-card p-3 rounded-3 d-flex justify-content-between align-items-center gap-3">
+                        <div class="min-w-0 flex-grow-1">
                             <span class="d-block small task-item-title fw-semibold">Tài khoản báo lỗi / Bảo trì</span>
                             <small class="task-item-desc text-secondary">Cần kiểm tra lại thông tin đăng nhập</small>
                         </div>
-                        <a href="admin_accounts.php?filter_status=MAINTENANCE" class="status-pill status-pill-warning text-decoration-none">
+                        <a href="admin_accounts.php?filter_status=MAINTENANCE" class="status-pill status-pill-warning text-decoration-none text-nowrap tabular-nums flex-shrink-0 ms-auto">
                             <?php echo $maintenance_accounts; ?> TK
                         </a>
                     </div>
 
                     <!-- Item 2 -->
-                    <div class="task-item-card p-3 rounded-3 d-flex justify-content-between align-items-center">
-                        <div>
+                    <div class="task-item-card p-3 rounded-3 d-flex justify-content-between align-items-center gap-3">
+                        <div class="min-w-0 flex-grow-1">
                             <span class="d-block small task-item-title fw-semibold">Đơn sắp hết hạn (trong 24h)</span>
                             <small class="task-item-desc text-secondary">Chuẩn bị tự động thu hồi tài khoản</small>
                         </div>
-                        <span class="status-pill status-pill-info">
+                        <span class="status-pill status-pill-info text-nowrap tabular-nums flex-shrink-0 ms-auto">
                             <?php echo $expiring_soon; ?> đơn
                         </span>
                     </div>
 
                     <!-- Item 3 -->
-                    <div class="task-item-card p-3 rounded-3 d-flex justify-content-between align-items-center">
-                        <div>
+                    <div class="task-item-card p-3 rounded-3 d-flex justify-content-between align-items-center gap-3">
+                        <div class="min-w-0 flex-grow-1">
                             <span class="d-block small task-item-title fw-semibold">Đơn lỗi chờ cấp bù tài khoản</span>
                             <small class="task-item-desc text-secondary">Khách đã trả tiền nhưng kho hết TK</small>
                         </div>
-                        <a href="admin_borrow.php?status=pending" class="status-pill status-pill-danger text-decoration-none">
+                        <a href="admin_borrow.php?status=pending" class="status-pill status-pill-danger text-decoration-none text-nowrap tabular-nums flex-shrink-0 ms-auto">
                             <?php echo $failed_allocations; ?> đơn
                         </a>
                     </div>
 
                     <!-- Item 4 -->
-                    <div class="task-item-card p-3 rounded-3 d-flex justify-content-between align-items-center">
-                        <div>
+                    <div class="task-item-card p-3 rounded-3 d-flex justify-content-between align-items-center gap-3">
+                        <div class="min-w-0 flex-grow-1">
                             <span class="d-block small task-item-title fw-semibold">Tổng khách hàng đăng ký</span>
                             <small class="task-item-desc text-secondary">Tài khoản game thủ trên website</small>
                         </div>
-                        <span class="badge task-badge-neutral">
+                        <span class="badge task-badge-neutral text-nowrap tabular-nums flex-shrink-0 ms-auto">
                             <?php echo $total_users; ?> người dùng
                         </span>
                     </div>
@@ -373,7 +365,7 @@ function runQuickCronScan(btn) {
 
             const s = data.summary || {};
             const warns = (s.warnings_sent ? s.warnings_sent.total : 0);
-            const msg = `✅ Quét hoàn tất trong ${data.duration_ms}ms!\n\n` +
+            const msg = `Quét hoàn tất trong ${data.duration_ms}ms!\n\n` +
                         `• Tổng đơn kiểm tra: ${s.scanned_total || 0}\n` +
                         `• Đơn hết hạn thu hồi: ${s.expired_revoked || 0}\n` +
                         `• Cảnh báo đã gửi: ${warns}\n` +
@@ -383,7 +375,7 @@ function runQuickCronScan(btn) {
             setTimeout(() => { window.location.reload(); }, 800);
         })
         .catch(err => {
-            alert('⚠️ Lỗi khi chạy quét tự động: ' + err.message);
+            alert('Lỗi khi chạy quét tự động: ' + err.message);
             btn.disabled = false;
             btn.innerHTML = originalHtml;
         });

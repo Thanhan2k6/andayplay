@@ -356,7 +356,7 @@ require_once __DIR__ . '/includes/admin_header.php';
                     <i class="bi bi-lock-fill me-1"></i> Kiểm soát Phân Quyền & Bảo Mật
                 </span>
             </div>
-            <h2 class="fw-bold text-white mb-0" style="letter-spacing: -0.5px;">
+            <h2 class="fw-bold mb-0" style="letter-spacing: -0.5px;">
                 <i class="bi bi-person-gear me-2" style="color: #c084fc;"></i>Quản Trị Ban Quản Trị & Phân Quyền
             </h2>
             <p class="text-secondary small mb-0 mt-1">
@@ -364,7 +364,7 @@ require_once __DIR__ . '/includes/admin_header.php';
             </p>
         </div>
         <div class="d-flex align-items-center gap-2">
-            <button type="button" class="btn btn-primary fw-bold px-3 shadow-sm d-flex align-items-center gap-2" data-bs-toggle="modal" data-bs-target="#createAdminModal" style="background: linear-gradient(135deg, #a855f7, #6366f1); border: none;">
+            <button type="button" class="btn btn-gaming-primary px-3 d-flex align-items-center gap-2" data-bs-toggle="modal" data-bs-target="#createAdminModal">
                 <i class="bi bi-person-plus-fill fs-5"></i>
                 <span>Tạo Admin Mới</span>
             </button>
@@ -398,7 +398,7 @@ require_once __DIR__ . '/includes/admin_header.php';
     <!-- STATS CARDS -->
     <div class="row g-3 mb-4">
         <div class="col-6 col-md-3">
-            <div class="card h-100 p-3 rounded-4 border border-secondary border-opacity-10" style="background: var(--admin-bg-card);">
+            <div class="card h-100 p-3 rounded-3 border border-secondary border-opacity-10" style="background: var(--admin-bg-card);">
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
                         <div class="text-secondary small fw-bold text-uppercase" style="font-size: 0.72rem;">Tổng Quản Trị</div>
@@ -411,7 +411,7 @@ require_once __DIR__ . '/includes/admin_header.php';
             </div>
         </div>
         <div class="col-6 col-md-3">
-            <div class="card h-100 p-3 rounded-4 border border-secondary border-opacity-10" style="background: var(--admin-bg-card);">
+            <div class="card h-100 p-3 rounded-3 border border-secondary border-opacity-10" style="background: var(--admin-bg-card);">
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
                         <div class="text-secondary small fw-bold text-uppercase" style="font-size: 0.72rem;">Super Admin</div>
@@ -424,7 +424,7 @@ require_once __DIR__ . '/includes/admin_header.php';
             </div>
         </div>
         <div class="col-6 col-md-3">
-            <div class="card h-100 p-3 rounded-4 border border-secondary border-opacity-10" style="background: var(--admin-bg-card);">
+            <div class="card h-100 p-3 rounded-3 border border-secondary border-opacity-10" style="background: var(--admin-bg-card);">
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
                         <div class="text-secondary small fw-bold text-uppercase" style="font-size: 0.72rem;">Đang Hoạt Động</div>
@@ -437,7 +437,7 @@ require_once __DIR__ . '/includes/admin_header.php';
             </div>
         </div>
         <div class="col-6 col-md-3">
-            <div class="card h-100 p-3 rounded-4 border border-secondary border-opacity-10" style="background: var(--admin-bg-card);">
+            <div class="card h-100 p-3 rounded-3 border border-secondary border-opacity-10" style="background: var(--admin-bg-card);">
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
                         <div class="text-secondary small fw-bold text-uppercase" style="font-size: 0.72rem;">Đang Bị Khóa</div>
@@ -477,13 +477,13 @@ require_once __DIR__ . '/includes/admin_header.php';
         <!-- TAB 1: DANH SÁCH VÀ THAO TÁC QUẢN TRỊ VIÊN -->
         <!-- =================================================================== -->
         <div class="tab-pane fade show active" id="tab-admins" role="tabpanel">
-            <div class="card border border-secondary border-opacity-10 rounded-4 shadow-sm" style="background: var(--admin-bg-card);">
+            <div class="card border border-secondary border-opacity-10 rounded-3 shadow-sm" style="background: var(--admin-bg-card);">
                 <div class="card-header bg-transparent border-bottom border-secondary border-opacity-10 p-3 d-flex justify-content-between align-items-center">
                     <h5 class="fw-bold mb-0">Danh Sách Thành Viên Ban Quản Trị</h5>
                     <span class="text-secondary small">Cập nhật quyền hạn và trạng thái theo thời gian thực</span>
                 </div>
                 <div class="table-responsive">
-                    <table class="table table-dark table-hover align-middle mb-0" style="background: transparent;">
+                    <table class="table table-gaming table-hover align-middle mb-0" style="background: transparent;">
                         <thead>
                             <tr class="text-secondary small text-uppercase" style="border-bottom: 1px solid rgba(255,255,255,0.08); font-size: 0.74rem;">
                                 <th class="ps-3 py-3">ID</th>
@@ -507,7 +507,7 @@ require_once __DIR__ . '/includes/admin_header.php';
                                     <div class="d-flex align-items-center gap-3">
                                         <img src="https://ui-avatars.com/api/?name=<?php echo urlencode($adm['username']); ?>&background=<?php echo $is_target_super ? 'c084fc' : '6366f1'; ?>&color=fff&bold=true&rounded=true" width="38" height="38" class="rounded-circle shadow-sm" alt="Avatar">
                                         <div>
-                                            <div class="fw-bold text-white">
+                                            <div class="fw-bold">
                                                 @<?php echo htmlspecialchars($adm['username']); ?>
                                                 <?php if ($is_self): ?>
                                                     <span class="badge bg-primary bg-opacity-25 text-primary border border-primary border-opacity-25 ms-1" style="font-size: 0.65rem;">Chính bạn</span>
@@ -546,7 +546,7 @@ require_once __DIR__ . '/includes/admin_header.php';
                                             $shown = 0;
                                             foreach ($adm['permissions'] as $pk) {
                                                 if ($shown >= $show_limit) break;
-                                                echo '<span class="badge bg-secondary bg-opacity-25 text-light" style="font-size: 0.65rem;">' . htmlspecialchars($pk) . '</span>';
+                                                echo '<span class="badge bg-secondary bg-opacity-25" style="font-size: 0.65rem;">' . htmlspecialchars($pk) . '</span>';
                                                 $shown++;
                                             }
                                             if ($p_count > $show_limit) {
@@ -653,13 +653,13 @@ require_once __DIR__ . '/includes/admin_header.php';
         <!-- TAB 2: MA TRẬN PHÂN QUYỀN HỆ THỐNG (PERMISSION MATRIX) -->
         <!-- =================================================================== -->
         <div class="tab-pane fade" id="tab-matrix" role="tabpanel">
-            <div class="card border border-secondary border-opacity-10 rounded-4 shadow-sm" style="background: var(--admin-bg-card);">
+            <div class="card border border-secondary border-opacity-10 rounded-3 shadow-sm" style="background: var(--admin-bg-card);">
                 <div class="card-header bg-transparent border-bottom border-secondary border-opacity-10 p-3">
                     <h5 class="fw-bold mb-0">Ma Trận 16 Quyền Hạn Hệ Thống (Permission Matrix)</h5>
                     <p class="text-secondary small mb-0 mt-1">SUPER_ADMIN mặc định sở hữu toàn quyền. ADMIN được phân bổ linh hoạt. USER không có quyền quản trị.</p>
                 </div>
                 <div class="table-responsive">
-                    <table class="table table-dark table-hover align-middle mb-0" style="background: transparent;">
+                    <table class="table table-gaming table-hover align-middle mb-0" style="background: transparent;">
                         <thead>
                             <tr class="text-secondary small text-uppercase" style="border-bottom: 1px solid rgba(255,255,255,0.08); font-size: 0.74rem;">
                                 <th class="ps-3 py-3">Mã Quyền (Key)</th>
@@ -683,11 +683,11 @@ require_once __DIR__ . '/includes/admin_header.php';
                                     </code>
                                 </td>
                                 <td>
-                                    <div class="fw-bold text-white"><?php echo htmlspecialchars($perm['permission_name']); ?></div>
+                                    <div class="fw-bold"><?php echo htmlspecialchars($perm['permission_name']); ?></div>
                                     <div class="text-secondary small" style="font-size: 0.76rem;"><?php echo htmlspecialchars($perm['description']); ?></div>
                                 </td>
                                 <td>
-                                    <span class="badge bg-secondary bg-opacity-25 text-light text-uppercase" style="font-size: 0.68rem;">
+                                    <span class="badge bg-secondary bg-opacity-25 text-uppercase" style="font-size: 0.68rem;">
                                         <?php echo htmlspecialchars($perm['module']); ?>
                                     </span>
                                 </td>
@@ -720,7 +720,7 @@ require_once __DIR__ . '/includes/admin_header.php';
         <!-- TAB 3: NHẬT KÝ KIỂM TOÁN BAN QUẢN TRỊ (AUDIT LOGS) -->
         <!-- =================================================================== -->
         <div class="tab-pane fade" id="tab-audit" role="tabpanel">
-            <div class="card border border-secondary border-opacity-10 rounded-4 shadow-sm" style="background: var(--admin-bg-card);">
+            <div class="card border border-secondary border-opacity-10 rounded-3 shadow-sm" style="background: var(--admin-bg-card);">
                 <div class="card-header bg-transparent border-bottom border-secondary border-opacity-10 p-3 d-flex flex-wrap justify-content-between align-items-center gap-2">
                     <div>
                         <h5 class="fw-bold mb-0">Lịch Sử Kiểm Toán An Ninh & Hoạt Động</h5>
@@ -743,7 +743,7 @@ require_once __DIR__ . '/includes/admin_header.php';
                     </div>
                 </div>
                 <div class="table-responsive">
-                    <table class="table table-dark table-hover align-middle mb-0" style="background: transparent;">
+                    <table class="table table-gaming table-hover align-middle mb-0" style="background: transparent;">
                         <thead>
                             <tr class="text-secondary small text-uppercase" style="border-bottom: 1px solid rgba(255,255,255,0.08); font-size: 0.74rem;">
                                 <th class="ps-3 py-3">Log ID</th>
@@ -773,18 +773,18 @@ require_once __DIR__ . '/includes/admin_header.php';
                                         <?php echo date('d/m/Y H:i:s', strtotime($log['created_at'])); ?>
                                     </td>
                                     <td>
-                                        <span class="fw-bold text-white">@<?php echo htmlspecialchars($log['username'] ?? 'User #' . $log['user_id']); ?></span>
+                                        <span class="fw-bold">@<?php echo htmlspecialchars($log['username'] ?? 'User #' . $log['user_id']); ?></span>
                                         <?php if (intval($log['role'] ?? 0) === ROLE_SUPER_ADMIN): ?>
                                             <span class="badge" style="background: rgba(192, 132, 252, 0.2); color: #c084fc; font-size: 0.65rem;">Super</span>
                                         <?php endif; ?>
                                     </td>
                                     <td>
-                                        <span class="badge <?php echo $action_badge; ?> bg-opacity-25 text-white border border-secondary border-opacity-25" style="font-size: 0.72rem;">
+                                        <span class="badge <?php echo $action_badge; ?> bg-opacity-25 border border-secondary border-opacity-25" style="font-size: 0.72rem;">
                                             <?php echo htmlspecialchars($log['action']); ?>
                                         </span>
                                     </td>
                                     <td>
-                                        <span class="text-light small">
+                                        <span class=" small">
                                             <?php echo htmlspecialchars($log['target_type'] ?? '-'); ?>
                                             <?php if ($log['target_id']): ?>
                                                 <span class="text-secondary">#<?php echo $log['target_id']; ?></span>
@@ -817,7 +817,7 @@ require_once __DIR__ . '/includes/admin_header.php';
 <!-- ======================================================================= -->
 <div class="modal fade" id="createAdminModal" tabindex="-1" aria-labelledby="createAdminModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered">
-        <div class="modal-content modal-gaming border-secondary border-opacity-25 rounded-4" style="background: var(--admin-bg-card);">
+        <div class="modal-content modal-gaming border-secondary border-opacity-25 rounded-3" style="background: var(--admin-bg-card);">
             <div class="modal-header border-secondary border-opacity-25">
                 <div class="d-flex align-items-center gap-2">
                     <div class="rounded-3 p-2" style="background: rgba(99,102,241,0.2); color: #818cf8;">
@@ -881,13 +881,13 @@ require_once __DIR__ . '/includes/admin_header.php';
                             ?>
                                 <div class="col-md-6">
                                     <div class="p-3 rounded-3 border border-secondary border-opacity-10" style="background: rgba(255,255,255,0.02);">
-                                        <div class="fw-bold text-white small mb-2 text-uppercase" style="color: #818cf8 !important; font-size: 0.75rem;">
+                                        <div class="fw-bold small mb-2 text-uppercase" style="color: #818cf8 !important; font-size: 0.75rem;">
                                             <i class="bi bi-folder-fill me-1"></i> <?php echo $module_labels[$mod] ?? $mod; ?>
                                         </div>
                                         <?php foreach ($p_list as $p_item): ?>
                                             <div class="form-check mb-2">
                                                 <input class="form-check-input create-perm-checkbox" type="checkbox" name="permissions[]" value="<?php echo $p_item['permission_key']; ?>" id="create_perm_<?php echo str_replace('.', '_', $p_item['permission_key']); ?>" checked>
-                                                <label class="form-check-label small text-light" for="create_perm_<?php echo str_replace('.', '_', $p_item['permission_key']); ?>">
+                                                <label class="form-check-label small" for="create_perm_<?php echo str_replace('.', '_', $p_item['permission_key']); ?>">
                                                     <span class="fw-bold"><?php echo htmlspecialchars($p_item['permission_name']); ?></span>
                                                     <code class="d-block text-secondary" style="font-size: 0.70rem;"><?php echo htmlspecialchars($p_item['permission_key']); ?></code>
                                                 </label>
@@ -901,7 +901,7 @@ require_once __DIR__ . '/includes/admin_header.php';
                 </div>
                 <div class="modal-footer border-secondary border-opacity-25">
                     <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Hủy bỏ</button>
-                    <button type="submit" class="btn btn-primary fw-bold px-4" style="background: linear-gradient(135deg, #a855f7, #6366f1); border: none;">
+                    <button type="submit" class="btn btn-gaming-primary px-4">
                         <i class="bi bi-check2-circle me-1"></i> Xác Nhận Tạo Admin
                     </button>
                 </div>
@@ -915,7 +915,7 @@ require_once __DIR__ . '/includes/admin_header.php';
 <!-- ======================================================================= -->
 <div class="modal fade" id="editPermModal" tabindex="-1" aria-labelledby="editPermModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered">
-        <div class="modal-content modal-gaming border-secondary border-opacity-25 rounded-4" style="background: var(--admin-bg-card);">
+        <div class="modal-content modal-gaming border-secondary border-opacity-25 rounded-3" style="background: var(--admin-bg-card);">
             <div class="modal-header border-secondary border-opacity-25">
                 <div class="d-flex align-items-center gap-2">
                     <div class="rounded-3 p-2" style="background: rgba(6,182,212,0.2); color: #06b6d4;">
@@ -950,13 +950,13 @@ require_once __DIR__ . '/includes/admin_header.php';
                         ?>
                             <div class="col-md-6">
                                 <div class="p-3 rounded-3 border border-secondary border-opacity-10" style="background: rgba(255,255,255,0.02);">
-                                    <div class="fw-bold text-white small mb-2 text-uppercase" style="color: #06b6d4 !important; font-size: 0.75rem;">
+                                    <div class="fw-bold small mb-2 text-uppercase" style="color: #06b6d4 !important; font-size: 0.75rem;">
                                         <i class="bi bi-folder-fill me-1"></i> <?php echo $module_labels[$mod] ?? $mod; ?>
                                     </div>
                                     <?php foreach ($p_list as $p_item): ?>
                                         <div class="form-check mb-2">
                                             <input class="form-check-input edit-perm-checkbox" type="checkbox" name="permissions[]" value="<?php echo $p_item['permission_key']; ?>" id="edit_perm_<?php echo str_replace('.', '_', $p_item['permission_key']); ?>">
-                                            <label class="form-check-label small text-light" for="edit_perm_<?php echo str_replace('.', '_', $p_item['permission_key']); ?>">
+                                            <label class="form-check-label small" for="edit_perm_<?php echo str_replace('.', '_', $p_item['permission_key']); ?>">
                                                 <span class="fw-bold"><?php echo htmlspecialchars($p_item['permission_name']); ?></span>
                                                 <code class="d-block text-secondary" style="font-size: 0.70rem;"><?php echo htmlspecialchars($p_item['permission_key']); ?></code>
                                             </label>
@@ -969,7 +969,7 @@ require_once __DIR__ . '/includes/admin_header.php';
                 </div>
                 <div class="modal-footer border-secondary border-opacity-25">
                     <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Hủy bỏ</button>
-                    <button type="submit" class="btn btn-info fw-bold px-4 text-white" style="background: linear-gradient(135deg, #06b6d4, #3b82f6); border: none;">
+                    <button type="submit" class="btn btn-gaming-primary px-4">
                         <i class="bi bi-check2-circle me-1"></i> Lưu Cập Nhật Quyền
                     </button>
                 </div>
