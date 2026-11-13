@@ -142,8 +142,9 @@ $csrf_token = generate_csrf_token();
                         </select>
                     </div>
                     <div class="col-md-6">
-                        <label class="form-label small fw-bold">Ảnh Bìa Game (Cover 16:9)</label>
-                        <input type="file" name="image" class="form-control form-control-gaming" accept="image/*">
+                        <label class="form-label small fw-bold">Ảnh Bìa Game (Tự động cân khung 16:9)</label>
+                        <input type="file" id="addGameCoverInput" name="image" class="form-control form-control-gaming" accept="image/jpeg,image/png,image/webp">
+                        <?php echo render_admin_cover_preview_widget('addGameCoverInput'); ?>
                     </div>
                 </div>
             </div>

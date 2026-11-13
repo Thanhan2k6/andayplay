@@ -63,6 +63,7 @@ if (isset($_SESSION['user_id'])) {
     <!-- Main Stylesheet & Assistant Stylesheet -->
     <link rel="stylesheet" href="css/style.css?v=<?php echo time(); ?>">
     <link rel="stylesheet" href="css/assistant.css?v=<?php echo time(); ?>">
+    <?php echo function_exists('render_game_cover_script') ? render_game_cover_script() : ''; ?>
 </head>
 <body>
 
@@ -646,7 +647,7 @@ if (isset($_SESSION['user_id'])) {
 
                                     html += `
                                         <a href="${item.url}" class="search-live-item">
-                                            <img src="${escapeHtml(item.image_url)}" class="search-live-thumb" alt="${escapeHtml(item.title)}" onerror="this.src='img/default-game.jpg'">
+                                            <img src="${escapeHtml(item.image_url)}" class="search-live-thumb" alt="${escapeHtml(item.title)}" onerror="window.anplayImgError && window.anplayImgError(this)">
                                             <div class="search-live-info">
                                                 <div class="search-live-title">${escapeHtml(item.title)}</div>
                                                 <div class="search-live-meta">

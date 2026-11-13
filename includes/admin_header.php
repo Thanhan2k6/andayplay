@@ -73,6 +73,7 @@ $page_file_name = basename($_SERVER['PHP_SELF']);
 
     <!-- Main Stylesheet -->
     <link rel="stylesheet" href="css/style.css?v=<?php echo time(); ?>">
+    <?php echo function_exists('render_game_cover_script') ? render_game_cover_script() : ''; ?>
 
     <style>
         /* =========================================================

@@ -303,23 +303,17 @@ require_once __DIR__ . '/includes/header.php';
         <div class="col-md-6 col-lg-4">
             <div class="gaming-card h-100 d-flex flex-column">
                 <!-- Cover Image & Overlays -->
-                <div class="gaming-card-img-wrapper" style="aspect-ratio: 16/9; position: relative;">
-                    <?php if (!empty($row['image_url']) && file_exists($row['image_url'])): ?>
-                        <img src="<?php echo htmlspecialchars($row['image_url']); ?>" class="gaming-card-img" alt="<?php echo htmlspecialchars($row['title']); ?>">
-                    <?php else: ?>
-                        <div class="w-100 h-100 d-flex flex-column align-items-center justify-content-center anplay-surface-muted text-secondary">
-                            <i class="bi bi-image fs-1 mb-2"></i>
-                            <span class="small fw-bold">ANPLAY GAME</span>
-                        </div>
-                    <?php endif; ?>
+                <div class="gaming-card-img-wrapper">
+                    <?php echo render_game_cover_media($row['image_url'] ?? '', $row['title'] ?? '', ['img_class' => 'gaming-card-img', 'placeholder_icon' => 'bi-image', 'placeholder_text' => 'ANPLAY GAME']); ?>
+                    <div class="gaming-card-overlay"></div>
 
                     <!-- Platform Pill -->
-                    <span class="platform-pill position-absolute top-0 start-0 m-3">
+                    <span class="platform-pill position-absolute top-0 start-0 m-3" style="z-index: 5;">
                         <i class="bi bi-display me-1"></i><?php echo htmlspecialchars($row['platform'] ?? 'PC'); ?>
                     </span>
 
                     <!-- Status Pill -->
-                    <div class="position-absolute top-0 end-0 m-3">
+                    <div class="position-absolute top-0 end-0 m-3" style="z-index: 5;">
                         <?php if ($is_active): ?>
                             <span class="status-pill status-pill-success">
                                 <span class="status-dot"></span> ĐANG KÍCH HOẠT
@@ -338,8 +332,8 @@ require_once __DIR__ . '/includes/header.php';
 
                 <!-- Card Body -->
                 <div class="card-body p-4 d-flex flex-column flex-grow-1">
-                    <div class="d-flex justify-content-between align-items-start mb-2">
-                        <h4 class="fw-bold mb-0 text-truncate" title="<?php echo htmlspecialchars($row['title']); ?>">
+                    <div class="d-flex justify-content-between align-items-start mb-2" style="min-width: 0;">
+                        <h4 class="fw-bold mb-0 text-truncate w-100" title="<?php echo htmlspecialchars($row['title']); ?>">
                             <?php echo htmlspecialchars($row['title']); ?>
                         </h4>
                     </div>

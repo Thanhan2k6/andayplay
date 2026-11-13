@@ -157,11 +157,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_id'])) {
                             <td class="text-secondary fw-bold">#<?php echo $row['game_id']; ?></td>
                             <td>
                                 <div class="d-flex align-items-center gap-3">
-                                    <?php if (!empty($row['image_url']) && file_exists($row['image_url'])): ?>
-                                        <img src="<?php echo htmlspecialchars($row['image_url']); ?>" alt="" style="width: 50px; height: 35px; object-fit: cover; border-radius: 6px; border: 1px solid var(--border-color);">
-                                    <?php else: ?>
-                                        <div style="width: 50px; height: 35px; background: #151824; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 0.65rem; color: #64748b; border: 1px solid var(--border-color);">COVER</div>
-                                    <?php endif; ?>
+                                    <?php echo render_game_thumb($row['image_url'] ?? '', $row['title'] ?? '', 'anplay-thumb', 'width: 56px; height: 36px; border-radius: 6px; border: 1px solid var(--border-color);'); ?>
                                     <div>
                                         <a href="game_detail.php?id=<?php echo $row['game_id']; ?>" target="_blank" class=" text-decoration-none fw-bold hover-info">
                                             <?php echo htmlspecialchars($row['title']); ?>

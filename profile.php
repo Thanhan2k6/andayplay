@@ -597,9 +597,7 @@ require_once __DIR__ . '/includes/header.php';
                                             <td class="text-secondary font-monospace small">#<?php echo htmlspecialchars($ord['order_code'] ?? ('RENT' . $ord['borrow_id'])); ?></td>
                                             <td>
                                                 <div class="d-flex align-items-center gap-2">
-                                                    <?php if (!empty($ord['image_url'])): ?>
-                                                        <img src="<?php echo htmlspecialchars($ord['image_url']); ?>" width="36" height="36" class="rounded object-fit-cover">
-                                                    <?php endif; ?>
+                                                    <?php echo render_game_thumb($ord['image_url'] ?? '', $ord['title'] ?? '', 'anplay-thumb rounded', 'width: 36px; height: 36px;'); ?>
                                                     <span class=" fw-bold"><?php echo htmlspecialchars($ord['title'] ?? 'Game #' . $ord['game_id']); ?></span>
                                                 </div>
                                             </td>
@@ -722,9 +720,7 @@ require_once __DIR__ . '/includes/header.php';
                                                 </td>
                                                 <td>
                                                     <div class="d-flex align-items-center gap-2">
-                                                        <?php if (!empty($ord['image_url'])): ?>
-                                                            <img src="<?php echo htmlspecialchars($ord['image_url']); ?>" width="40" height="40" class="rounded object-fit-cover shadow-sm">
-                                                        <?php endif; ?>
+                                                        <?php echo render_game_thumb($ord['image_url'] ?? '', $ord['title'] ?? '', 'anplay-thumb rounded shadow-sm', 'width: 40px; height: 40px;'); ?>
                                                         <div>
                                                             <div class=" fw-bold"><?php echo htmlspecialchars($ord['title'] ?? 'Game #' . $ord['game_id']); ?></div>
                                                             <div class="text-secondary small" style="font-size: 0.72rem;">

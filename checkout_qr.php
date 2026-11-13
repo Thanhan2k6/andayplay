@@ -273,9 +273,9 @@ $csrf_token = generate_csrf_token();
                 <div class="col-md-5">
                     <div class="p-3 rounded-3 h-100 d-flex flex-column justify-content-between borrow-summary-card">
                         <div>
-                            <?php if (!empty($order['image_url'])): ?>
-                                <img src="<?php echo htmlspecialchars($order['image_url']); ?>" alt="<?php echo htmlspecialchars($order['title']); ?>" class="w-100 rounded-3 mb-3 object-fit-cover" style="height: 180px;">
-                            <?php endif; ?>
+                            <div class="rounded-3 overflow-hidden mb-3 border game-preview-cover-wrapper">
+                                <?php echo render_game_cover_media($order['image_url'] ?? '', $order['title'] ?? 'ANPLAY Game', ['loading' => 'eager', 'placeholder_text' => 'ANPLAY GAME']); ?>
+                            </div>
                             <h5 class="fw-bold game-title-display mb-2"><?php echo htmlspecialchars($order['title']); ?></h5>
                             <div class="d-flex flex-wrap gap-1 mb-3">
                                 <span class="badge bg-primary bg-opacity-20 text-primary border border-primary border-opacity-25">

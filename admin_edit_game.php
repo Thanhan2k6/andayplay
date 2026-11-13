@@ -186,13 +186,11 @@ $csrf_token = generate_csrf_token();
                     </div>
 
                     <div class="col-md-6">
-                        <label class="form-label small fw-bold">Ảnh Bìa Game (Chọn để thay mới)</label>
-                        <input type="file" name="image" class="form-control form-control-gaming" accept="image/*">
-                        <?php if(!empty($game['image_url'])): ?>
-                            <div class="mt-2 d-flex align-items-center gap-2">
-                                <img src="<?php echo htmlspecialchars($game['image_url']); ?>" alt="" style="width: 80px; height: 45px; object-fit: cover; border-radius: 6px; border: 1px solid var(--border-color);">
-                                <span class="small text-secondary">Ảnh hiện tại: <?php echo htmlspecialchars($game['image_url']); ?></span>
-                            </div>
+                        <label class="form-label small fw-bold">Ảnh Bìa Game (Chọn để thay mới — tự cân khung 16:9)</label>
+                        <input type="file" id="editGameCoverInput" name="image" class="form-control form-control-gaming" accept="image/jpeg,image/png,image/webp">
+                        <?php echo render_admin_cover_preview_widget('editGameCoverInput', $game['image_url'] ?? ''); ?>
+                        <?php if (!empty($game['image_url'])): ?>
+                            <div class="small text-secondary mt-1">Đường dẫn hiện tại: <?php echo htmlspecialchars($game['image_url']); ?></div>
                         <?php endif; ?>
                     </div>
                 </div>

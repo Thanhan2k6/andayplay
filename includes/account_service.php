@@ -152,6 +152,174 @@ function upload_game_image(array $file, string $prefix = 'game'): array {
 }
 
 /**
+ * Fallback thumbnail dạng SVG inline (không phát sinh HTTP 404 nếu thiếu file ảnh)
+ */
+function anplay_fallback_thumb_data_uri(): string {
+    $svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 90">'
+         . '<rect width="160" height="90" fill="#131726"/>'
+         . '<rect x="1" y="1" width="158" height="88" rx="8" fill="none" stroke="#334155" stroke-opacity="0.6"/>'
+         . '<path d="M62 35h36a14 14 0 0 1 13.4 17.9l-2.6 8.8A7 7 0 0 1 96 63l-5.6-6.2a4 4 0 0 0-3-1.3H72.6a4 4 0 0 0-3 1.3L64 63a7 7 0 0 1-12.8-1.3l-2.6-8.8A14 14 0 0 1 62 35Zm4 8v6m-3-3h6m17-1.5a2 2 0 1 0 0 4 2 2 0 0 0 0-4Zm7 3.5a2 2 0 1 0 0 4 2 2 0 0 0 0-4Z" fill="none" stroke="#818cf8" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>'
+         . '</svg>';
+    return 'data:image/svg+xml;charset=UTF-8,' . rawurlencode($svg);
+}
+
+/**
+ * Kiểm tra đường dẫn ảnh bìa game (local hoặc URL ngoài) và phân tích tỷ lệ khung hình
+ */
+function anplay_resolve_game_image(?string $imageUrl): array {
+    static $cache = [];
+    $clean = str_replace('\\', '/', trim((string)$imageUrl));
+    if ($clean === '' || strpos($clean, '..') !== false || strpos($clean, "\0") !== false) {
+        return ['exists' => false, 'src' => '', 'is_contained' => false, 'width' => 0, 'height' => 0];
+    }
+    if (isset($cache[$clean])) {
+        return $cache[$clean];
+    }
+
+    if (preg_match('#^https?://#i', $clean)) {
+        $result = ['exists' => true, 'src' => $clean, 'is_contained' => false, 'width' => 0, 'height' => 0];
+        $cache[$clean] = $result;
+        return $result;
+    }
+
+    $rel = ltrim($clean, '/');
+    $fsPath = __DIR__ . '/../' . $rel;
+    if (!is_file($fsPath)) {
+        $result = ['exists' => false, 'src' => '', 'is_contained' => false, 'width' => 0, 'height' => 0];
+        $cache[$clean] = $result;
+        return $result;
+    }
+
+    $info = @getimagesize($fsPath);
+    $w = is_array($info) ? intval($info[0] ?? 0) : 0;
+    $h = is_array($info) ? intval($info[1] ?? 0) : 0;
+    $isContained = ($w > 0 && $h > 0) ? (($w / $h) < 1.2 || ($w / $h) > 2.4) : false;
+
+    $result = ['exists' => true, 'src' => $rel, 'is_contained' => $isContained, 'width' => $w, 'height' => $h];
+    $cache[$clean] = $result;
+    return $result;
+}
+
+/**
+ * Render khối ảnh bìa game tự động cân chỉnh (landscape phủ full, portrait/vuông/siêu rộng căn giữa trên nền mờ)
+ */
+function render_game_cover_media(?string $imageUrl, string $title, array $opts = []): string {
+    $meta = anplay_resolve_game_image($imageUrl);
+    $extraImgClass = trim((string)($opts['img_class'] ?? ''));
+    $loading = (($opts['loading'] ?? 'lazy') === 'eager') ? 'eager' : 'lazy';
+    $placeholderIcon = preg_replace('/[^a-zA-Z0-9_-]/', '', (string)($opts['placeholder_icon'] ?? 'bi-controller')) ?: 'bi-controller';
+    $placeholderText = trim((string)($opts['placeholder_text'] ?? 'ANPLAY GAME'));
+    $safeTitle = htmlspecialchars($title !== '' ? $title : 'ANPLAY Game', ENT_QUOTES, 'UTF-8');
+
+    $frameClasses = 'anplay-cover-media';
+    if ($meta['exists'] && $meta['is_contained']) {
+        $frameClasses .= ' is-contained';
+    } elseif (!$meta['exists']) {
+        $frameClasses .= ' is-missing';
+    }
+
+    $fgClasses = trim('anplay-cover-fg ' . $extraImgClass);
+    $html = '<div class="' . $frameClasses . '">';
+    if ($meta['exists']) {
+        $safeSrc = htmlspecialchars($meta['src'], ENT_QUOTES, 'UTF-8');
+        $html .= '<img src="' . $safeSrc . '" class="anplay-cover-bg" alt="" aria-hidden="true" loading="' . $loading . '" decoding="async">';
+        $html .= '<img src="' . $safeSrc . '" class="' . htmlspecialchars($fgClasses, ENT_QUOTES, 'UTF-8') . '" alt="' . $safeTitle . '" loading="' . $loading . '" decoding="async" onload="window.anplayFitCover && window.anplayFitCover(this)" onerror="window.anplayImgError && window.anplayImgError(this)">';
+    }
+    $html .= '<div class="anplay-cover-fallback">'
+           . '<i class="bi ' . htmlspecialchars($placeholderIcon, ENT_QUOTES, 'UTF-8') . ' fs-1"></i>'
+           . ($placeholderText !== '' ? '<span class="small fw-bold">' . htmlspecialchars($placeholderText, ENT_QUOTES, 'UTF-8') . '</span>' : '')
+           . '</div>';
+    $html .= '</div>';
+    return $html;
+}
+
+/**
+ * Render thumbnail game nhỏ đồng nhất (bảng admin, profile, ticket hỗ trợ) có fallback an toàn
+ */
+function render_game_thumb(?string $imageUrl, string $title = '', string $class = 'anplay-thumb', string $style = 'width: 50px; height: 35px;'): string {
+    $meta = anplay_resolve_game_image($imageUrl);
+    $fallback = htmlspecialchars(anplay_fallback_thumb_data_uri(), ENT_QUOTES, 'UTF-8');
+    $src = $meta['exists'] ? htmlspecialchars($meta['src'], ENT_QUOTES, 'UTF-8') : $fallback;
+    $alt = htmlspecialchars($title, ENT_QUOTES, 'UTF-8');
+    return '<img src="' . $src . '" class="' . htmlspecialchars($class, ENT_QUOTES, 'UTF-8') . '" style="' . htmlspecialchars($style, ENT_QUOTES, 'UTF-8') . '" alt="' . $alt . '" loading="lazy" onerror="window.anplayImgError && window.anplayImgError(this)">';
+}
+
+/**
+ * Script toàn cục tự động cân tỷ lệ ảnh bìa và xử lý lỗi tải ảnh cho mọi game hiện tại & tương lai
+ */
+function render_game_cover_script(): string {
+    $fallback = json_encode(anplay_fallback_thumb_data_uri(), JSON_UNESCAPED_SLASHES);
+    return '<script>(function(){'
+        . 'var FB=' . $fallback . ';'
+        . 'window.anplayFitCover=function(img){'
+        . 'if(!img||!img.naturalWidth||!img.naturalHeight)return;'
+        . 'var f=img.closest(".anplay-cover-media");if(!f)return;'
+        . 'var r=img.naturalWidth/img.naturalHeight;'
+        . 'var c=(r<1.2||r>2.4);'
+        . 'f.classList.toggle("is-contained",c);'
+        . 'var bg=f.querySelector(".anplay-cover-bg");'
+        . 'if(c&&bg&&img.getAttribute("src")&&bg.getAttribute("src")!==img.getAttribute("src")){bg.setAttribute("src",img.getAttribute("src"));}'
+        . '};'
+        . 'window.anplayImgError=function(img){'
+        . 'if(!img)return;'
+        . 'var f=img.closest(".anplay-cover-media");'
+        . 'if(f){f.classList.add("is-missing");return;}'
+        . 'if(!img.dataset.anplayFb){img.dataset.anplayFb="1";img.src=FB;}'
+        . '};'
+        . 'document.addEventListener("DOMContentLoaded",function(){'
+        . 'document.querySelectorAll(".anplay-cover-fg").forEach(function(img){'
+        . 'if(img.complete){if(img.naturalWidth>0)window.anplayFitCover(img);else window.anplayImgError(img);}'
+        . '});'
+        . '});'
+        . '})();</script>';
+}
+
+/**
+ * Widget xem trước ảnh bìa 16:9 cho form thêm/sửa game trong Admin
+ */
+function render_admin_cover_preview_widget(string $inputId, ?string $currentImageUrl = ''): string {
+    $meta = anplay_resolve_game_image($currentImageUrl);
+    $uid = preg_replace('/[^a-zA-Z0-9_-]/', '', $inputId) ?: 'gameCoverInput';
+    $previewHtml = render_game_cover_media($meta['exists'] ? $meta['src'] : '', 'Xem trước ảnh bìa', ['loading' => 'eager', 'placeholder_text' => 'CHƯA CHỌN ẢNH']);
+    $initInfo = $meta['exists'] && $meta['width'] > 0
+        ? ($meta['width'] . '×' . $meta['height'] . 'px — ' . ($meta['is_contained'] ? 'Tỷ lệ dọc/vuông (tự căn giữa trên nền mờ)' : 'Tỷ lệ ngang 16:9 chuẩn'))
+        : 'Hỗ trợ JPG, PNG, WEBP (tối đa 5MB). Mọi kích thước sẽ tự động căn chuẩn khung 16:9.';
+
+    return '<div class="mt-2">'
+        . '<div id="' . $uid . '_box" class="rounded-3 border overflow-hidden position-relative" style="max-width: 280px; aspect-ratio: 16/9; border-color: var(--border-color, rgba(255,255,255,0.12)) !important;">'
+        . $previewHtml
+        . '</div>'
+        . '<div id="' . $uid . '_meta" class="small text-secondary mt-1">' . htmlspecialchars($initInfo, ENT_QUOTES, 'UTF-8') . '</div>'
+        . '<script>(function(){'
+        . 'var inp=document.getElementById(' . json_encode($uid) . ');'
+        . 'var box=document.getElementById(' . json_encode($uid . '_box') . ');'
+        . 'var meta=document.getElementById(' . json_encode($uid . '_meta') . ');'
+        . 'if(!inp||!box||!meta)return;'
+        . 'var lastUrl="";'
+        . 'inp.addEventListener("change",function(){'
+        . 'var file=inp.files&&inp.files[0];'
+        . 'if(!file)return;'
+        . 'if(!/^image\/(jpeg|png|webp)$/i.test(file.type)&&!/\.(jpe?g|png|webp)$/i.test(file.name)){'
+        . 'meta.className="small text-danger mt-1";meta.textContent="Chỉ hỗ trợ định dạng JPG, JPEG, PNG hoặc WEBP.";return;}'
+        . 'if(file.size>5*1024*1024){'
+        . 'meta.className="small text-danger mt-1";meta.textContent="Dung lượng vượt quá 5MB, vui lòng chọn ảnh nhẹ hơn.";return;}'
+        . 'if(lastUrl)URL.revokeObjectURL(lastUrl);'
+        . 'lastUrl=URL.createObjectURL(file);'
+        . 'var frame=box.querySelector(".anplay-cover-media");'
+        . 'if(!frame)return;'
+        . 'frame.classList.remove("is-missing");'
+        . 'var bg=frame.querySelector(".anplay-cover-bg");'
+        . 'var fg=frame.querySelector(".anplay-cover-fg");'
+        . 'if(!bg){bg=document.createElement("img");bg.className="anplay-cover-bg";bg.alt="";bg.setAttribute("aria-hidden","true");frame.insertBefore(bg,frame.firstChild);}'
+        . 'if(!fg){fg=document.createElement("img");fg.className="anplay-cover-fg";fg.alt="Preview";frame.insertBefore(fg,frame.querySelector(".anplay-cover-fallback"));}'
+        . 'fg.onload=function(){window.anplayFitCover&&window.anplayFitCover(fg);var c=frame.classList.contains("is-contained");meta.className="small text-info mt-1";meta.textContent=fg.naturalWidth+"×"+fg.naturalHeight+"px — "+(c?"Ảnh dọc/vuông: tự động căn giữa trên nền mờ":"Ảnh ngang: phủ khít khung 16:9");};'
+        . 'bg.src=lastUrl;fg.src=lastUrl;'
+        . '});'
+        . '})();</script>'
+        . '</div>';
+}
+
+/**
  * Tạo mật khẩu mạnh ngẫu nhiên bảo mật cao (CSPRNG)
  */
 function generate_strong_password($length = 14) {

@@ -217,13 +217,7 @@ $csrf_token = generate_csrf_token();
         <div class="col-lg-5">
             <div class="panel-dark p-4 h-100 d-flex flex-column">
                 <div class="rounded-3 overflow-hidden mb-3 border game-preview-cover-wrapper">
-                    <?php if(!empty($game['image_url']) && file_exists($game['image_url'])) { ?>
-                        <img src="<?php echo htmlspecialchars($game['image_url']); ?>" alt="<?php echo htmlspecialchars($game['title']); ?>" class="w-100 object-fit-cover" style="height: 200px;">
-                    <?php } else { ?>
-                        <div class="d-flex align-items-center justify-content-center anplay-surface-muted text-muted" style="height: 200px;">
-                            <i class="bi bi-controller fs-1"></i>
-                        </div>
-                    <?php } ?>
+                    <?php echo render_game_cover_media($game['image_url'] ?? '', $game['title'] ?? '', ['loading' => 'eager', 'placeholder_text' => 'CHƯA CÓ ẢNH BÌA']); ?>
                 </div>
 
                 <h4 class="fw-bold game-title-display mb-2"><?php echo htmlspecialchars($game['title']); ?></h4>

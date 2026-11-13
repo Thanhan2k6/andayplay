@@ -123,17 +123,11 @@ if (empty($packages) && ($game['price_type'] ?? 'paid') == 'paid') {
             <!-- Cột 1: Ảnh Bìa Game -->
             <div class="col-lg-5 col-md-6 text-center">
                 <div class="position-relative rounded-3 overflow-hidden shadow-lg border game-preview-cover-wrapper">
-                    <?php if (!empty($game['image_url']) && file_exists($game['image_url'])): ?>
-                        <img src="<?php echo htmlspecialchars($game['image_url']); ?>" class="img-fluid w-100" alt="<?php echo htmlspecialchars($game['title']); ?>" style="max-height: 480px; object-fit: cover;">
-                    <?php else: ?>
-                        <div class="d-flex flex-column align-items-center justify-content-center text-muted" style="height: 380px;">
-                            <i class="bi bi-controller fs-1 mb-2 text-secondary"></i>
-                            <span>CHƯA CÓ ẢNH BÌA</span>
-                        </div>
-                    <?php endif; ?>
+                    <?php echo render_game_cover_media($game['image_url'] ?? '', $game['title'] ?? '', ['loading' => 'eager', 'placeholder_text' => 'CHƯA CÓ ẢNH BÌA']); ?>
+                    <div class="gaming-card-overlay"></div>
 
                     <!-- Platform Tag góc trên ảnh -->
-                    <div class="position-absolute top-0 start-0 m-3 d-flex gap-2">
+                    <div class="position-absolute top-0 start-0 m-3 d-flex gap-2 flex-wrap" style="z-index: 5;">
                         <span class="badge-platform px-3 py-2 fs-6">
                             <?php echo (($game['platform'] ?? 'PC') == 'PC') ? '<i class="bi bi-display me-1"></i>PC Game' : '<i class="bi bi-phone me-1"></i>Mobile Game'; ?>
                         </span>

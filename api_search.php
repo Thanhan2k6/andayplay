@@ -57,10 +57,11 @@ try {
         $results = [];
         if ($res && $res->num_rows > 0) {
             while ($row = $res->fetch_assoc()) {
+                $imgMeta = anplay_resolve_game_image($row['image_url'] ?? '');
                 $results[] = [
                     'game_id'       => intval($row['game_id']),
                     'title'         => $row['title'],
-                    'image_url'     => !empty($row['image_url']) ? $row['image_url'] : 'img/default-game.jpg',
+                    'image_url'     => $imgMeta['exists'] ? $imgMeta['src'] : anplay_fallback_thumb_data_uri(),
                     'platform'      => $row['platform'] ?? 'PC',
                     'cate_name'     => $row['cate_name'] ?? 'Hành động',
                     'min_price'     => floatval($row['min_rent_price']),
@@ -78,10 +79,11 @@ try {
 
         if ($res && $res->num_rows > 0) {
             while ($row = $res->fetch_assoc()) {
+                $imgMeta = anplay_resolve_game_image($row['image_url'] ?? '');
                 $results[] = [
                     'game_id'       => intval($row['game_id']),
                     'title'         => $row['title'],
-                    'image_url'     => !empty($row['image_url']) ? $row['image_url'] : 'img/default-game.jpg',
+                    'image_url'     => $imgMeta['exists'] ? $imgMeta['src'] : anplay_fallback_thumb_data_uri(),
                     'platform'      => $row['platform'] ?? 'PC',
                     'cate_name'     => $row['cate_name'] ?? 'Hành động',
                     'min_price'     => floatval($row['min_rent_price']),

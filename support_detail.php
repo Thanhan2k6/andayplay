@@ -407,9 +407,7 @@ require_once __DIR__ . '/includes/header.php';
 
                     <?php if (!empty($ticket['game_title'])): ?>
                         <div class="d-flex align-items-center gap-3 mb-3">
-                            <?php if (!empty($ticket['game_img'])): ?>
-                                <img src="<?php echo htmlspecialchars($ticket['game_img']); ?>" width="55" height="55" class="rounded-3 object-fit-cover shadow-sm" alt="Game">
-                            <?php endif; ?>
+                            <?php echo render_game_thumb($ticket['game_img'] ?? '', $ticket['game_title'] ?? 'Game', 'anplay-thumb rounded-3 shadow-sm', 'width: 55px; height: 55px;'); ?>
                             <div>
                                 <h6 class="fw-bold mb-1"><?php echo htmlspecialchars($ticket['game_title']); ?></h6>
                                 <span class="badge bg-secondary bg-opacity-25 text-info">Bản quyền Steam / PC</span>

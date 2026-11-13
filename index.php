@@ -342,13 +342,7 @@ if (!$result) {
         <div class="gaming-card">
             <!-- Cover Ảnh & Badge nổi trên ảnh -->
             <a href="<?php echo $target_url; ?>" class="gaming-card-cover-wrapper text-decoration-none">
-                <?php if (!empty($game['image_url']) && file_exists($game['image_url'])): ?>
-                    <img src="<?php echo $game['image_url']; ?>" class="gaming-card-cover" alt="<?php echo htmlspecialchars($game['title']); ?>" loading="lazy">
-                <?php else: ?>
-                    <div class="gaming-card-cover d-flex align-items-center justify-content-center text-muted" style="background: #11141e;">
-                        <i class="bi bi-controller fs-1 text-secondary"></i>
-                    </div>
-                <?php endif; ?>
+                <?php echo render_game_cover_media($game['image_url'] ?? '', $game['title'] ?? '', ['img_class' => 'gaming-card-cover', 'placeholder_text' => '']); ?>
                 
                 <div class="gaming-card-overlay"></div>
 
