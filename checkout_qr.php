@@ -5,6 +5,7 @@ ob_start();
 if (session_status() === PHP_SESSION_NONE) { session_start(); }
 require_once __DIR__ . '/includes/connect.php';
 require_once __DIR__ . '/includes/account_service.php';
+require_once __DIR__ . '/includes/payment_service.php';
 
 if (!isset($_SESSION['user_id'])) {
     ob_end_clean();
@@ -131,32 +132,136 @@ $amount       = $order ? floatval($order['rental_price'] ?? 15000) : 15000;
 if ($amount <= 0) $amount = 15000;
 $order_code   = $order && !empty($order['order_code']) ? $order['order_code'] : ("ORD" . $order_id);
 $is_extension = $order && (($order['rent_type'] ?? '') === 'extend');
-$is_paid_and_active = $order && (($order['payment_status'] ?? '') === 'paid' && ($order['status'] ?? '') === 'active');
+$is_paid      = $order && (($order['payment_status'] ?? '') === 'paid');
+$is_paid_and_active = $is_paid && (($order['status'] ?? '') === 'active');
 $has_account  = $order && !empty($order['account_username']);
+
+// Chế độ mô phỏng xác nhận thanh toán tự động sau 20 giây hiển thị mã QR
+$sim_wait_seconds = 20;
+$sim_enabled = function_exists('anplay_get_system_setting')
+    ? (anplay_get_system_setting($conn, 'payment_simulation_mode', '1') === '1')
+    : true;
+if (!isset($_SESSION['qr_sim_started']) || !is_array($_SESSION['qr_sim_started'])) {
+    $_SESSION['qr_sim_started'] = [];
+}
+if ($order && !$is_paid) {
+    if (empty($_SESSION['qr_sim_started'][$order_id])) {
+        $_SESSION['qr_sim_started'][$order_id] = time();
+    }
+    $sim_elapsed = max(0, time() - intval($_SESSION['qr_sim_started'][$order_id]));
+    $sim_remaining = max(0, $sim_wait_seconds - $sim_elapsed);
+} else {
+    unset($_SESSION['qr_sim_started'][$order_id]);
+    $sim_elapsed = $sim_wait_seconds;
+    $sim_remaining = 0;
+}
+
+/**
+ * Kích hoạt thanh toán mô phỏng tự động dùng chung service process_verified_payment()
+ */
+function anplay_execute_simulated_payment($conn, $order_id, $order_code, $tx_prefix = 'SIM_AUTO_') {
+    $tx_id = $tx_prefix . $order_code . '_' . time();
+    $res = process_verified_payment($conn, $order_id, $tx_id, 'AUTO_SIM_20S');
+    $paid_ok = (!empty($res['success']) || !empty($res['paid_pending_alloc']) || !empty($res['already_paid']));
+    if ($paid_ok) {
+        unset($_SESSION['qr_sim_started'][$order_id]);
+    }
+    return [
+        'paid'      => $paid_ok,
+        'allocated' => !empty($res['success']) || !empty($res['already_paid']),
+        'error'     => $res['error'] ?? '',
+    ];
+}
+
+// Endpoint kích hoạt xác nhận thanh toán tự động sau khi đủ 20 giây hiển thị mã QR
+if ($order && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_GET['auto_verify']) && $_GET['auto_verify'] == '1') {
+    ob_end_clean();
+    header('Content-Type: application/json; charset=UTF-8');
+
+    if (!verify_csrf_token($_POST['csrf_token'] ?? '')) {
+        http_response_code(403);
+        echo json_encode(['success' => false, 'paid' => false, 'error' => 'Phiên bảo mật đã hết hạn. Vui lòng tải lại trang.'], JSON_UNESCAPED_UNICODE);
+        exit();
+    }
+
+    if ($is_paid) {
+        echo json_encode([
+            'success'    => true,
+            'paid'       => true,
+            'allocated'  => ($order['status'] ?? '') === 'active',
+            'order_code' => $order_code,
+            'message'    => "Đơn hàng #$order_code đã được xác nhận thanh toán thành công!"
+        ], JSON_UNESCAPED_UNICODE);
+        exit();
+    }
+
+    if ($sim_enabled && $sim_elapsed >= $sim_wait_seconds) {
+        $sim_out = anplay_execute_simulated_payment($conn, $order_id, $order_code, 'SIM_AUTO_');
+        if ($sim_out['paid']) {
+            $msg = $sim_out['allocated']
+                ? "Đơn hàng #$order_code đã thanh toán thành công và cấp tài khoản game tự động!"
+                : "Đơn hàng #$order_code đã thanh toán thành công! Hệ thống đang hoàn tất phân bổ tài khoản.";
+            echo json_encode([
+                'success'    => true,
+                'paid'       => true,
+                'allocated'  => $sim_out['allocated'],
+                'order_code' => $order_code,
+                'message'    => $msg,
+                'warning'    => $sim_out['allocated'] ? '' : $sim_out['error'],
+            ], JSON_UNESCAPED_UNICODE);
+            exit();
+        }
+        echo json_encode([
+            'success' => false,
+            'paid'    => false,
+            'error'   => $sim_out['error'] ?: 'Không thể xử lý thanh toán tự động.',
+        ], JSON_UNESCAPED_UNICODE);
+        exit();
+    }
+
+    echo json_encode([
+        'success'               => true,
+        'paid'                  => false,
+        'sim_enabled'           => $sim_enabled,
+        'remaining_sim_seconds' => $sim_remaining,
+        'order_code'            => $order_code,
+    ], JSON_UNESCAPED_UNICODE);
+    exit();
+}
 
 // Endpoint polling trạng thái thanh toán (chỉ đọc, không tự kích hoạt đơn)
 if ($order && isset($_GET['check_status']) && $_GET['check_status'] == '1') {
     ob_end_clean();
     header('Content-Type: application/json; charset=UTF-8');
     echo json_encode([
-        'success' => true,
-        'paid' => $is_paid_and_active,
-        'payment_status' => $order['payment_status'] ?? 'pending',
-        'status' => $order['status'] ?? 'pending',
-        'order_code' => $order_code
-    ]);
+        'success'               => true,
+        'paid'                  => $is_paid,
+        'allocated'             => $is_paid_and_active,
+        'payment_status'        => $order['payment_status'] ?? 'pending',
+        'status'                => $order['status'] ?? 'pending',
+        'order_code'            => $order_code,
+        'sim_enabled'           => $sim_enabled,
+        'remaining_sim_seconds' => $sim_remaining,
+    ], JSON_UNESCAPED_UNICODE);
     exit();
 }
 
-// XỬ LÝ KHI KHÁCH BẤM "TÔI ĐÃ CHUYỂN KHOẢN" — CHỈ GHI NHẬN CHỜ XÁC NHẬN (KHÔNG TỰ KÍCH HOẠT)
+// XỬ LÝ KHI KHÁCH BẤM "TÔI ĐÃ CHUYỂN KHOẢN"
 $allocation_error = null;
 $payment_claimed_notice = false;
 if ($order && isset($_POST['confirm_payment_webhook'])) {
     if (!verify_csrf_token($_POST['csrf_token'] ?? '')) {
         $allocation_error = "Phiên bảo mật đã hết hạn. Vui lòng tải lại trang và thử lại.";
-    } elseif ($is_paid_and_active) {
-        header("Location: checkout_qr.php?order_id=" . $order_id . "&success=1");
+    } elseif ($is_paid) {
+        header("Location: checkout_qr.php?order_id=" . $order_id . "&paid_success=1");
         exit();
+    } elseif ($sim_enabled && $sim_elapsed >= $sim_wait_seconds) {
+        $sim_out = anplay_execute_simulated_payment($conn, $order_id, $order_code, 'SIM_BTN_');
+        if ($sim_out['paid']) {
+            header("Location: checkout_qr.php?order_id=" . $order_id . "&paid_success=1");
+            exit();
+        }
+        $allocation_error = $sim_out['error'] ?: 'Không thể xác nhận thanh toán lúc này. Vui lòng thử lại.';
     } else {
         $upd_claim = $conn->prepare("UPDATE borrow_records SET payment_method = 'vietqr_transfer_claimed' WHERE borrow_id = ? AND user_id = ? AND payment_status = 'pending'");
         if ($upd_claim) {
@@ -181,7 +286,7 @@ if ($order && isset($_POST['confirm_payment_webhook'])) {
 }
 
 // Re-query để cập nhật trạng thái mới nhất nếu vừa xử lý POST
-if ($order && !$is_paid_and_active) {
+if ($order && !$is_paid) {
     try {
         $stmt2 = $conn->prepare("SELECT br.*, g.title, g.image_url, g.platform, rp.package_name, 
                                ga.account_username, ga.account_password_encrypted, ga.server_region, ga.status as account_status 
@@ -197,16 +302,17 @@ if ($order && !$is_paid_and_active) {
             $stmt2->close();
             if ($refreshed) {
                 $order = $refreshed;
-                $is_paid_and_active = (($order['payment_status'] ?? '') === 'paid' && ($order['status'] ?? '') === 'active');
+                $is_paid = (($order['payment_status'] ?? '') === 'paid');
+                $is_paid_and_active = ($is_paid && ($order['status'] ?? '') === 'active');
                 $has_account = !empty($order['account_username']);
             }
         }
     } catch (Throwable $e) {}
 }
 
-// Giải mã mật khẩu sau khi biết chắc trạng thái
+// Giải mã mật khẩu sau khi biết chắc trạng thái đã thanh toán
 $plain_game_pass = '';
-if ($is_paid_and_active && !empty($order['account_password_encrypted'])) {
+if ($is_paid && !empty($order['account_password_encrypted'])) {
     $plain_game_pass = decrypt_game_password($order['account_password_encrypted']);
 }
 
@@ -246,21 +352,21 @@ $csrf_token = generate_csrf_token();
     <div class="d-flex align-items-center justify-content-center gap-2 gap-md-3 mb-4 flex-wrap">
         <span class="step-pill"><i class="bi bi-check-circle-fill me-1"></i> 1. Chọn Gói</span>
         <i class="bi bi-chevron-right step-arrow"></i>
-        <span class="step-pill <?php echo !$is_paid_and_active ? 'step-pill-active' : ''; ?>"><i class="bi bi-qr-code me-1"></i> 2. Quét VietQR</span>
+        <span class="step-pill <?php echo !$is_paid ? 'step-pill-active' : ''; ?>"><i class="bi bi-qr-code me-1"></i> 2. Quét VietQR</span>
         <i class="bi bi-chevron-right step-arrow"></i>
-        <span class="step-pill <?php echo $is_paid_and_active ? 'step-pill-active' : ''; ?>">
+        <span class="step-pill <?php echo $is_paid ? 'step-pill-active' : ''; ?>">
             <i class="bi bi-controller me-1"></i> 3. Nhận Tài Khoản
         </span>
     </div>
 
-    <?php if ($is_paid_and_active): ?>
+    <?php if ($is_paid): ?>
         <!-- ========================================================== -->
         <!-- MÀN HÌNH ĐÃ THANH TOÁN THÀNH CÔNG & THÔNG TIN TÀI KHOẢN   -->
         <!-- ========================================================== -->
         <div class="panel-dark p-4 p-md-5 shadow-lg border border-success border-opacity-25">
             <div class="text-center mb-4">
                 <span class="badge bg-success bg-opacity-20 text-success border border-success border-opacity-30 px-3 py-2 fw-bold mb-2">
-                    <i class="bi bi-patch-check-fill me-1"></i> THANH TOÁN THÀNH CÔNG — TÀI KHOẢN ĐÃ CẤP PHÁT
+                    <i class="bi bi-patch-check-fill me-1"></i> <?php echo $has_account ? 'THANH TOÁN THÀNH CÔNG — TÀI KHOẢN ĐÃ CẤP PHÁT' : 'THANH TOÁN THÀNH CÔNG — ĐANG PHÂN BỔ TÀI KHOẢN'; ?>
                 </span>
                 <h3 class="fw-bold mb-1"><i class="bi bi-controller text-success me-2"></i>Chúc Bạn Chơi Game Vui Vẻ!</h3>
                 <p class="text-secondary small mb-0">
@@ -420,7 +526,7 @@ $csrf_token = generate_csrf_token();
 
             <?php if ($payment_claimed_notice): ?>
                 <div class="alert alert-info alert-dismissible fade show mb-4" style="background: rgba(6, 182, 212, 0.15); border: 1px solid #06b6d4;" role="alert">
-                    <i class="bi bi-hourglass-split text-info me-2"></i><strong>Đã ghi nhận thông báo chuyển khoản!</strong> Hệ thống đang đối soát giao dịch tự động (hoặc Admin sẽ duyệt trong ít phút). Trang sẽ tự động cập nhật khi thanh toán được xác nhận.
+                    <i class="bi bi-hourglass-split text-info me-2"></i><strong>Đã ghi nhận yêu cầu đối soát!</strong> <?php echo $sim_enabled ? 'Hệ thống tự động đang hoàn tất xác nhận giao dịch — vui lòng giữ trang trong vài giây.' : 'Hệ thống đang đối soát giao dịch tự động (hoặc Admin sẽ duyệt trong ít phút). Trang sẽ tự động cập nhật khi thanh toán được xác nhận.'; ?>
                     <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                 </div>
             <?php endif; ?>
@@ -501,7 +607,24 @@ $csrf_token = generate_csrf_token();
             </div>
 
             <!-- Nút Xác Nhận Đã Chuyển Khoản -->
-            <div class="mt-4 pt-3 border-top border-white border-opacity-10 text-center">
+            <div class="mt-4 pt-3 border-top border-secondary border-opacity-25 text-center">
+                <?php if ($sim_enabled): ?>
+                    <div id="auto_pay_status_box" class="anplay-auto-pay-box p-3 rounded-3 mb-3 text-start">
+                        <div class="d-flex align-items-center justify-content-between gap-2 flex-wrap">
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="spinner-border spinner-border-sm text-info" id="auto_pay_spinner" role="status"></div>
+                                <span class="small fw-semibold" id="auto_pay_status_text">
+                                    Đang chờ hệ thống tự động xác nhận giao dịch VietQR sau <strong class="text-info font-monospace" id="sim_countdown_text"><?php echo $sim_remaining; ?>s</strong>
+                                </span>
+                            </div>
+                            <span class="badge bg-info bg-opacity-20 text-info border border-info border-opacity-25 font-monospace" id="sim_countdown_badge"><?php echo $sim_remaining; ?>s</span>
+                        </div>
+                        <div class="progress mt-2" style="height: 5px; background: rgba(148, 163, 184, 0.2);">
+                            <div id="sim_progress_bar" class="progress-bar bg-info" role="progressbar" style="width: <?php echo intval((($sim_wait_seconds - $sim_remaining) / $sim_wait_seconds) * 100); ?>%; transition: width 0.4s linear;"></div>
+                        </div>
+                    </div>
+                <?php endif; ?>
+
                 <form method="POST" action="">
                     <input type="hidden" name="csrf_token" value="<?php echo $csrf_token; ?>">
                     <button type="submit" name="confirm_payment_webhook" class="btn btn-gaming-primary w-100 py-3 fs-5 fw-bold shadow">
@@ -555,8 +678,8 @@ function togglePassView(fieldId, btn) {
     }
 }
 
-// Countdown 15 minutes (chỉ chạy khi chưa thanh toán)
-<?php if (!$is_paid_and_active): ?>
+// Countdown 15 minutes & tự động xác nhận thanh toán sau 20s (chỉ chạy khi chưa thanh toán)
+<?php if ($order && !$is_paid): ?>
 (function() {
     var totalSeconds = 15 * 60;
     var timerEl = document.getElementById('countdown_clock');
@@ -573,7 +696,145 @@ function togglePassView(fieldId, btn) {
             }
         }
     }, 1000);
+
+    var orderId = <?php echo intval($order_id); ?>;
+    var orderCode = <?php echo json_encode($order_code, JSON_UNESCAPED_UNICODE); ?>;
+    var csrfToken = <?php echo json_encode($csrf_token); ?>;
+    var simEnabled = <?php echo $sim_enabled ? 'true' : 'false'; ?>;
+    var simTotalWait = <?php echo intval($sim_wait_seconds); ?>;
+    var simDeadlineMs = Date.now() + (<?php echo intval($sim_remaining); ?> * 1000);
+    var verifyInFlight = false;
+    var paidHandled = false;
+
+    function handlePaymentSuccess(message) {
+        if (paidHandled) return;
+        paidHandled = true;
+        clearInterval(simTickTimer);
+        clearInterval(pollTimer);
+
+        var statusBox = document.getElementById('auto_pay_status_box');
+        var statusTxt = document.getElementById('auto_pay_status_text');
+        var spinner = document.getElementById('auto_pay_spinner');
+        var badge = document.getElementById('sim_countdown_badge');
+        var bar = document.getElementById('sim_progress_bar');
+        if (spinner) spinner.className = 'bi bi-check-circle-fill text-success';
+        if (statusTxt) statusTxt.innerHTML = '<strong class="text-success">Thanh toán thành công! Đang chuyển sang nhận tài khoản...</strong>';
+        if (badge) {
+            badge.className = 'badge bg-success bg-opacity-20 text-success border border-success border-opacity-25';
+            badge.textContent = 'HOÀN TẤT';
+        }
+        if (bar) {
+            bar.className = 'progress-bar bg-success';
+            bar.style.width = '100%';
+        }
+        if (statusBox) {
+            statusBox.style.borderColor = 'rgba(16, 185, 129, 0.45)';
+            statusBox.style.background = 'rgba(16, 185, 129, 0.1)';
+        }
+
+        var targetUrl = 'checkout_qr.php?order_id=' + orderId;
+        if (typeof Swal !== 'undefined') {
+            Swal.fire({
+                icon: 'success',
+                title: 'Thanh toán thành công!',
+                text: message || ('Đơn hàng #' + orderCode + ' đã được xác nhận tự động. Tài khoản game của bạn đã sẵn sàng!'),
+                confirmButtonText: 'Xem Tài Khoản Ngay',
+                confirmButtonColor: '#10b981',
+                background: document.documentElement.getAttribute('data-theme') === 'light' ? '#ffffff' : '#0f1118',
+                color: document.documentElement.getAttribute('data-theme') === 'light' ? '#0f172a' : '#f8fafc',
+                timer: 3000,
+                timerProgressBar: true
+            }).then(function() {
+                window.location.href = targetUrl;
+            });
+        } else {
+            window.location.href = targetUrl;
+        }
+    }
+
+    function triggerAutoVerify() {
+        if (!simEnabled || verifyInFlight || paidHandled) return;
+        verifyInFlight = true;
+        var statusTxt = document.getElementById('auto_pay_status_text');
+        if (statusTxt) {
+            statusTxt.innerHTML = 'Đang xác nhận giao dịch thanh toán tự động cho đơn <strong class="text-info">#' + orderCode + '</strong>...';
+        }
+        fetch('checkout_qr.php?order_id=' + orderId + '&auto_verify=1', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: 'csrf_token=' + encodeURIComponent(csrfToken)
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            verifyInFlight = false;
+            if (!data) return;
+            if (data.paid) {
+                handlePaymentSuccess(data.message);
+            } else if (typeof data.remaining_sim_seconds === 'number' && data.remaining_sim_seconds > 0) {
+                simDeadlineMs = Date.now() + (data.remaining_sim_seconds * 1000);
+            }
+        })
+        .catch(function() {
+            verifyInFlight = false;
+        });
+    }
+
+    function updateSimCountdown() {
+        if (!simEnabled || paidHandled) return;
+        var remSec = Math.max(0, Math.ceil((simDeadlineMs - Date.now()) / 1000));
+        var countText = document.getElementById('sim_countdown_text');
+        var badge = document.getElementById('sim_countdown_badge');
+        var bar = document.getElementById('sim_progress_bar');
+        var pct = Math.min(100, Math.max(0, Math.round(((simTotalWait - remSec) / simTotalWait) * 100)));
+
+        if (countText) countText.textContent = remSec + 's';
+        if (badge) badge.textContent = remSec + 's';
+        if (bar) bar.style.width = pct + '%';
+
+        if (remSec <= 0 && !verifyInFlight) {
+            triggerAutoVerify();
+        }
+    }
+
+    var simTickTimer = setInterval(updateSimCountdown, 500);
+    updateSimCountdown();
+
+    document.addEventListener('visibilitychange', function() {
+        if (!document.hidden) updateSimCountdown();
+    });
+
+    // Polling dự phòng nếu webhook thật hoặc admin duyệt sớm hơn
+    var pollTimer = setInterval(function() {
+        if (paidHandled) return;
+        fetch('checkout_qr.php?order_id=' + orderId + '&check_status=1')
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                if (data && data.paid) {
+                    handlePaymentSuccess('Đơn hàng #' + orderCode + ' đã được xác nhận thanh toán thành công!');
+                }
+            })
+            .catch(function() {});
+    }, 5000);
 })();
+<?php elseif ($order && $is_paid && isset($_GET['paid_success']) && $_GET['paid_success'] === '1'): ?>
+document.addEventListener('DOMContentLoaded', function() {
+    if (typeof Swal !== 'undefined') {
+        Swal.fire({
+            icon: 'success',
+            title: 'Thanh toán thành công!',
+            text: <?php echo json_encode("Đơn hàng #$order_code đã được xác nhận tự động. Tài khoản game của bạn đã sẵn sàng!", JSON_UNESCAPED_UNICODE); ?>,
+            confirmButtonText: 'Xem Tài Khoản Ngay',
+            confirmButtonColor: '#10b981',
+            background: document.documentElement.getAttribute('data-theme') === 'light' ? '#ffffff' : '#0f1118',
+            color: document.documentElement.getAttribute('data-theme') === 'light' ? '#0f172a' : '#f8fafc',
+            timer: 3000,
+            timerProgressBar: true
+        });
+    }
+    if (window.history && window.history.replaceState) {
+        window.history.replaceState({}, document.title, 'checkout_qr.php?order_id=<?php echo intval($order_id); ?>');
+    }
+});
 <?php endif; ?>
 </script>
 

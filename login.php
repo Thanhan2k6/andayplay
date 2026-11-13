@@ -22,6 +22,38 @@ if (isset($_GET['cancel_2fa'])) {
 $script_hieu_ung = "";
 $client_ip = $_SERVER['REMOTE_ADDR'] ?? '127.0.0.1';
 
+/**
+ * Giới hạn đường dẫn redirect sau đăng nhập trong nội bộ website ANPLAY
+ */
+function anplay_sanitize_local_redirect($candidate) {
+    $raw = trim((string)$candidate);
+    if ($raw === '' || preg_match('/[\r\n\\\\]|^\/|^[a-zA-Z][a-zA-Z0-9+.-]*:/', $raw)) {
+        return 'index.php';
+    }
+    $parts = explode('?', $raw, 2);
+    $path = basename($parts[0]);
+    $allowed_pages = [
+        'index.php',
+        'support.php',
+        'my_library.php',
+        'profile.php',
+        'checkout_qr.php',
+        'borrow_process.php',
+        'game_detail.php',
+        'notifications.php',
+    ];
+    if (!in_array($path, $allowed_pages, true)) {
+        return 'index.php';
+    }
+    if (isset($parts[1]) && $parts[1] !== '') {
+        return $path . '?' . $parts[1];
+    }
+    return $path;
+}
+
+$redirect_target = anplay_sanitize_local_redirect($_POST['redirect'] ?? ($_GET['redirect'] ?? 'index.php'));
+$safe_js_redirect = json_encode($redirect_target, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE);
+
 // 1. XỬ LÝ ĐĂNG NHẬP BƯỚC 1: USERNAME + PASSWORD
 if (isset($_POST['btn_login'])) {
     $username = trim($_POST['username'] ?? '');
@@ -95,7 +127,7 @@ if (isset($_POST['btn_login'])) {
                                 confirmButtonText: 'VÀO CHIẾN GAME NGAY',
                                 customClass: { popup: 'z-index-master' }
                             }).then((result) => {
-                                window.location.href = 'index.php';
+                                window.location.href = " . $safe_js_redirect . ";
                             });
                         ";
                     }
@@ -191,7 +223,7 @@ if (isset($_POST['btn_verify_2fa'])) {
                         confirmButtonText: 'VÀO CHIẾN GAME NGAY',
                         customClass: { popup: 'z-index-master' }
                     }).then((result) => {
-                        window.location.href = 'index.php';
+                        window.location.href = " . $safe_js_redirect . ";
                     });
                 ";
             } else {
@@ -482,6 +514,7 @@ $is_2fa_step = !empty($_SESSION['2fa_pending']) && !empty($_SESSION['2fa_pending
             </p>
 
             <form method="POST" action="" class="text-start">
+                <input type="hidden" name="redirect" value="<?php echo htmlspecialchars($redirect_target); ?>">
                 <div class="mb-4">
                     <label class="form-label small fw-bold mb-1">Mã xác thực hoặc Mã dự phòng</label>
                     <div class="input-group">
@@ -518,6 +551,7 @@ $is_2fa_step = !empty($_SESSION['2fa_pending']) && !empty($_SESSION['2fa_pending
             <p class="text-secondary small mb-4">Đăng nhập tài khoản để vào thế giới game bản quyền</p>
 
             <form method="POST" action="" class="text-start">
+                <input type="hidden" name="redirect" value="<?php echo htmlspecialchars($redirect_target); ?>">
                 <!-- Username Input -->
                 <div class="mb-3">
                     <label class="form-label small fw-bold mb-1">Email hoặc Tên đăng nhập</label>

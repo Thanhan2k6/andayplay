@@ -479,10 +479,11 @@ if (!$result) {
                 <span class="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25 px-3 py-2 text-uppercase fw-bold" style="font-size: 0.75rem;">Hỗ trợ khách hàng</span>
                 <h3 class="fw-bold mt-2 mb-3">Câu Hỏi Thường Gặp</h3>
                 <p class="text-secondary">Những thắc mắc phổ biến nhất khi khách hàng trải nghiệm dịch vụ thuê tài khoản game tại ANPLAY STORE.</p>
-                <div class="d-flex align-items-center gap-2 text-info mt-3">
+                <a href="support.php?new=1" class="anplay-support-cta d-inline-flex align-items-center gap-2 fw-bold text-decoration-none mt-3 px-3 py-2 rounded-3" title="Gửi yêu cầu hỗ trợ riêng tới kỹ thuật viên 24/7">
                     <i class="bi bi-headset fs-4"></i>
-                    <span class="fw-bold">Cần hỗ trợ riêng? Liên hệ kỹ thuật viên 24/7</span>
-                </div>
+                    <span>Cần hỗ trợ riêng? Liên hệ kỹ thuật viên 24/7</span>
+                    <i class="bi bi-arrow-right-short fs-5 ms-1"></i>
+                </a>
             </div>
 
             <div class="col-lg-7">

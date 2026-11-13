@@ -36,9 +36,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['btn_save_settings']))
             foreach ($settings as $key => $val) {
                 $k = trim($key);
                 $v = trim($val);
-                $stmt = $conn->prepare("UPDATE system_settings SET setting_value = ?, updated_by = ?, updated_at = NOW() WHERE setting_key = ?");
+                $stmt = $conn->prepare("INSERT INTO system_settings (setting_key, setting_value, setting_group, updated_by, updated_at)
+                                        VALUES (?, ?, 'general', ?, NOW())
+                                        ON DUPLICATE KEY UPDATE setting_value = VALUES(setting_value), updated_by = VALUES(updated_by), updated_at = NOW()");
                 if ($stmt) {
-                    $stmt->bind_param("sis", $v, $super_admin_id, $k);
+                    $stmt->bind_param("ssi", $k, $v, $super_admin_id);
                     if ($stmt->execute()) {
                         $updated_count++;
                     }
@@ -169,6 +171,14 @@ require_once __DIR__ . '/includes/admin_header.php';
                         <select name="settings[allow_registrations]" class="form-select form-control-gaming">
                             <option value="1" <?php echo (($settings_map['allow_registrations']['setting_value'] ?? '1') == '1') ? 'selected' : ''; ?>>Bật - Cho phép đăng ký tự do</option>
                             <option value="0" <?php echo (($settings_map['allow_registrations']['setting_value'] ?? '1') == '0') ? 'selected' : ''; ?>>Tạm khóa đăng ký thành viên mới</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label text-secondary small fw-bold">Xác Nhận Thanh Toán VietQR</label>
+                        <select name="settings[payment_simulation_mode]" class="form-select form-control-gaming">
+                            <option value="1" <?php echo (($settings_map['payment_simulation_mode']['setting_value'] ?? '1') == '1') ? 'selected' : ''; ?>>Tự động xác nhận sau 20 giây (Chế độ mô phỏng)</option>
+                            <option value="0" <?php echo (($settings_map['payment_simulation_mode']['setting_value'] ?? '1') == '0') ? 'selected' : ''; ?>>Chỉ xác nhận qua Webhook ngân hàng / Admin duyệt</option>
                         </select>
                     </div>
 

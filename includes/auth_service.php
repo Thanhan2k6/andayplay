@@ -176,7 +176,31 @@ function ensure_auth_and_system_schema($conn) {
                               ON DUPLICATE KEY UPDATE `setting_value` = '1'");
             }
         }
+
+        // Mặc định bật chế độ xác nhận thanh toán VietQR tự động mô phỏng 20s (có thể tắt trong Cấu hình hệ thống)
+        $conn->query("INSERT IGNORE INTO `system_settings` (`setting_key`, `setting_value`, `setting_group`, `description`)
+                      VALUES ('payment_simulation_mode', '1', 'payment', 'Tự động mô phỏng xác nhận thanh toán VietQR sau 20 giây')");
     } catch (Throwable $e) {}
+}
+
+/**
+ * Đọc cấu hình từ bảng system_settings với giá trị mặc định an toàn
+ */
+function anplay_get_system_setting($conn, $key, $default = null) {
+    if (!$conn || empty($key)) return $default;
+    try {
+        $stmt = $conn->prepare("SELECT `setting_value` FROM `system_settings` WHERE `setting_key` = ? LIMIT 1");
+        if ($stmt) {
+            $stmt->bind_param("s", $key);
+            $stmt->execute();
+            $row = $stmt->get_result()->fetch_assoc();
+            $stmt->close();
+            if ($row && isset($row['setting_value'])) {
+                return $row['setting_value'];
+            }
+        }
+    } catch (Throwable $e) {}
+    return $default;
 }
 
 /**

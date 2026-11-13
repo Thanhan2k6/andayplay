@@ -9,7 +9,8 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 
 if (!isset($_SESSION['user_id'])) {
-    header("Location: login.php");
+    $req_uri = basename($_SERVER['PHP_SELF']) . (!empty($_SERVER['QUERY_STRING']) ? ('?' . $_SERVER['QUERY_STRING']) : '');
+    header("Location: login.php?redirect=" . urlencode($req_uri));
     exit();
 }
 
@@ -20,6 +21,21 @@ if (file_exists(__DIR__ . '/includes/pagination_helper.php')) {
 
 $user_id = intval($_SESSION['user_id']);
 $categories = get_support_categories();
+
+$subject_map = [
+    'account_issue' => 'account',
+];
+$raw_subject = trim($_GET['subject'] ?? '');
+$prefill_category = $subject_map[$raw_subject] ?? $raw_subject;
+if (!array_key_exists($prefill_category, $categories)) {
+    $prefill_category = '';
+}
+$prefill_order_id = isset($_GET['order_id']) ? intval($_GET['order_id']) : 0;
+$auto_open_create_modal = (
+    (isset($_GET['new']) && $_GET['new'] === '1')
+    || $raw_subject !== ''
+    || $prefill_order_id > 0
+);
 
 // Đảm bảo CSRF token
 if (empty($_SESSION['csrf_token'])) {
@@ -415,7 +431,7 @@ require_once __DIR__ . '/includes/header.php';
                             <label class="form-label text-secondary small fw-bold">Danh Mục Vấn Đề <span class="text-danger">*</span></label>
                             <select name="category" class="form-select form-control-gaming" required>
                                 <?php foreach ($categories as $ckey => $cval): ?>
-                                    <option value="<?php echo $ckey; ?>">
+                                    <option value="<?php echo $ckey; ?>" <?php echo ($prefill_category === $ckey) ? 'selected' : ''; ?>>
                                         <?php echo $cval['label']; ?> — (<?php echo $cval['desc']; ?>)
                                     </option>
                                 <?php endforeach; ?>
@@ -428,7 +444,7 @@ require_once __DIR__ . '/includes/header.php';
                             <select name="order_id" class="form-select form-control-gaming">
                                 <option value="">-- Không chọn / Sự cố chung --</option>
                                 <?php foreach ($user_orders as $uo): ?>
-                                    <option value="<?php echo $uo['borrow_id']; ?>">
+                                    <option value="<?php echo $uo['borrow_id']; ?>" <?php echo ($prefill_order_id > 0 && intval($uo['borrow_id']) === $prefill_order_id) ? 'selected' : ''; ?>>
                                         Đơn #<?php echo htmlspecialchars($uo['order_code'] ?? $uo['borrow_id']); ?> - <?php echo htmlspecialchars($uo['title']); ?> (<?php echo $uo['status']; ?>)
                                     </option>
                                 <?php endforeach; ?>
@@ -488,4 +504,14 @@ require_once __DIR__ . '/includes/header.php';
 </div>
 
 <?php require_once __DIR__ . '/includes/footer.php'; ?>
+<?php if ($auto_open_create_modal): ?>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var modalEl = document.getElementById('createTicketModal');
+    if (modalEl && typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+        bootstrap.Modal.getOrCreateInstance(modalEl).show();
+    }
+});
+</script>
+<?php endif; ?>
 
