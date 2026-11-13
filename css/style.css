@@ -1899,7 +1899,7 @@ p, span, div {
     background-color: var(--bg-surface);
     border: 1px solid var(--border-subtle);
     border-radius: var(--radius-pill);
-    padding: 9px 40px 9px 42px;
+    padding: 9px 76px 9px 42px;
     color: var(--text-white);
     font-weight: 500;
     font-size: 0.90rem;

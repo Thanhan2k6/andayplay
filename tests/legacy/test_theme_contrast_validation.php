@@ -26,7 +26,7 @@ echo "   ANPLAY STORE - KIỂM THỬ XÁC THỰC LIGHT & DARK MODE      \n";
 echo "============================================================\n\n";
 
 $style_css = file_get_contents(__DIR__ . '/css/style.css');
-$chatbot_css = file_get_contents(__DIR__ . '/css/chatbot.css');
+$chatbot_css = file_get_contents(__DIR__ . '/../../css/assistant.css');
 $index_php = file_get_contents(__DIR__ . '/index.php');
 $header_php = file_get_contents(__DIR__ . '/includes/header.php');
 $admin_hdr = file_get_contents(__DIR__ . '/includes/admin_header.php');

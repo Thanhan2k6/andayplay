@@ -473,7 +473,7 @@ window.ANPLAY_CHAT_CSRF = "<?php echo htmlspecialchars($_SESSION['chat_csrf_toke
 })();
 </script>
 
-<script src="assets/js/chatbot.js?v=<?php echo time(); ?>"></script>
+<script src="assets/js/assistant.js?v=<?php echo time(); ?>"></script>
 
 <!-- MOBILE BOTTOM NAVIGATION (Hiển thị trên mobile, ẩn trên desktop qua CSS) -->
 <nav class="mobile-bottom-nav" aria-label="Điều hướng mobile">

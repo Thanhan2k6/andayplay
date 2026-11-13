@@ -60,9 +60,9 @@ if (isset($_SESSION['user_id'])) {
         })();
     </script>
 
-    <!-- Main Stylesheet & Chatbot Stylesheet -->
+    <!-- Main Stylesheet & Assistant Stylesheet -->
     <link rel="stylesheet" href="css/style.css?v=<?php echo time(); ?>">
-    <link rel="stylesheet" href="css/chatbot.css?v=<?php echo time(); ?>">
+    <link rel="stylesheet" href="css/assistant.css?v=<?php echo time(); ?>">
 </head>
 <body>
 

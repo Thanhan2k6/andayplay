@@ -95,7 +95,7 @@ assertTest("download_game.php có hướng dẫn Epic Games", strpos($download_c
 
 // TEST GROUP 6: RESPONSIVE MOBILE & CHATBOT (PHASE 10)
 echo "\n--- NHÓM 6: MOBILE RESPONSIVE & CHATBOT SPACING ---\n";
-$chatbot_css = file_get_contents(__DIR__ . '/css/chatbot.css');
+$chatbot_css = file_get_contents(__DIR__ . '/../../css/assistant.css');
 assertTest(
     "Chatbot không che bottom navigation trên mobile (có tính offset nav height)",
     strpos($chatbot_css, 'calc(var(--bottom-nav-height, 64px) + 16px)') !== false

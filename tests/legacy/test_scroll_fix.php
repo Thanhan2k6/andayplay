@@ -80,8 +80,8 @@ assert_test("style.css: inactive chatbot box has display: none !important and po
 assert_test("style.css: chatbot wrapper has pointer-events: none !important", 
     preg_match('/\.anplay-chatbot-wrapper\s*\{[^}]*pointer-events:\s*none\s*!important/s', $style_css));
 
-// 2. Audit css/chatbot.css
-$chatbot_css = file_get_contents(__DIR__ . '/css/chatbot.css');
+// 2. Audit css/assistant.css
+$chatbot_css = file_get_contents(__DIR__ . '/../../css/assistant.css');
 
 assert_test("chatbot.css: .anplay-chatbot-wrapper has pointer-events: none !important", 
     preg_match('/\.anplay-chatbot-wrapper\s*\{[^}]*pointer-events:\s*none\s*!important/s', $chatbot_css));
