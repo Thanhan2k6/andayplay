@@ -222,11 +222,11 @@ require_once __DIR__ . '/includes/admin_header.php';
     </div>
 
     <!-- BỘ LỌC TÌM KIẾM -->
-    <div class="panel-dark p-3 rounded-4 mb-4">
+    <div class="panel-dark p-3 rounded-3 mb-4">
         <form action="admin_roles.php" method="GET" class="row g-2 align-items-center">
             <div class="col-md-5">
                 <div class="input-group">
-                    <span class="input-group-text bg-dark border-secondary border-opacity-25 text-secondary"><i class="bi bi-search"></i></span>
+                    <span class="input-group-text" style="background: var(--surface-secondary); border-color: var(--border-default); color: var(--text-muted);"><i class="bi bi-search"></i></span>
                     <input type="text" name="search" class="form-control form-control-gaming" placeholder="Tìm theo username hoặc email..." value="<?php echo htmlspecialchars($search); ?>">
                 </div>
             </div>

@@ -14,6 +14,9 @@ if (!isset($_SESSION['user_id'])) {
 }
 
 require_once __DIR__ . '/includes/connect.php';
+if (file_exists(__DIR__ . '/includes/pagination_helper.php')) {
+    require_once __DIR__ . '/includes/pagination_helper.php';
+}
 
 $user_id = intval($_SESSION['user_id']);
 $categories = get_support_categories();
@@ -113,11 +116,14 @@ try {
     }
 } catch (Throwable $e) {}
 
-// 4. LỌC VÀ TÌM KIẾM TICKET
+// 4. LỌC VÀ TÌM KIẾM TICKET (PREPARED STATEMENT + PHÂN TRANG DB)
 $filter_status = isset($_GET['status']) ? trim($_GET['status']) : 'all';
 $search_query = isset($_GET['search']) ? trim($_GET['search']) : '';
 
-$where_clauses = ["st.user_id = $user_id"];
+$where_clauses = ["st.user_id = ?"];
+$bind_types = 'i';
+$bind_params = [$user_id];
+
 if ($filter_status === 'open') {
     $where_clauses[] = "st.status IN ('new', 'assigned', 'in_progress')";
 } elseif ($filter_status === 'waiting') {
@@ -127,25 +133,61 @@ if ($filter_status === 'open') {
 }
 
 if (!empty($search_query)) {
-    $esc_search = $conn->real_escape_string($search_query);
-    $where_clauses[] = "(st.ticket_code LIKE '%$esc_search%' OR st.title LIKE '%$esc_search%')";
+    $like_search = '%' . $search_query . '%';
+    $where_clauses[] = "(st.ticket_code LIKE ? OR st.title LIKE ?)";
+    $bind_types .= 'ss';
+    $bind_params[] = $like_search;
+    $bind_params[] = $like_search;
 }
 
 $where_sql = implode(" AND ", $where_clauses);
-$tickets = [];
 
+$per_page_options = [10, 20, 50];
+$per_page = (isset($_GET['per_page']) && in_array(intval($_GET['per_page']), $per_page_options, true)) ? intval($_GET['per_page']) : 10;
+$page_num = isset($_GET['page']) ? max(1, intval($_GET['page'])) : 1;
+
+$total_tickets = 0;
+try {
+    $cnt_stmt = $conn->prepare("SELECT COUNT(*) AS total FROM support_tickets st WHERE $where_sql");
+    if ($cnt_stmt) {
+        $cnt_stmt->bind_param($bind_types, ...$bind_params);
+        $cnt_stmt->execute();
+        $cnt_res = $cnt_stmt->get_result();
+        if ($cnt_res && ($crow = $cnt_res->fetch_assoc())) {
+            $total_tickets = intval($crow['total']);
+        }
+        $cnt_stmt->close();
+    }
+} catch (Throwable $e) {}
+
+$total_pages = max(1, (int)ceil($total_tickets / $per_page));
+if ($page_num > $total_pages) {
+    $page_num = $total_pages;
+}
+$offset = ($page_num - 1) * $per_page;
+
+$tickets = [];
 try {
     $sql_t = "SELECT st.*, g.title as game_title, br.order_code 
               FROM support_tickets st 
               LEFT JOIN games g ON st.game_id = g.game_id 
               LEFT JOIN borrow_records br ON st.order_id = br.borrow_id 
               WHERE $where_sql 
-              ORDER BY st.updated_at DESC";
-    $res_t = $conn->query($sql_t);
-    if ($res_t && $res_t->num_rows > 0) {
-        while ($t = $res_t->fetch_assoc()) {
-            $tickets[] = $t;
+              ORDER BY st.updated_at DESC
+              LIMIT ? OFFSET ?";
+    $stmt_t = $conn->prepare($sql_t);
+    if ($stmt_t) {
+        $q_types = $bind_types . 'ii';
+        $q_params = array_merge($bind_params, [$per_page, $offset]);
+        $stmt_t->bind_param($q_types, ...$q_params);
+        $stmt_t->execute();
+        $res_t = $stmt_t->get_result();
+        if ($res_t && $res_t->num_rows > 0) {
+            while ($t = $res_t->fetch_assoc()) {
+                $tickets[] = $t;
+            }
         }
+        $stmt_t->close();
     }
 } catch (Throwable $e) {}
 
@@ -345,6 +387,12 @@ require_once __DIR__ . '/includes/header.php';
                 </div>
             <?php endforeach; ?>
         </div>
+
+        <?php if (function_exists('render_pagination')): ?>
+            <div class="mt-4">
+                <?php echo render_pagination($page_num, $total_pages, $total_tickets, $per_page, $_GET, [10, 20, 50]); ?>
+            </div>
+        <?php endif; ?>
     <?php endif; ?>
 </div>
 

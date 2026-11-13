@@ -9,13 +9,21 @@ date_default_timezone_set('Asia/Ho_Chi_Minh');
 $cron_start_time = microtime(true);
 $log_timestamp = date('Y-m-d H:i:s');
 
-// 1. CẤU HÌNH TOKEN BẢO MẬT
+// 1. CẤU HÌNH TOKEN BẢO MẬT (Nạp từ env hoặc includes/secrets.local.php, KHÔNG hardcode)
+if (!defined('ANPLAY_INTERNAL')) {
+    define('ANPLAY_INTERNAL', true);
+}
 if (!defined('ANPLAY_CRON_SECRET')) {
     $env_secret = getenv('ANPLAY_CRON_SECRET');
-    define('ANPLAY_CRON_SECRET', !empty($env_secret) ? $env_secret : 'ANPLAY_CRON_SEC_9b8e21a7df4e083c6f41');
-}
-if (!defined('ANPLAY_LEGACY_CRON_SECRET')) {
-    define('ANPLAY_LEGACY_CRON_SECRET', 'ANPLAY_CRON_2026');
+    $local_secret = '';
+    $secrets_file = __DIR__ . '/includes/secrets.local.php';
+    if (file_exists($secrets_file)) {
+        $sec = require $secrets_file;
+        if (is_array($sec) && !empty($sec['cron_secret'])) {
+            $local_secret = trim($sec['cron_secret']);
+        }
+    }
+    define('ANPLAY_CRON_SECRET', !empty($env_secret) ? $env_secret : $local_secret);
 }
 
 // 2. XÁC THỰC QUYỀN TRUY CẬP (CLI, SECRET TOKEN HOẶC ADMIN SESSION)
@@ -38,10 +46,7 @@ if (!$is_cli) {
         }
     }
 
-    $token_valid = (!empty($provided_token) && (
-        hash_equals(ANPLAY_CRON_SECRET, $provided_token) ||
-        hash_equals(ANPLAY_LEGACY_CRON_SECRET, $provided_token)
-    ));
+    $token_valid = (!empty(ANPLAY_CRON_SECRET) && !empty($provided_token) && hash_equals(ANPLAY_CRON_SECRET, $provided_token));
 
     if (isset($_SESSION['role']) && in_array(intval($_SESSION['role']), [1, 2])) {
         $is_admin = true;
@@ -164,11 +169,21 @@ if ($res_expired && $res_expired->num_rows > 0) {
         $chk_ext->close();
 
         if ($has_extension && !empty($ext_data['due_date'])) {
-            // Đã gia hạn thành công: Đồng bộ hạn mới cho đơn gốc, không thu hồi tài khoản
+            // Đã gia hạn thành công: Đồng bộ hạn mới cho đơn gốc bằng prepared statement
             $new_due = $ext_data['due_date'];
-            $conn->query("UPDATE borrow_records SET due_date = '$new_due', status = 'active' WHERE borrow_id = $borrow_id");
+            $u_ext_b = $conn->prepare("UPDATE borrow_records SET due_date = ?, status = 'active' WHERE borrow_id = ?");
+            if ($u_ext_b) {
+                $u_ext_b->bind_param("si", $new_due, $borrow_id);
+                $u_ext_b->execute();
+                $u_ext_b->close();
+            }
             if ($account_id > 0) {
-                $conn->query("UPDATE game_accounts SET status = 'RENTED', rent_expires_at = '$new_due', updated_at = NOW() WHERE account_id = $account_id");
+                $u_ext_a = $conn->prepare("UPDATE game_accounts SET status = 'RENTED', rent_expires_at = ?, updated_at = NOW() WHERE account_id = ?");
+                if ($u_ext_a) {
+                    $u_ext_a->bind_param("si", $new_due, $account_id);
+                    $u_ext_a->execute();
+                    $u_ext_a->close();
+                }
             }
             $extended_count++;
             $execution_logs[] = "  [EXTENDED] Đơn #$borrow_id ($game_title) đã được gia hạn đến " . date('H:i d/m/Y', strtotime($new_due));

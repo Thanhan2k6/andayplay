@@ -1,4 +1,5 @@
-<?php
+﻿<?php
+if (php_sapi_name() !== 'cli') { http_response_code(403); exit('CLI only'); }
 /**
  * ANPLAY STORE - AUTOMATED TEST SUITE: PHASE 4 ADMIN MANAGEMENT & PERMISSION
  * Kiểm thử toàn diện các tính năng độc quyền Super Admin và bảo mật permissions

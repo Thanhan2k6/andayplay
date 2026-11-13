@@ -1,14 +1,10 @@
-<?php
-if (session_status() === PHP_SESSION_NONE) { session_start(); }
-require_once __DIR__ . '/includes/connect.php';
-
-// Kiểm tra quyền Admin
-if (!isset($_SESSION['user_id']) || $_SESSION['role'] != 1) {
-    die("<div style='font-family:sans-serif; text-align:center; padding:50px; background:#0f172a; color:#fff;'>
-        <h2>⛔ Từ chối truy cập</h2>
-        <p>Vui lòng đăng nhập bằng tài khoản Quản trị viên (Admin) để thực hiện tính năng này.</p>
-        <a href='login.php' style='color:#38bdf8;'>Đăng nhập ngay</a>
-    </div>");
+﻿<?php
+if (php_sapi_name() !== 'cli') {
+    if (session_status() === PHP_SESSION_NONE) { session_start(); }
+    require_once dirname(__DIR__) . '/includes/connect.php';
+    require_super_admin();
+} else {
+    require_once dirname(__DIR__) . '/includes/connect.php';
 }
 
 $target_quantity = 20; // 20 tài khoản mỗi game
@@ -117,10 +113,10 @@ if ($games_res && $games_res->num_rows > 0) {
     </div>
 
     <div class="text-center">
-        <a href="admin_accounts.php" class="btn btn-info fw-bold px-4 py-2 me-2">
+        <a href="../admin_accounts.php" class="btn btn-info fw-bold px-4 py-2 me-2">
             <i class="bi bi-box-seam me-1"></i> Đến Kho Tài Khoản (Admin)
         </a>
-        <a href="index.php" class="btn btn-outline-light px-4 py-2">
+        <a href="../index.php" class="btn btn-outline-light px-4 py-2">
             <i class="bi bi-house me-1"></i> Về Cửa Hàng Trang Chủ
         </a>
     </div>

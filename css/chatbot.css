@@ -563,9 +563,9 @@
 }
 
 /* 10. RESPONSIVE DESIGN (MOBILE / TABLET) */
-@media (max-width: 575.98px) {
+@media (max-width: 767.98px) {
     .anplay-chatbot-wrapper {
-        bottom: calc(var(--bottom-nav-height, 64px) + 16px) !important;
+        bottom: calc(var(--bottom-nav-height, 64px) + var(--safe-area-bottom, 0px) + 16px) !important;
         right: 16px !important;
     }
 
@@ -623,27 +623,49 @@
     color: #ffffff !important;
 }
 
+[data-theme="light"] .anplay-chat-suggestions {
+    background: #f1f5f9 !important;
+    border-bottom: 1px solid #e2e8f0 !important;
+}
+
+[data-theme="light"] .anplay-suggestion-chip {
+    background: #ffffff !important;
+    border: 1px solid #cbd5e1 !important;
+    color: #334155 !important;
+}
+
+[data-theme="light"] .anplay-suggestion-chip:hover {
+    background: rgba(79, 70, 229, 0.1) !important;
+    border-color: #4f46e5 !important;
+    color: #4f46e5 !important;
+}
+
 [data-theme="light"] .anplay-chat-messages {
     background: #f8fafc !important;
 }
 
-[data-theme="light"] .anplay-msg-bot .anplay-msg-content {
+[data-theme="light"] .anplay-msg-row.bot .anplay-msg-content {
     background: #ffffff !important;
     border: 1px solid #e2e8f0 !important;
     color: #0f172a !important;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04) !important;
 }
 
-[data-theme="light"] .anplay-msg-bot .anplay-msg-content p,
-[data-theme="light"] .anplay-msg-bot .anplay-msg-content li,
-[data-theme="light"] .anplay-msg-bot .anplay-msg-content span {
+[data-theme="light"] .anplay-msg-row.bot .anplay-msg-content p,
+[data-theme="light"] .anplay-msg-row.bot .anplay-msg-content li,
+[data-theme="light"] .anplay-msg-row.bot .anplay-msg-content span,
+[data-theme="light"] .anplay-msg-row.bot .anplay-msg {
     color: #1e293b !important;
 }
 
-[data-theme="light"] .anplay-msg-user .anplay-msg-content {
+[data-theme="light"] .anplay-msg-row.user .anplay-msg-content {
     background: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%) !important;
     color: #ffffff !important;
     box-shadow: 0 4px 12px rgba(79, 70, 229, 0.25) !important;
+}
+
+[data-theme="light"] .anplay-msg-row.user .anplay-msg {
+    color: #ffffff !important;
 }
 
 [data-theme="light"] .anplay-msg-time {

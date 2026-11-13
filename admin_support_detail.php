@@ -12,6 +12,7 @@ require_once __DIR__ . '/includes/connect.php';
 
 // Kiểm tra quyền Quản trị viên (ADMIN hoặc SUPER_ADMIN)
 require_admin();
+require_permission('support.view');
 
 $admin_id = intval($_SESSION['user_id']);
 $ticket_id = isset($_GET['id']) ? intval($_GET['id']) : 0;
@@ -32,6 +33,7 @@ $error_msg = "";
 
 // 1. XỬ LÝ CẬP NHẬT TRẠNG THÁI / MỨC ĐỘ ƯU TIÊN / PHÂN CÔNG ADMIN
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['btn_update_ticket_meta'])) {
+    require_permission('support.reply');
     if (!verify_csrf_token($_POST['csrf_token'] ?? '')) {
         $error_msg = "Mã xác thực bảo mật không hợp lệ.";
     } else {
@@ -55,6 +57,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['btn_update_ticket_met
 
 // 2. XỬ LÝ GỬI PHẢN HỒI CỦA ADMIN
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['btn_admin_reply'])) {
+    require_permission('support.reply');
     if (!verify_csrf_token($_POST['csrf_token'] ?? '')) {
         $error_msg = "Mã xác thực bảo mật không hợp lệ.";
     } else {
@@ -172,7 +175,7 @@ require_once __DIR__ . '/includes/admin_header.php';
 <div class="container-fluid px-lg-5 py-4 text-white">
     <!-- Top Action Navigation -->
     <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
-        <a href="admin_support.php" class="btn btn-outline-secondary btn-sm py-2 px-3 text-white">
+        <a href="admin_support.php" class="btn btn-gaming-secondary btn-sm py-2 px-3">
             <i class="bi bi-chevron-left me-1"></i> Quay lại danh sách yêu cầu
         </a>
         <div class="d-flex align-items-center gap-2">

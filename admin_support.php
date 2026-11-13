@@ -10,8 +10,9 @@ if (session_status() === PHP_SESSION_NONE) {
 
 require_once __DIR__ . '/includes/connect.php';
 
-// Kiểm tra quyền Quản trị viên
+// Kiểm tra quyền Quản trị viên & quyền xem hỗ trợ
 require_admin();
+require_permission('support.view');
 
 $current_page = 'admin_support.php';
 
@@ -42,13 +43,22 @@ try {
     }
 } catch (Throwable $e) {}
 
-// 2. BỘ LỌC VÀ TÌM KIẾM
+// 2. BỘ LỌC, TÌM KIẾM & PHÂN TRANG (PREPARED STATEMENT)
+if (file_exists(__DIR__ . '/includes/pagination_helper.php')) {
+    require_once __DIR__ . '/includes/pagination_helper.php';
+}
+$req_per_page = intval($_GET['per_page'] ?? 20);
+$per_page = in_array($req_per_page, [10, 20, 50], true) ? $req_per_page : 20;
+$page = max(1, (int)($_GET['page'] ?? 1));
+
 $filter_status = isset($_GET['status']) ? trim($_GET['status']) : 'all';
 $filter_priority = isset($_GET['priority']) ? trim($_GET['priority']) : 'all';
 $filter_category = isset($_GET['category']) ? trim($_GET['category']) : 'all';
 $search = isset($_GET['search']) ? trim($_GET['search']) : '';
 
 $where_clauses = ["1=1"];
+$bind_types = '';
+$bind_params = [];
 
 if ($filter_status === 'new') {
     $where_clauses[] = "st.status = 'new'";
@@ -62,61 +72,70 @@ if ($filter_status === 'new') {
     $where_clauses[] = "st.status = 'closed'";
 }
 
-if ($filter_priority !== 'all' && in_array($filter_priority, ['low', 'normal', 'high', 'urgent'])) {
-    $where_clauses[] = "st.priority = '" . $conn->real_escape_string($filter_priority) . "'";
+if ($filter_priority !== 'all' && in_array($filter_priority, ['low', 'normal', 'high', 'urgent'], true)) {
+    $where_clauses[] = "st.priority = ?";
+    $bind_types .= 's';
+    $bind_params[] = $filter_priority;
 }
 
-if ($filter_category !== 'all' && !empty($filter_category)) {
-    $where_clauses[] = "st.category = '" . $conn->real_escape_string($filter_category) . "'";
+if ($filter_category !== 'all' && $filter_category !== '') {
+    $where_clauses[] = "st.category = ?";
+    $bind_types .= 's';
+    $bind_params[] = $filter_category;
 }
 
-if (!empty($search)) {
-    $esc = $conn->real_escape_string($search);
-    $where_clauses[] = "(st.ticket_code LIKE '%$esc%' OR st.title LIKE '%$esc%' OR u.username LIKE '%$esc%' OR u.email LIKE '%$esc%' OR br.order_code LIKE '%$esc%')";
+if ($search !== '') {
+    $where_clauses[] = "(st.ticket_code LIKE ? OR st.title LIKE ? OR u.username LIKE ? OR u.email LIKE ? OR br.order_code LIKE ?)";
+    $like = '%' . $search . '%';
+    $bind_types .= 'sssss';
+    array_push($bind_params, $like, $like, $like, $like, $like);
 }
 
 $where_sql = implode(" AND ", $where_clauses);
 
-// Phân trang
-$page = isset($_GET['page']) ? max(1, intval($_GET['page'])) : 1;
-$per_page = 20;
+$total_rows = 0;
+$st_cnt = $conn->prepare("SELECT COUNT(*) as c FROM support_tickets st 
+    JOIN users u ON st.user_id = u.user_id 
+    LEFT JOIN borrow_records br ON st.order_id = br.borrow_id 
+    WHERE $where_sql");
+if ($st_cnt) {
+    if ($bind_types !== '') {
+        $st_cnt->bind_param($bind_types, ...$bind_params);
+    }
+    $st_cnt->execute();
+    $r = $st_cnt->get_result()->fetch_assoc();
+    $total_rows = intval($r['c'] ?? 0);
+    $st_cnt->close();
+}
+
+$total_pages = max(1, (int)ceil($total_rows / $per_page));
+$page = min($page, $total_pages);
 $offset = ($page - 1) * $per_page;
 
-$count_sql = "SELECT COUNT(*) as c FROM support_tickets st 
-              JOIN users u ON st.user_id = u.user_id 
-              LEFT JOIN borrow_records br ON st.order_id = br.borrow_id 
-              WHERE $where_sql";
-$total_rows = 0;
-try {
-    $q_c = $conn->query($count_sql);
-    if ($q_c && $r = $q_c->fetch_assoc()) {
-        $total_rows = intval($r['c'] ?? 0);
-    }
-} catch (Throwable $e) {}
-
-$total_pages = max(1, ceil($total_rows / $per_page));
-
-// Lấy danh sách ticket
 $tickets = [];
-try {
-    $sql = "SELECT st.*, u.username, u.email, g.title as game_title, br.order_code, u_adm.username as assigned_admin_name 
-            FROM support_tickets st 
-            JOIN users u ON st.user_id = u.user_id 
-            LEFT JOIN games g ON st.game_id = g.game_id 
-            LEFT JOIN borrow_records br ON st.order_id = br.borrow_id 
-            LEFT JOIN users u_adm ON st.assigned_to = u_adm.user_id 
-            WHERE $where_sql 
-            ORDER BY 
-                CASE WHEN st.priority = 'urgent' THEN 1 WHEN st.priority = 'high' THEN 2 ELSE 3 END, 
-                st.updated_at DESC 
-            LIMIT $per_page OFFSET $offset";
-    $res = $conn->query($sql);
-    if ($res && $res->num_rows > 0) {
+$st_list = $conn->prepare("SELECT st.*, u.username, u.email, g.title as game_title, br.order_code, u_adm.username as assigned_admin_name 
+    FROM support_tickets st 
+    JOIN users u ON st.user_id = u.user_id 
+    LEFT JOIN games g ON st.game_id = g.game_id 
+    LEFT JOIN borrow_records br ON st.order_id = br.borrow_id 
+    LEFT JOIN users u_adm ON st.assigned_to = u_adm.user_id 
+    WHERE $where_sql 
+    ORDER BY 
+        CASE WHEN st.priority = 'urgent' THEN 1 WHEN st.priority = 'high' THEN 2 ELSE 3 END, 
+        st.updated_at DESC 
+    LIMIT ? OFFSET ?");
+if ($st_list) {
+    $data_types = $bind_types . 'ii';
+    $data_params = array_merge($bind_params, [$per_page, $offset]);
+    $st_list->bind_param($data_types, ...$data_params);
+    if ($st_list->execute()) {
+        $res = $st_list->get_result();
         while ($t = $res->fetch_assoc()) {
             $tickets[] = $t;
         }
     }
-} catch (Throwable $e) {}
+    $st_list->close();
+}
 
 $categories = get_support_categories();
 
@@ -140,7 +159,7 @@ require_once __DIR__ . '/includes/admin_header.php';
             <a href="admin_notifications.php" class="btn btn-gaming-secondary d-flex align-items-center">
                 <i class="bi bi-broadcast me-1 text-warning"></i> Gửi Thông Báo Toàn Sàn
             </a>
-            <a href="admin_dashboard.php" class="btn btn-outline-secondary d-flex align-items-center text-white">
+            <a href="admin_dashboard.php" class="btn btn-gaming-secondary d-flex align-items-center">
                 <i class="bi bi-speedometer2 me-1"></i> Admin Dashboard
             </a>
         </div>
@@ -337,20 +356,7 @@ require_once __DIR__ . '/includes/admin_header.php';
         </div>
 
         <!-- Phân trang -->
-        <?php if ($total_pages > 1): ?>
-            <div class="p-3 border-top border-secondary border-opacity-25 d-flex justify-content-between align-items-center">
-                <span class="text-secondary small">Hiển thị <?php echo count($tickets); ?> / <?php echo $total_rows; ?> yêu cầu</span>
-                <ul class="pagination pagination-sm gap-1 mb-0">
-                    <?php for ($p = 1; $p <= $total_pages; $p++): ?>
-                        <li class="page-item <?php echo ($p === $page) ? 'active' : ''; ?>">
-                            <a class="page-link rounded-2" href="admin_support.php?status=<?php echo urlencode($filter_status); ?>&priority=<?php echo urlencode($filter_priority); ?>&category=<?php echo urlencode($filter_category); ?>&search=<?php echo urlencode($search); ?>&page=<?php echo $p; ?>">
-                                <?php echo $p; ?>
-                            </a>
-                        </li>
-                    <?php endfor; ?>
-                </ul>
-            </div>
-        <?php endif; ?>
+        <?php if (function_exists('render_pagination')) { echo render_pagination($page, $total_pages, $total_rows, $per_page, $_GET); } ?>
     </div>
 </div>
 

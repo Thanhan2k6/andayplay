@@ -1,4 +1,5 @@
 # Local secrets & configs
+includes/secrets.local.php
 includes/chatbot_secrets.local.php
 .env
-
+*.log

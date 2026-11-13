@@ -43,9 +43,25 @@ if ($action === 'get_dropdown') {
     exit();
 }
 
+// Các hành động thay đổi trạng thái yêu cầu POST + CSRF
+$mutating_actions = ['mark_read', 'mark_all_read', 'delete', 'clear_all'];
+if (in_array($action, $mutating_actions, true)) {
+    if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+        http_response_code(405);
+        echo json_encode(['success' => false, 'error' => 'Phương thức không hợp lệ (chỉ chấp nhận POST)']);
+        exit();
+    }
+    $csrf = $_POST['csrf_token'] ?? ($_SERVER['HTTP_X_CSRF_TOKEN'] ?? '');
+    if (!verify_csrf_token($csrf)) {
+        http_response_code(403);
+        echo json_encode(['success' => false, 'error' => 'Mã xác thực CSRF không hợp lệ']);
+        exit();
+    }
+}
+
 // 3. ĐÁNH DẤU 1 THÔNG BÁO ĐÃ ĐỌC
 if ($action === 'mark_read') {
-    $id = isset($_POST['id']) ? intval($_POST['id']) : (isset($_GET['id']) ? intval($_GET['id']) : 0);
+    $id = isset($_POST['id']) ? intval($_POST['id']) : 0;
     if ($id > 0) {
         $res = mark_notification_read($conn, $id, $user_id);
         $new_count = get_unread_notification_count($conn, $user_id);
@@ -65,7 +81,7 @@ if ($action === 'mark_all_read') {
 
 // 5. XÓA 1 THÔNG BÁO (POLICY CHO PHÉP)
 if ($action === 'delete') {
-    $id = isset($_POST['id']) ? intval($_POST['id']) : (isset($_GET['id']) ? intval($_GET['id']) : 0);
+    $id = isset($_POST['id']) ? intval($_POST['id']) : 0;
     if ($id > 0) {
         $res = delete_notification($conn, $id, $user_id);
         $new_count = get_unread_notification_count($conn, $user_id);
@@ -78,7 +94,7 @@ if ($action === 'delete') {
 
 // 6. XÓA TẤT CẢ THÔNG BÁO ĐÃ ĐỌC HOẶC TẤT CẢ
 if ($action === 'clear_all') {
-    $only_read = isset($_POST['only_read']) ? (bool)$_POST['only_read'] : (isset($_GET['only_read']) ? (bool)$_GET['only_read'] : false);
+    $only_read = isset($_POST['only_read']) ? (bool)$_POST['only_read'] : false;
     $res = delete_user_notifications($conn, $user_id, $only_read);
     $new_count = get_unread_notification_count($conn, $user_id);
     echo json_encode(['success' => $res, 'unread_count' => $new_count]);

@@ -5,21 +5,52 @@ if (session_status() === PHP_SESSION_NONE) {
 $page_title = "Quản Lý Kho Game & Giá Thuê";
 require_once __DIR__ . '/includes/admin_header.php';
 
-// XỬ LÝ: Xóa game
-if(isset($_GET['delete_id'])) {
-    $del_id = intval($_GET['delete_id']);
-    // Kiểm tra xem game có tài khoản đang được thuê hoặc đơn thuê đang hoạt động không
-    $chk_rent = $conn->query("SELECT COUNT(*) as c FROM game_accounts WHERE game_id = $del_id AND status = 'RENTED'")->fetch_assoc();
-    $chk_borrow = $conn->query("SELECT COUNT(*) as c FROM borrow_records WHERE game_id = $del_id AND status = 'active'")->fetch_assoc();
+require_permission('game.view');
+$csrf_token = generate_csrf_token();
+
+// XỬ LÝ: Xóa game (BẮT BUỘC POST + CSRF + game.manage)
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_id'])) {
+    if (!verify_csrf_token($_POST['csrf_token'] ?? '')) {
+        echo "<script>alert('Mã xác thực bảo mật không hợp lệ!'); window.location='admin_games.php';</script>";
+        exit();
+    }
+    require_permission('game.manage');
+    $del_id = intval($_POST['delete_id']);
+
+    $st_rent = $conn->prepare("SELECT COUNT(*) as c FROM game_accounts WHERE game_id = ? AND status = 'RENTED'");
+    $st_rent->bind_param("i", $del_id);
+    $st_rent->execute();
+    $chk_rent = $st_rent->get_result()->fetch_assoc();
+    $st_rent->close();
+
+    $st_bor = $conn->prepare("SELECT COUNT(*) as c FROM borrow_records WHERE game_id = ? AND status = 'active'");
+    $st_bor->bind_param("i", $del_id);
+    $st_bor->execute();
+    $chk_borrow = $st_bor->get_result()->fetch_assoc();
+    $st_bor->close();
+
     if (($chk_rent && $chk_rent['c'] > 0) || ($chk_borrow && $chk_borrow['c'] > 0)) {
         echo "<script>alert('Không thể xóa tựa game đang có tài khoản hoặc đơn thuê đang trong thời hạn hiệu lực!'); window.location='admin_games.php';</script>";
     } else {
-        // Không xóa dữ liệu lịch sử borrow_records để bảo vệ toàn vẹn lịch sử giao dịch và doanh thu
-        $conn->query("DELETE FROM games WHERE game_id = $del_id");
-        $conn->query("DELETE FROM game_accounts WHERE game_id = $del_id AND status != 'RENTED'");
-        $conn->query("DELETE FROM rental_packages WHERE game_id = $del_id");
+        $d1 = $conn->prepare("DELETE FROM games WHERE game_id = ?");
+        $d1->bind_param("i", $del_id);
+        $d1->execute();
+        $d1->close();
+
+        $d2 = $conn->prepare("DELETE FROM game_accounts WHERE game_id = ? AND status != 'RENTED'");
+        $d2->bind_param("i", $del_id);
+        $d2->execute();
+        $d2->close();
+
+        $d3 = $conn->prepare("DELETE FROM rental_packages WHERE game_id = ?");
+        $d3->bind_param("i", $del_id);
+        $d3->execute();
+        $d3->close();
+
+        write_audit_log($conn, intval($_SESSION['user_id']), 'DELETE_GAME', 'game', $del_id);
         echo "<script>alert('Đã xóa game và dữ liệu kho liên quan thành công!'); window.location='admin_games.php';</script>";
     }
+    exit();
 }
 ?>
 
@@ -62,6 +93,25 @@ if(isset($_GET['delete_id'])) {
                 </thead>
                 <tbody>
                     <?php
+                    if (file_exists(__DIR__ . '/includes/pagination_helper.php')) {
+                        require_once __DIR__ . '/includes/pagination_helper.php';
+                    }
+                    $req_per_page = intval($_GET['per_page'] ?? 10);
+                    $per_page = in_array($req_per_page, [10, 20, 50], true) ? $req_per_page : 10;
+                    $page = max(1, (int)($_GET['page'] ?? 1));
+
+                    $total_items = 0;
+                    $st_cnt = $conn->prepare("SELECT COUNT(*) AS total FROM games");
+                    if ($st_cnt) {
+                        $st_cnt->execute();
+                        $row_cnt = $st_cnt->get_result()->fetch_assoc();
+                        $total_items = intval($row_cnt['total'] ?? 0);
+                        $st_cnt->close();
+                    }
+                    $total_pages = max(1, (int)ceil($total_items / $per_page));
+                    $page = min($page, $total_pages);
+                    $offset = ($page - 1) * $per_page;
+
                     $sql = "SELECT g.*, c.cate_name,
                             (SELECT COUNT(*) FROM game_accounts ga WHERE ga.game_id = g.game_id) as total_acc,
                             (SELECT COUNT(*) FROM game_accounts ga WHERE ga.game_id = g.game_id AND ga.status = 'AVAILABLE') as avail_acc,
@@ -69,19 +119,31 @@ if(isset($_GET['delete_id'])) {
                             (SELECT COUNT(*) FROM rental_packages rp WHERE rp.game_id = g.game_id AND rp.is_active = 1) as total_packages
                             FROM games g 
                             LEFT JOIN categories c ON g.category_id = c.category_id 
-                            ORDER BY g.game_id DESC";
+                            ORDER BY g.game_id DESC
+                            LIMIT ? OFFSET ?";
                     $result = false;
-                    try {
-                        $result = $conn->query($sql);
-                    } catch (Throwable $e) {}
+                    $st_g = $conn->prepare($sql);
+                    if ($st_g) {
+                        $st_g->bind_param("ii", $per_page, $offset);
+                        if ($st_g->execute()) {
+                            $result = $st_g->get_result();
+                        }
+                        $st_g->close();
+                    }
                     if (!$result) {
-                        try {
-                            $sql_fallback = "SELECT g.*, c.cate_name, g.quantity as total_acc, g.quantity as avail_acc, 5000 as min_rent_price, 4 as total_packages 
-                                             FROM games g 
-                                             LEFT JOIN categories c ON g.category_id = c.category_id 
-                                             ORDER BY g.game_id DESC";
-                            $result = $conn->query($sql_fallback);
-                        } catch (Throwable $e) {}
+                        $sql_fallback = "SELECT g.*, c.cate_name, g.quantity as total_acc, g.quantity as avail_acc, 5000 as min_rent_price, 4 as total_packages 
+                                         FROM games g 
+                                         LEFT JOIN categories c ON g.category_id = c.category_id 
+                                         ORDER BY g.game_id DESC
+                                         LIMIT ? OFFSET ?";
+                        $st_fb = $conn->prepare($sql_fallback);
+                        if ($st_fb) {
+                            $st_fb->bind_param("ii", $per_page, $offset);
+                            if ($st_fb->execute()) {
+                                $result = $st_fb->get_result();
+                            }
+                            $st_fb->close();
+                        }
                     }
                     
                     if($result && $result->num_rows > 0):
@@ -146,12 +208,16 @@ if(isset($_GET['delete_id'])) {
                             </td>
                             <td class="text-end pe-3">
                                 <div class="d-inline-flex gap-2">
-                                    <a href="admin_edit_game.php?id=<?php echo $row['game_id']; ?>" class="btn btn-sm btn-gaming-secondary py-1 px-3">
+                                    <a href="admin_edit_game.php?id=<?php echo intval($row['game_id']); ?>" class="btn btn-sm btn-gaming-secondary py-1 px-3">
                                         <i class="bi bi-pencil-square me-1 text-warning"></i> Sửa & Giá
                                     </a>
-                                    <a href="admin_games.php?delete_id=<?php echo $row['game_id']; ?>" class="btn btn-sm btn-outline-danger py-1 px-2" onclick="return confirm('Bạn có chắc chắn muốn xóa tựa game này khỏi hệ thống?')" title="Xóa game">
-                                        <i class="bi bi-trash"></i>
-                                    </a>
+                                    <form method="POST" class="d-inline" onsubmit="return confirm('Bạn có chắc chắn muốn xóa tựa game này khỏi hệ thống?');">
+                                        <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($csrf_token); ?>">
+                                        <input type="hidden" name="delete_id" value="<?php echo intval($row['game_id']); ?>">
+                                        <button type="submit" class="btn btn-sm btn-outline-danger py-1 px-2" title="Xóa game">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </form>
                                 </div>
                             </td>
                         </tr>
@@ -170,6 +236,7 @@ if(isset($_GET['delete_id'])) {
             </table>
         </div>
     </div>
+    <?php if (function_exists('render_pagination')) { echo render_pagination($page, $total_pages, $total_items, $per_page, $_GET); } ?>
 </div>
 
 <?php require_once __DIR__ . '/includes/admin_footer.php'; ?>

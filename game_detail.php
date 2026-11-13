@@ -7,20 +7,23 @@ $game_id = isset($_GET['id']) ? intval($_GET['id']) : 0;
 $user_id = isset($_SESSION['user_id']) ? intval($_SESSION['user_id']) : null;
 
 // XỬ LÝ: Khi người dùng gửi bình luận (Xử lý TRƯỚC KHI output header để redirect an toàn)
-if (isset($_POST['btn_comment'])) {
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['btn_comment'])) {
     if (!$user_id) {
         header("Location: login.php");
         exit();
     }
-    
-    $content = trim($_POST['comment_content'] ?? '');
-    if (!empty($content) && $game_id > 0) {
-        $clean_content = $conn->real_escape_string($content);
-        try {
-            $conn->query("INSERT INTO comments (game_id, user_id, content) VALUES ($game_id, $user_id, '$clean_content')");
-        } catch (Throwable $e) {}
+    if (verify_csrf_token($_POST['csrf_token'] ?? '')) {
+        $content = trim($_POST['comment_content'] ?? '');
+        if (!empty($content) && $game_id > 0) {
+            $st_cmt = $conn->prepare("INSERT INTO comments (game_id, user_id, content) VALUES (?, ?, ?)");
+            if ($st_cmt) {
+                $st_cmt->bind_param("iis", $game_id, $user_id, $content);
+                $st_cmt->execute();
+                $st_cmt->close();
+            }
+        }
     }
-    
+
     header("Location: game_detail.php?id=$game_id#commentsSection");
     exit();
 }
@@ -139,7 +142,7 @@ if (empty($packages) && ($game['price_type'] ?? 'paid') == 'paid') {
                 </div>
 
                 <!-- Tình trạng kho tài khoản -->
-                <div class="mt-3 p-3 rounded-3 bg-dark border border-secondary border-opacity-25 d-flex justify-content-between align-items-center">
+                <div class="mt-3 p-3 rounded-3 d-flex flex-wrap justify-content-between align-items-center gap-2" style="background: var(--surface-secondary); border: 1px solid var(--border-default);">
                     <span class="text-secondary small fw-bold"><i class="bi bi-box-seam me-1"></i> Trạng thái kho:</span>
                     <?php if ($available_accounts > 0): ?>
                         <span class="badge bg-success bg-opacity-25 text-success border border-success border-opacity-50 px-3 py-2 fw-bold">
@@ -286,6 +289,7 @@ if (empty($packages) && ($game['price_type'] ?? 'paid') == 'paid') {
                 <!-- Form gửi bình luận -->
                 <form method="POST" action="game_detail.php?id=<?php echo $game_id; ?>#commentsSection" class="mb-4">
                     <div class="mb-3">
+                        <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars(generate_csrf_token()); ?>">
                         <textarea name="comment_content" class="form-control" rows="3" placeholder="Chia sẻ cảm nhận hoặc trải nghiệm chơi game của bạn..." required style="resize: none;"></textarea>
                     </div>
                     <button type="submit" name="btn_comment" class="btn btn-gaming-primary w-100 py-2">

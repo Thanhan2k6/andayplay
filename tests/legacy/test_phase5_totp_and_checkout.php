@@ -1,4 +1,5 @@
-<?php
+﻿<?php
+if (php_sapi_name() !== 'cli') { http_response_code(403); exit('CLI only'); }
 require_once __DIR__ . '/includes/connect.php';
 require_once __DIR__ . '/includes/totp_service.php';
 require_once __DIR__ . '/includes/account_service.php';

@@ -1,4 +1,5 @@
-<?php
+﻿<?php
+if (php_sapi_name() !== 'cli') { http_response_code(403); exit('CLI only'); }
 /**
  * TEST AUTOMATION: LIGHT & DARK MODE CONTRAST & WCAG AA/AAA VALIDATION (v2.0)
  * Kiểm thử tự động tính tương thích, độ tương phản và không còn chữ bị ẩn

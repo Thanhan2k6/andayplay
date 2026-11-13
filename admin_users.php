@@ -4,17 +4,24 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 require_once __DIR__ . '/includes/connect.php';
 
-// BẢO VỆ NGHIÊM NGẶT SERVER-SIDE: Tối thiểu phải là ADMIN (role 1 hoặc 2) mới được truy cập
+// BẢO VỆ NGHIÊM NGẶT SERVER-SIDE: Tối thiểu phải là ADMIN và có quyền customer.view
 require_admin();
+require_permission('customer.view');
 
 $current_user_id = intval($_SESSION['user_id']);
 $actor_is_super = is_super_admin();
+$csrf_token = generate_csrf_token();
 
-// 1. XỬ LÝ NÂNG CẤP / GIÁNG CHỨC / XÓA USER (SERVER-SIDE AUTHORIZATION)
-$action = $_GET['action'] ?? ($_POST['action'] ?? '');
-$target_id = intval($_GET['id'] ?? ($_POST['id'] ?? 0));
+// 1. XỬ LÝ NÂNG CẤP / GIÁNG CHỨC / XÓA USER (BẮT BUỘC POST + CSRF)
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_POST['action'])) {
+    $action = trim($_POST['action'] ?? '');
+    $target_id = intval($_POST['id'] ?? 0);
 
-if (!empty($action) && $target_id > 0) {
+    if (!verify_csrf_token($_POST['csrf_token'] ?? '')) {
+        render_403("Mã xác thực bảo mật (CSRF) không hợp lệ.");
+    }
+
+    if ($target_id > 0) {
     // KIỂM SOÁT PHÂN QUYỀN CHẶT CHẼ:
     // ADMIN (role 1) TUYỆT ĐỐI KHÔNG ĐƯỢC:
     // - Quản lý, tạo, hạ quyền hoặc xóa SUPER_ADMIN (role 2)
@@ -75,6 +82,7 @@ if (!empty($action) && $target_id > 0) {
         echo "<script>alert('Đã chuyển @{$target_name} về Game Thủ thông thường!'); window.location='admin_users.php';</script>";
         exit();
     } elseif ($action === 'delete') {
+        require_permission('customer.manage');
         if ($target_role === ROLE_SUPER_ADMIN) {
             render_403("Không thể xóa tài khoản Super Admin!");
         }
@@ -88,21 +96,58 @@ if (!empty($action) && $target_id > 0) {
         echo "<script>alert('Đã xóa tài khoản thành công!'); window.location='admin_users.php';</script>";
         exit();
     }
+    }
 }
 
 $page_title = "Quản Lý Danh Sách Khách Hàng";
 require_once __DIR__ . '/includes/admin_header.php';
 
-// 2. TÌM KIẾM THÀNH VIÊN
-$search_query = "";
-if (isset($_GET['search_user']) && !empty($_GET['search_user'])) {
-    $search = $conn->real_escape_string($_GET['search_user']);
-    $search_query = " WHERE username LIKE '%$search%' OR email LIKE '%$search%' ";
+// 2. TÌM KIẾM THÀNH VIÊN & PHÂN TRANG (PREPARED STATEMENT)
+if (file_exists(__DIR__ . '/includes/pagination_helper.php')) {
+    require_once __DIR__ . '/includes/pagination_helper.php';
+}
+$req_per_page = intval($_GET['per_page'] ?? 10);
+$per_page = in_array($req_per_page, [10, 20, 50], true) ? $req_per_page : 10;
+$page = max(1, (int)($_GET['page'] ?? 1));
+
+$search_kw = trim($_GET['search_user'] ?? '');
+$where_sql = '';
+$bind_types = '';
+$bind_params = [];
+if ($search_kw !== '') {
+    $where_sql = " WHERE username LIKE ? OR email LIKE ? ";
+    $like_kw = '%' . $search_kw . '%';
+    $bind_types = 'ss';
+    $bind_params = [$like_kw, $like_kw];
 }
 
-// 3. LẤY DANH SÁCH USER
-$sql_users = "SELECT * FROM users $search_query ORDER BY role DESC, created_at DESC";
-$result_users = $conn->query($sql_users);
+// 3. ĐẾM TỔNG & LẤY DANH SÁCH USER THEO TRANG
+$total_items = 0;
+$st_cnt = $conn->prepare("SELECT COUNT(*) AS total FROM users $where_sql");
+if ($st_cnt) {
+    if ($bind_types !== '') {
+        $st_cnt->bind_param($bind_types, ...$bind_params);
+    }
+    $st_cnt->execute();
+    $row_cnt = $st_cnt->get_result()->fetch_assoc();
+    $total_items = intval($row_cnt['total'] ?? 0);
+    $st_cnt->close();
+}
+
+$total_pages = max(1, (int)ceil($total_items / $per_page));
+$page = min($page, $total_pages);
+$offset = ($page - 1) * $per_page;
+
+$result_users = false;
+$st_users = $conn->prepare("SELECT * FROM users $where_sql ORDER BY role DESC, created_at DESC LIMIT ? OFFSET ?");
+if ($st_users) {
+    $data_types = $bind_types . 'ii';
+    $data_params = array_merge($bind_params, [$per_page, $offset]);
+    $st_users->bind_param($data_types, ...$data_params);
+    $st_users->execute();
+    $result_users = $st_users->get_result();
+    $st_users->close();
+}
 ?>
 
 <div class="container-fluid px-lg-5 py-4 my-2 text-white">
@@ -191,45 +236,66 @@ $result_users = $conn->query($sql_users);
                                             <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-end shadow" style="background: var(--bg-card); border: 1px solid var(--border-color);">
                                                 <?php if ($u['role'] == 0): ?>
                                                     <li>
-                                                        <a class="dropdown-item text-info small" href="admin_users.php?action=make_admin&id=<?php echo $u['user_id']; ?>" onclick="return confirm('Bạn có chắc muốn cấp quyền Quản trị viên cho người này?');">
-                                                            <i class="bi bi-arrow-up-circle me-2"></i> Cấp quyền Admin
-                                                        </a>
+                                                        <form method="POST" onsubmit="return confirm('Bạn có chắc muốn cấp quyền Quản trị viên cho người này?');">
+                                                            <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($csrf_token); ?>">
+                                                            <input type="hidden" name="action" value="make_admin">
+                                                            <input type="hidden" name="id" value="<?php echo intval($u['user_id']); ?>">
+                                                            <button type="submit" class="dropdown-item text-info small"><i class="bi bi-arrow-up-circle me-2"></i> Cấp quyền Admin</button>
+                                                        </form>
                                                     </li>
                                                     <li>
-                                                        <a class="dropdown-item text-danger small" href="admin_users.php?action=make_super_admin&id=<?php echo $u['user_id']; ?>" onclick="return confirm('Bạn có chắc muốn cấp quyền Super Admin cho người này?');">
-                                                            <i class="bi bi-shield-shaded me-2"></i> Cấp quyền Super Admin
-                                                        </a>
+                                                        <form method="POST" onsubmit="return confirm('Bạn có chắc muốn cấp quyền Super Admin cho người này?');">
+                                                            <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($csrf_token); ?>">
+                                                            <input type="hidden" name="action" value="make_super_admin">
+                                                            <input type="hidden" name="id" value="<?php echo intval($u['user_id']); ?>">
+                                                            <button type="submit" class="dropdown-item text-danger small"><i class="bi bi-shield-shaded me-2"></i> Cấp quyền Super Admin</button>
+                                                        </form>
                                                     </li>
                                                 <?php elseif ($u['role'] == 1): ?>
                                                     <li>
-                                                        <a class="dropdown-item text-danger small" href="admin_users.php?action=make_super_admin&id=<?php echo $u['user_id']; ?>" onclick="return confirm('Bạn có chắc muốn thăng cấp người này làm Super Admin?');">
-                                                            <i class="bi bi-shield-shaded me-2"></i> Thăng lên Super Admin
-                                                        </a>
+                                                        <form method="POST" onsubmit="return confirm('Bạn có chắc muốn thăng cấp người này làm Super Admin?');">
+                                                            <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($csrf_token); ?>">
+                                                            <input type="hidden" name="action" value="make_super_admin">
+                                                            <input type="hidden" name="id" value="<?php echo intval($u['user_id']); ?>">
+                                                            <button type="submit" class="dropdown-item text-danger small"><i class="bi bi-shield-shaded me-2"></i> Thăng lên Super Admin</button>
+                                                        </form>
                                                     </li>
                                                     <li>
-                                                        <a class="dropdown-item text-warning small" href="admin_users.php?action=remove_admin&id=<?php echo $u['user_id']; ?>" onclick="return confirm('Bạn có chắc muốn gỡ quyền Admin của người này?');">
-                                                            <i class="bi bi-arrow-down-circle me-2"></i> Gỡ quyền Admin
-                                                        </a>
+                                                        <form method="POST" onsubmit="return confirm('Bạn có chắc muốn gỡ quyền Admin của người này?');">
+                                                            <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($csrf_token); ?>">
+                                                            <input type="hidden" name="action" value="remove_admin">
+                                                            <input type="hidden" name="id" value="<?php echo intval($u['user_id']); ?>">
+                                                            <button type="submit" class="dropdown-item text-warning small"><i class="bi bi-arrow-down-circle me-2"></i> Gỡ quyền Admin</button>
+                                                        </form>
                                                     </li>
                                                 <?php else: ?>
                                                     <li>
-                                                        <a class="dropdown-item text-warning small" href="admin_users.php?action=make_admin&id=<?php echo $u['user_id']; ?>" onclick="return confirm('Bạn có chắc muốn hạ cấp người này về Admin thông thường?');">
-                                                            <i class="bi bi-arrow-down-circle me-2"></i> Chuyển về Admin
-                                                        </a>
+                                                        <form method="POST" onsubmit="return confirm('Bạn có chắc muốn hạ cấp người này về Admin thông thường?');">
+                                                            <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($csrf_token); ?>">
+                                                            <input type="hidden" name="action" value="make_admin">
+                                                            <input type="hidden" name="id" value="<?php echo intval($u['user_id']); ?>">
+                                                            <button type="submit" class="dropdown-item text-warning small"><i class="bi bi-arrow-down-circle me-2"></i> Chuyển về Admin</button>
+                                                        </form>
                                                     </li>
                                                     <li>
-                                                        <a class="dropdown-item text-warning small" href="admin_users.php?action=remove_admin&id=<?php echo $u['user_id']; ?>" onclick="return confirm('Bạn có chắc muốn gỡ toàn bộ quyền Quản trị của người này?');">
-                                                            <i class="bi bi-arrow-down-circle me-2"></i> Gỡ quyền Quản trị
-                                                        </a>
+                                                        <form method="POST" onsubmit="return confirm('Bạn có chắc muốn gỡ toàn bộ quyền Quản trị của người này?');">
+                                                            <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($csrf_token); ?>">
+                                                            <input type="hidden" name="action" value="remove_admin">
+                                                            <input type="hidden" name="id" value="<?php echo intval($u['user_id']); ?>">
+                                                            <button type="submit" class="dropdown-item text-warning small"><i class="bi bi-arrow-down-circle me-2"></i> Gỡ quyền Quản trị</button>
+                                                        </form>
                                                     </li>
                                                 <?php endif; ?>
                                                 
                                                 <li><hr class="dropdown-divider border-secondary border-opacity-25"></li>
                                                 
                                                 <li>
-                                                    <a class="dropdown-item text-danger small" href="admin_users.php?action=delete&id=<?php echo $u['user_id']; ?>" onclick="return confirm('CẢNH BÁO: Hành động này sẽ xóa vĩnh viễn tài khoản. Tiếp tục?');">
-                                                        <i class="bi bi-trash me-2"></i> Xóa tài khoản
-                                                    </a>
+                                                    <form method="POST" onsubmit="return confirm('CẢNH BÁO: Hành động này sẽ xóa vĩnh viễn tài khoản. Tiếp tục?');">
+                                                        <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($csrf_token); ?>">
+                                                        <input type="hidden" name="action" value="delete">
+                                                        <input type="hidden" name="id" value="<?php echo intval($u['user_id']); ?>">
+                                                        <button type="submit" class="dropdown-item text-danger small"><i class="bi bi-trash me-2"></i> Xóa tài khoản</button>
+                                                    </form>
                                                 </li>
                                             </ul>
                                         </div>
@@ -251,6 +317,7 @@ $result_users = $conn->query($sql_users);
             </table>
         </div>
     </div>
+    <?php if (function_exists('render_pagination')) { echo render_pagination($page, $total_pages, $total_items, $per_page, $_GET); } ?>
 </div>
 
 <?php require_once __DIR__ . '/includes/admin_footer.php'; ?>

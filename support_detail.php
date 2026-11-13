@@ -166,7 +166,7 @@ require_once __DIR__ . '/includes/header.php';
 <div class="container-fluid px-lg-5 py-4 text-white">
     <!-- Breadcrumb & Back button -->
     <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
-        <a href="<?php echo $is_admin ? 'admin_support.php' : 'support.php'; ?>" class="btn btn-outline-secondary btn-sm py-2 px-3 text-white">
+        <a href="<?php echo $is_admin ? 'admin_support.php' : 'support.php'; ?>" class="btn btn-gaming-secondary btn-sm py-2 px-3">
             <i class="bi bi-chevron-left me-1"></i> Quay lại danh sách
         </a>
         <div class="d-flex align-items-center gap-2">

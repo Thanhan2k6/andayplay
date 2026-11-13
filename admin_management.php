@@ -253,41 +253,91 @@ foreach ($all_system_perms as $p) {
     $grouped_perms[$p['module']][] = $p;
 }
 
-// Lấy danh sách tất cả Admins (Role 1 và 2)
-$admins = [];
-$res_admins = $conn->query("SELECT user_id, username, email, role, status, created_at FROM users WHERE role IN (1, 2) ORDER BY role DESC, user_id ASC");
-if ($res_admins) {
-    while ($row = $res_admins->fetch_assoc()) {
-        $row['permissions'] = get_user_permissions($conn, $row['user_id']);
-        $admins[] = $row;
+if (file_exists(__DIR__ . '/includes/pagination_helper.php')) {
+    require_once __DIR__ . '/includes/pagination_helper.php';
+}
+
+// Lấy toàn bộ Admins cho KPI & dropdown lọc
+$all_admins = [];
+$res_all_admins = $conn->query("SELECT user_id, username, email, role, status, created_at FROM users WHERE role IN (1, 2) ORDER BY role DESC, user_id ASC");
+if ($res_all_admins) {
+    while ($row = $res_all_admins->fetch_assoc()) {
+        $all_admins[] = $row;
     }
 }
 
 // Thống kê nhanh
-$total_admins = count($admins);
+$total_admins = count($all_admins);
 $count_super = 0;
 $count_active = 0;
 $count_locked = 0;
-foreach ($admins as $a) {
+foreach ($all_admins as $a) {
     if (intval($a['role']) === ROLE_SUPER_ADMIN) $count_super++;
     if ($a['status'] === 'active') $count_active++;
     if (in_array($a['status'], ['banned', 'suspended'])) $count_locked++;
 }
 
-// Lấy 40 Audit Logs gần nhất
-$filter_admin_id = isset($_GET['filter_admin']) ? intval($_GET['filter_admin']) : 0;
-$sql_audit = "SELECT al.*, u.username, u.role FROM audit_logs al 
-              LEFT JOIN users u ON al.user_id = u.user_id ";
-if ($filter_admin_id > 0) {
-    $sql_audit .= " WHERE al.user_id = $filter_admin_id ";
-}
-$sql_audit .= " ORDER BY al.created_at DESC LIMIT 50";
-$recent_audits = [];
-$res_audit = $conn->query($sql_audit);
-if ($res_audit) {
-    while ($ra = $res_audit->fetch_assoc()) {
-        $recent_audits[] = $ra;
+// Phân trang danh sách Admins (Prepared Statement)
+$req_adm_per_page = intval($_GET['adm_per_page'] ?? 10);
+$adm_per_page = in_array($req_adm_per_page, [10, 20, 50], true) ? $req_adm_per_page : 10;
+$adm_page = max(1, (int)($_GET['adm_page'] ?? 1));
+$adm_total_pages = max(1, (int)ceil($total_admins / $adm_per_page));
+$adm_page = min($adm_page, $adm_total_pages);
+$adm_offset = ($adm_page - 1) * $adm_per_page;
+
+$admins = [];
+$st_adm = $conn->prepare("SELECT user_id, username, email, role, status, created_at FROM users WHERE role IN (1, 2) ORDER BY role DESC, user_id ASC LIMIT ? OFFSET ?");
+if ($st_adm) {
+    $st_adm->bind_param("ii", $adm_per_page, $adm_offset);
+    if ($st_adm->execute()) {
+        $res_admins = $st_adm->get_result();
+        while ($row = $res_admins->fetch_assoc()) {
+            $row['permissions'] = get_user_permissions($conn, $row['user_id']);
+            $admins[] = $row;
+        }
     }
+    $st_adm->close();
+}
+
+// Phân trang Audit Logs (Prepared Statement)
+$req_audit_per_page = intval($_GET['per_page'] ?? 10);
+$audit_per_page = in_array($req_audit_per_page, [10, 20, 50], true) ? $req_audit_per_page : 10;
+$audit_page = max(1, (int)($_GET['page'] ?? 1));
+$filter_admin_id = isset($_GET['filter_admin']) ? intval($_GET['filter_admin']) : 0;
+
+$audit_where = ($filter_admin_id > 0) ? " WHERE al.user_id = ? " : "";
+$audit_total_items = 0;
+$st_acnt = $conn->prepare("SELECT COUNT(*) AS total FROM audit_logs al $audit_where");
+if ($st_acnt) {
+    if ($filter_admin_id > 0) {
+        $st_acnt->bind_param("i", $filter_admin_id);
+    }
+    $st_acnt->execute();
+    $ra_cnt = $st_acnt->get_result()->fetch_assoc();
+    $audit_total_items = intval($ra_cnt['total'] ?? 0);
+    $st_acnt->close();
+}
+
+$audit_total_pages = max(1, (int)ceil($audit_total_items / $audit_per_page));
+$audit_page = min($audit_page, $audit_total_pages);
+$audit_offset = ($audit_page - 1) * $audit_per_page;
+
+$recent_audits = [];
+$st_audit = $conn->prepare("SELECT al.*, u.username, u.role FROM audit_logs al 
+              LEFT JOIN users u ON al.user_id = u.user_id $audit_where ORDER BY al.created_at DESC LIMIT ? OFFSET ?");
+if ($st_audit) {
+    if ($filter_admin_id > 0) {
+        $st_audit->bind_param("iii", $filter_admin_id, $audit_per_page, $audit_offset);
+    } else {
+        $st_audit->bind_param("ii", $audit_per_page, $audit_offset);
+    }
+    if ($st_audit->execute()) {
+        $res_audit = $st_audit->get_result();
+        while ($ra = $res_audit->fetch_assoc()) {
+            $recent_audits[] = $ra;
+        }
+    }
+    $st_audit->close();
 }
 
 $page_title = "Quản Trị Admin & Phân Quyền";
@@ -595,6 +645,7 @@ require_once __DIR__ . '/includes/admin_header.php';
                         </tbody>
                     </table>
                 </div>
+                <?php if (function_exists('render_pagination')) { echo render_pagination($adm_page, $adm_total_pages, $total_admins, $adm_per_page, $_GET, [10, 20, 50], 'adm_page', 'adm_per_page'); } ?>
             </div>
         </div>
 
@@ -678,9 +729,9 @@ require_once __DIR__ . '/includes/admin_header.php';
                     <!-- Bộ lọc theo Admin -->
                     <div class="d-flex align-items-center gap-2">
                         <label class="text-secondary small">Lọc theo Admin:</label>
-                        <select class="form-select form-select-sm bg-dark text-white border-secondary border-opacity-25" style="width: auto;" onchange="location.href='admin_management.php?filter_admin=' + this.value + '#tab-audit'">
+                        <select class="form-select form-select-sm form-control-gaming" style="width: auto;" onchange="location.href='admin_management.php?filter_admin=' + this.value + '#tab-audit'">
                             <option value="0">-- Tất cả Quản Trị Viên --</option>
-                            <?php foreach ($admins as $adm): ?>
+                            <?php foreach ($all_admins as $adm): ?>
                                 <option value="<?php echo $adm['user_id']; ?>" <?php echo ($filter_admin_id === intval($adm['user_id'])) ? 'selected' : ''; ?>>
                                     @<?php echo htmlspecialchars($adm['username']); ?> (ID: <?php echo $adm['user_id']; ?>)
                                 </option>
@@ -754,6 +805,7 @@ require_once __DIR__ . '/includes/admin_header.php';
                         </tbody>
                     </table>
                 </div>
+                <?php if (function_exists('render_pagination')) { echo render_pagination($audit_page, $audit_total_pages, $audit_total_items, $audit_per_page, $_GET); } ?>
             </div>
         </div>
 
@@ -783,16 +835,16 @@ require_once __DIR__ . '/includes/admin_header.php';
                     <div class="row g-3 mb-4">
                         <div class="col-md-6">
                             <label class="form-label text-secondary small fw-bold text-uppercase">Tên Đăng Nhập (Username) *</label>
-                            <input type="text" name="username" class="form-control bg-dark border-secondary border-opacity-25 text-white" placeholder="vd: admin_support_2" required autocomplete="off">
+                            <input type="text" name="username" class="form-control form-control-gaming" placeholder="vd: admin_support_2" required autocomplete="off">
                         </div>
                         <div class="col-md-6">
                             <label class="form-label text-secondary small fw-bold text-uppercase">Địa Chỉ Email *</label>
-                            <input type="email" name="email" class="form-control bg-dark border-secondary border-opacity-25 text-white" placeholder="vd: support2@anplay.store" required autocomplete="off">
+                            <input type="email" name="email" class="form-control form-control-gaming" placeholder="vd: support2@anplay.store" required autocomplete="off">
                         </div>
                         <div class="col-md-12">
                             <label class="form-label text-secondary small fw-bold text-uppercase">Mật Khẩu Khởi Tạo (Tối thiểu 6 ký tự) *</label>
                             <div class="input-group">
-                                <input type="password" name="password" id="createPwdInput" class="form-control bg-dark border-secondary border-opacity-25 text-white" placeholder="Nhập mật khẩu an toàn..." required minlength="6">
+                                <input type="password" name="password" id="createPwdInput" class="form-control form-control-gaming" placeholder="Nhập mật khẩu an toàn..." required minlength="6">
                                 <button class="btn btn-outline-secondary" type="button" onclick="togglePasswordVisibility('createPwdInput')">
                                     <i class="bi bi-eye"></i>
                                 </button>

@@ -8,7 +8,7 @@ jobs:
     steps:
     - name: Lấy Code Mới Nhất
       uses: actions/checkout@v3
-      
+
     - name: Đồng bộ hóa file lên Hosting qua FTP
       uses: SamKirkland/FTP-Deploy-Action@v4.3.4
       with:
@@ -16,3 +16,18 @@ jobs:
         username: ${{ secrets.FTP_USERNAME }}
         password: ${{ secrets.FTP_PASSWORD }}
         server-dir: /htdocs/
+        exclude: |
+          **/.git*
+          **/.git*/**
+          **/*.sql
+          **/*.md
+          **/*.py
+          **/*.docx
+          **/test_*.php
+          **/seed_*.php
+          **/tests/**
+          **/scripts/**
+          **/So_Do_Thiet_Ke/**
+          **/Bao_Cao_Chuan_Hoa/**
+          includes/secrets.local.php
+          includes/chatbot_secrets.local.php

@@ -83,6 +83,7 @@ $page_file_name = basename($_SERVER['PHP_SELF']);
             --admin-bg-base: #090b10;
             --admin-bg-surface: #0f121d;
             --admin-bg-card: #151926;
+            --bg-card: var(--admin-bg-card);
             --admin-border: rgba(255, 255, 255, 0.08);
             --admin-border-focus: rgba(99, 102, 241, 0.4);
             --admin-sidebar-width: 260px;

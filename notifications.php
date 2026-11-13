@@ -14,6 +14,9 @@ if (!isset($_SESSION['user_id'])) {
 }
 
 require_once __DIR__ . '/includes/connect.php';
+if (file_exists(__DIR__ . '/includes/pagination_helper.php')) {
+    require_once __DIR__ . '/includes/pagination_helper.php';
+}
 
 $user_id = intval($_SESSION['user_id']);
 $tab = isset($_GET['tab']) ? trim($_GET['tab']) : 'all';
@@ -63,9 +66,9 @@ if (isset($_GET['action'])) {
 $total_unread = get_unread_notification_count($conn, $user_id);
 
 // Phân trang
+$per_page_options = [10, 20, 50];
+$per_page = (isset($_GET['per_page']) && in_array(intval($_GET['per_page']), $per_page_options, true)) ? intval($_GET['per_page']) : 10;
 $page = isset($_GET['page']) ? max(1, intval($_GET['page'])) : 1;
-$per_page = 15;
-$offset = ($page - 1) * $per_page;
 
 $unread_only = ($tab === 'unread');
 $filter_type = ($tab === 'unread') ? 'all' : $tab;
@@ -104,7 +107,11 @@ try {
     }
 } catch (Throwable $e) {}
 
-$total_pages = max(1, ceil($total_rows / $per_page));
+$total_pages = max(1, (int)ceil($total_rows / $per_page));
+if ($page > $total_pages) {
+    $page = $total_pages;
+}
+$offset = ($page - 1) * $per_page;
 
 // Lấy danh sách thông báo
 $notifications = get_user_notifications($conn, $user_id, $filter_type, $unread_only, $per_page, $offset);
@@ -143,28 +150,28 @@ require_once __DIR__ . '/includes/header.php';
 
     <!-- Category Tabs Filter -->
     <div class="d-flex flex-wrap gap-2 mb-4">
-        <a href="notifications.php?tab=all" class="btn btn-sm <?php echo ($tab === 'all') ? 'btn-primary fw-bold' : 'btn-outline-secondary text-white'; ?> rounded-pill px-3 py-2">
+        <a href="notifications.php?tab=all" class="btn btn-sm <?php echo ($tab === 'all') ? 'btn-primary fw-bold' : 'btn-gaming-secondary'; ?> rounded-pill px-3 py-2">
             <i class="bi bi-grid-fill me-1"></i> Tất cả
         </a>
-        <a href="notifications.php?tab=unread" class="btn btn-sm <?php echo ($tab === 'unread') ? 'btn-primary fw-bold' : 'btn-outline-secondary text-white'; ?> rounded-pill px-3 py-2 position-relative">
+        <a href="notifications.php?tab=unread" class="btn btn-sm <?php echo ($tab === 'unread') ? 'btn-primary fw-bold' : 'btn-gaming-secondary'; ?> rounded-pill px-3 py-2 position-relative">
             <i class="bi bi-envelope-fill me-1"></i> Chưa đọc
             <?php if ($total_unread > 0): ?>
                 <span class="badge bg-danger rounded-pill ms-1"><?php echo $total_unread; ?></span>
             <?php endif; ?>
         </a>
-        <a href="notifications.php?tab=rental" class="btn btn-sm <?php echo ($tab === 'rental') ? 'btn-primary fw-bold' : 'btn-outline-secondary text-white'; ?> rounded-pill px-3 py-2">
+        <a href="notifications.php?tab=rental" class="btn btn-sm <?php echo ($tab === 'rental') ? 'btn-primary fw-bold' : 'btn-gaming-secondary'; ?> rounded-pill px-3 py-2">
             <i class="bi bi-controller me-1"></i> Đơn thuê
         </a>
-        <a href="notifications.php?tab=payment" class="btn btn-sm <?php echo ($tab === 'payment') ? 'btn-primary fw-bold' : 'btn-outline-secondary text-white'; ?> rounded-pill px-3 py-2">
+        <a href="notifications.php?tab=payment" class="btn btn-sm <?php echo ($tab === 'payment') ? 'btn-primary fw-bold' : 'btn-gaming-secondary'; ?> rounded-pill px-3 py-2">
             <i class="bi bi-credit-card-2-front me-1"></i> Thanh toán
         </a>
-        <a href="notifications.php?tab=support" class="btn btn-sm <?php echo ($tab === 'support') ? 'btn-primary fw-bold' : 'btn-outline-secondary text-white'; ?> rounded-pill px-3 py-2">
+        <a href="notifications.php?tab=support" class="btn btn-sm <?php echo ($tab === 'support') ? 'btn-primary fw-bold' : 'btn-gaming-secondary'; ?> rounded-pill px-3 py-2">
             <i class="bi bi-headset me-1"></i> Hỗ trợ
         </a>
-        <a href="notifications.php?tab=promotion" class="btn btn-sm <?php echo ($tab === 'promotion') ? 'btn-primary fw-bold' : 'btn-outline-secondary text-white'; ?> rounded-pill px-3 py-2">
+        <a href="notifications.php?tab=promotion" class="btn btn-sm <?php echo ($tab === 'promotion') ? 'btn-primary fw-bold' : 'btn-gaming-secondary'; ?> rounded-pill px-3 py-2">
             <i class="bi bi-gift-fill me-1"></i> Khuyến mãi
         </a>
-        <a href="notifications.php?tab=system" class="btn btn-sm <?php echo ($tab === 'system') ? 'btn-primary fw-bold' : 'btn-outline-secondary text-white'; ?> rounded-pill px-3 py-2">
+        <a href="notifications.php?tab=system" class="btn btn-sm <?php echo ($tab === 'system') ? 'btn-primary fw-bold' : 'btn-gaming-secondary'; ?> rounded-pill px-3 py-2">
             <i class="bi bi-shield-lock-fill me-1"></i> Hệ thống & Bảo mật
         </a>
     </div>
@@ -243,18 +250,10 @@ require_once __DIR__ . '/includes/header.php';
                 </div>
 
                 <!-- Phân trang -->
-                <?php if ($total_pages > 1): ?>
-                    <nav class="mt-4 d-flex justify-content-center">
-                        <ul class="pagination pagination-sm gap-1">
-                            <?php for ($p = 1; $p <= $total_pages; $p++): ?>
-                                <li class="page-item <?php echo ($p === $page) ? 'active' : ''; ?>">
-                                    <a class="page-link rounded-2" href="notifications.php?tab=<?php echo urlencode($tab); ?>&page=<?php echo $p; ?>">
-                                        <?php echo $p; ?>
-                                    </a>
-                                </li>
-                            <?php endfor; ?>
-                        </ul>
-                    </nav>
+                <?php if (function_exists('render_pagination')): ?>
+                    <div class="mt-4">
+                        <?php echo render_pagination($page, $total_pages, $total_rows, $per_page, $_GET); ?>
+                    </div>
                 <?php endif; ?>
 
             <?php endif; ?>

@@ -1,4 +1,5 @@
-<?php
+﻿<?php
+if (php_sapi_name() !== 'cli') { http_response_code(403); exit('CLI only'); }
 /**
  * ANPLAY STORE - AUTOMATED TEST SUITE: PHASE 6 FINAL SECURITY + REGRESSION
  * Kiểm thử toàn diện 7 khía cạnh trọng yếu:

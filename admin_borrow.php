@@ -2,70 +2,150 @@
 if (session_status() === PHP_SESSION_NONE) { session_start(); }
 $page_title = "Quản Lý Đơn Thuê & Giao Dịch";
 require_once __DIR__ . '/includes/admin_header.php';
+require_once __DIR__ . '/includes/payment_service.php';
+
+require_permission('order.view');
 
 $message = "";
 $error = "";
 
-// 1. XỬ LÝ THU HỒI TÀI KHOẢN THỦ CÔNG
-if (isset($_GET['revoke_id'])) {
-    $borrow_id = intval($_GET['revoke_id']);
-    
-    $check_sql = $conn->query("SELECT * FROM borrow_records WHERE borrow_id = $borrow_id");
-    if ($check_sql && $check_sql->num_rows > 0) {
-        $record = $check_sql->fetch_assoc();
-        $g_id = intval($record['game_id']);
-        $a_id = intval($record['account_id']);
-        $u_id = intval($record['user_id']);
+// XỬ LÝ CÁC HÀNH ĐỘNG THAY ĐỔI TRẠNG THÁI (BẮT BUỘC POST + CSRF + order.manage)
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (!verify_csrf_token($_POST['csrf_token'] ?? '')) {
+        $error = "Mã xác thực bảo mật không hợp lệ. Vui lòng tải lại trang.";
+    } else {
+        require_permission('order.manage');
+        $admin_id = intval($_SESSION['user_id']);
+        $admin_name = $_SESSION['username'] ?? 'admin';
 
-        $conn->begin_transaction();
-        try {
-            // Cập nhật đơn thuê thành returned
-            $conn->query("UPDATE borrow_records SET status = 'returned', revoke_status = 'revoked' WHERE borrow_id = $borrow_id");
-            
-            // Cập nhật tài khoản về AVAILABLE hoặc MAINTENANCE nếu cần đổi mật khẩu
-            if ($a_id > 0) {
-                $conn->query("UPDATE game_accounts SET status = 'AVAILABLE', current_borrow_id = NULL, rent_expires_at = NULL WHERE account_id = $a_id");
-                log_account_allocation($conn, $a_id, $borrow_id, $u_id, 'MANUAL_REVOKED', "Admin thu hồi tài khoản thủ công", 'ADMIN: ' . $_SESSION['username']);
-                sync_game_inventory($conn, $g_id);
+        // 1. THU HỒI TÀI KHOẢN THỦ CÔNG
+        if (isset($_POST['revoke_id'])) {
+            $borrow_id = intval($_POST['revoke_id']);
+            $st_chk = $conn->prepare("SELECT borrow_id, game_id, account_id, user_id FROM borrow_records WHERE borrow_id = ? LIMIT 1");
+            if ($st_chk) {
+                $st_chk->bind_param("i", $borrow_id);
+                $st_chk->execute();
+                $record = $st_chk->get_result()->fetch_assoc();
+                $st_chk->close();
+
+                if ($record) {
+                    $g_id = intval($record['game_id']);
+                    $a_id = intval($record['account_id'] ?? 0);
+                    $u_id = intval($record['user_id']);
+
+                    $conn->begin_transaction();
+                    try {
+                        $u_br = $conn->prepare("UPDATE borrow_records SET status = 'returned', revoke_status = 'revoked' WHERE borrow_id = ?");
+                        $u_br->bind_param("i", $borrow_id);
+                        $u_br->execute();
+                        $u_br->close();
+
+                        if ($a_id > 0) {
+                            $u_ga = $conn->prepare("UPDATE game_accounts SET status = 'AVAILABLE', current_borrow_id = NULL, rent_expires_at = NULL WHERE account_id = ?");
+                            $u_ga->bind_param("i", $a_id);
+                            $u_ga->execute();
+                            $u_ga->close();
+                            log_account_allocation($conn, $a_id, $borrow_id, $u_id, 'MANUAL_REVOKED', "Admin thu hồi tài khoản thủ công", 'ADMIN: ' . $admin_name);
+                            sync_game_inventory($conn, $g_id);
+                        }
+
+                        $conn->commit();
+                        write_audit_log($conn, $admin_id, 'REVOKE_RENTAL', 'borrow_record', $borrow_id, ['account_id' => $a_id]);
+                        $message = "Đã xác nhận thu hồi tài khoản cho đơn #$borrow_id thành công!";
+                    } catch (Throwable $e) {
+                        $conn->rollback();
+                        $error = "Lỗi khi thu hồi: " . $e->getMessage();
+                    }
+                }
             }
+        }
 
-            $conn->commit();
-            $message = "Đã xác nhận thu hồi tài khoản cho đơn #$borrow_id thành công! Tài khoản đã sẵn sàng cho lượt thuê mới.";
-        } catch (Exception $e) {
-            $conn->rollback();
-            $error = "Lỗi khi thu hồi: " . $e->getMessage();
+        // 2. CẤP LẠI TÀI KHOẢN
+        if (isset($_POST['retry_allocate_id'])) {
+            $retry_b_id = intval($_POST['retry_allocate_id']);
+            $st_ret = $conn->prepare("SELECT borrow_id, game_id, user_id, duration_hours FROM borrow_records WHERE borrow_id = ? LIMIT 1");
+            if ($st_ret) {
+                $st_ret->bind_param("i", $retry_b_id);
+                $st_ret->execute();
+                $ret_order = $st_ret->get_result()->fetch_assoc();
+                $st_ret->close();
+
+                if ($ret_order) {
+                    $alloc_res = allocate_game_account($conn, intval($ret_order['game_id']), intval($ret_order['user_id']), $retry_b_id, intval($ret_order['duration_hours']));
+                    if ($alloc_res['success']) {
+                        write_audit_log($conn, $admin_id, 'RETRY_ALLOCATE', 'borrow_record', $retry_b_id, ['account_id' => $alloc_res['account_id']]);
+                        $message = "Đã cấp bù tài khoản thành công cho đơn #$retry_b_id!";
+                    } else {
+                        $error = "Cấp bù thất bại: " . $alloc_res['error'];
+                    }
+                }
+            }
+        }
+
+        // 3. DUYỆT THANH TOÁN THỦ CÔNG (KÍCH HOẠT ĐƠN MỚI HOẶC GIA HẠN)
+        if (isset($_POST['approve_payment_id'])) {
+            $approve_id = intval($_POST['approve_payment_id']);
+            $pay_res = process_verified_payment($conn, $approve_id, 'MANUAL-' . date('YmdHis') . '-' . $approve_id, 'ADMIN:' . $admin_name);
+            if ($pay_res['success']) {
+                write_audit_log($conn, $admin_id, 'APPROVE_PAYMENT', 'borrow_record', $approve_id, ['order_code' => $pay_res['order_code'] ?? '']);
+                $message = "Đã xác nhận thanh toán & kích hoạt đơn #$approve_id thành công!";
+            } else {
+                $error = "Duyệt thanh toán thất bại: " . ($pay_res['error'] ?? 'Lỗi không xác định');
+            }
         }
     }
 }
 
-// 2. XỬ LÝ CẤP LẠI TÀI KHOẢN (CHO CÁC ĐƠN BỊ LỖI KHI CẤP PHÁT BAN ĐẦU)
-if (isset($_GET['retry_allocate_id'])) {
-    $retry_b_id = intval($_GET['retry_allocate_id']);
-    $ret_order = $conn->query("SELECT * FROM borrow_records WHERE borrow_id = $retry_b_id")->fetch_assoc();
-    if ($ret_order) {
-        $alloc_res = allocate_game_account($conn, $ret_order['game_id'], $ret_order['user_id'], $retry_b_id, $ret_order['duration_hours']);
-        if ($alloc_res['success']) {
-            $message = "Đã cấp bù tài khoản thành công cho đơn #$retry_b_id!";
-        } else {
-            $error = "Cấp bù thất bại: " . $alloc_res['error'];
-        }
-    }
-}
+$csrf_token = generate_csrf_token();
 
-// LỌC VÀ TÌM KIẾM
-$search = isset($_GET['search']) ? $conn->real_escape_string($_GET['search']) : '';
-$filter_status = isset($_GET['status']) ? $conn->real_escape_string($_GET['status']) : '';
+// LỌC, TÌM KIẾM & PHÂN TRANG (PREPARED STATEMENT)
+if (file_exists(__DIR__ . '/includes/pagination_helper.php')) {
+    require_once __DIR__ . '/includes/pagination_helper.php';
+}
+$req_per_page = intval($_GET['per_page'] ?? 10);
+$per_page = in_array($req_per_page, [10, 20, 50], true) ? $req_per_page : 10;
+$page = max(1, (int)($_GET['page'] ?? 1));
+
+$search = isset($_GET['search']) ? trim($_GET['search']) : '';
+$filter_status = isset($_GET['status']) ? trim($_GET['status']) : '';
 
 $where = [];
-if (!empty($search)) {
-    $where[] = "(br.order_code LIKE '%$search%' OR u.username LIKE '%$search%' OR g.title LIKE '%$search%' OR ga.account_username LIKE '%$search%')";
+$bind_types = '';
+$bind_params = [];
+if ($search !== '') {
+    $where[] = "(br.order_code LIKE ? OR u.username LIKE ? OR g.title LIKE ? OR ga.account_username LIKE ?)";
+    $like = '%' . $search . '%';
+    $bind_types .= 'ssss';
+    array_push($bind_params, $like, $like, $like, $like);
 }
-if (!empty($filter_status)) {
-    $where[] = "br.status = '$filter_status'";
+if ($filter_status !== '') {
+    $where[] = "br.status = ?";
+    $bind_types .= 's';
+    $bind_params[] = $filter_status;
 }
 $where_str = count($where) > 0 ? " WHERE " . implode(" AND ", $where) : "";
 
-// Lấy danh sách toàn bộ đơn thuê từ Database
+$total_items = 0;
+$st_cnt = $conn->prepare("SELECT COUNT(*) AS total
+    FROM borrow_records br
+    JOIN users u ON br.user_id = u.user_id
+    JOIN games g ON br.game_id = g.game_id
+    LEFT JOIN game_accounts ga ON br.account_id = ga.account_id
+    $where_str");
+if ($st_cnt) {
+    if ($bind_types !== '') {
+        $st_cnt->bind_param($bind_types, ...$bind_params);
+    }
+    $st_cnt->execute();
+    $row_cnt = $st_cnt->get_result()->fetch_assoc();
+    $total_items = intval($row_cnt['total'] ?? 0);
+    $st_cnt->close();
+}
+
+$total_pages = max(1, (int)ceil($total_items / $per_page));
+$page = min($page, $total_pages);
+$offset = ($page - 1) * $per_page;
+
 $sql = "SELECT br.*, u.username, u.email, g.title, ga.account_username, rp.package_name
         FROM borrow_records br 
         JOIN users u ON br.user_id = u.user_id 
@@ -73,21 +153,19 @@ $sql = "SELECT br.*, u.username, u.email, g.title, ga.account_username, rp.packa
         LEFT JOIN game_accounts ga ON br.account_id = ga.account_id
         LEFT JOIN rental_packages rp ON br.package_id = rp.package_id
         $where_str
-        ORDER BY br.borrow_id DESC";
+        ORDER BY br.borrow_id DESC
+        LIMIT ? OFFSET ?";
 
 $result = false;
-try {
-    $result = $conn->query($sql);
-} catch (Throwable $e) {}
-if (!$result) {
-    try {
-        $sql_fallback = "SELECT br.*, u.username, u.email, g.title, '' as account_username, 'Tiêu chuẩn' as package_name, '' as order_code
-                        FROM borrow_records br 
-                        JOIN users u ON br.user_id = u.user_id 
-                        JOIN games g ON br.game_id = g.game_id 
-                        ORDER BY br.borrow_id DESC";
-        $result = $conn->query($sql_fallback);
-    } catch (Throwable $e) {}
+$st_list = $conn->prepare($sql);
+if ($st_list) {
+    $data_types = $bind_types . 'ii';
+    $data_params = array_merge($bind_params, [$per_page, $offset]);
+    $st_list->bind_param($data_types, ...$data_params);
+    if ($st_list->execute()) {
+        $result = $st_list->get_result();
+    }
+    $st_list->close();
 }
 ?>
 
@@ -104,7 +182,7 @@ if (!$result) {
             <p class="text-secondary small mb-0">Theo dõi lịch sử đơn, tiến độ hạn thuê, doanh thu, thanh toán VietQR và xử lý thu hồi sớm</p>
         </div>
         <div class="d-flex gap-2">
-            <a href="cron_process_expirations.php?secret_token=ANPLAY_CRON_SEC_9b8e21a7df4e083c6f41" class="btn btn-gaming-secondary d-flex align-items-center" target="_blank" title="Kích hoạt quét và thu hồi đơn hết hạn">
+            <a href="cron_process_expirations.php" class="btn btn-gaming-secondary d-flex align-items-center" target="_blank" title="Kích hoạt quét và thu hồi đơn hết hạn">
                 <i class="bi bi-arrow-clockwise me-1 text-info"></i> Quét Hết Hạn Ngay
             </a>
             <a href="admin_accounts.php" class="btn btn-gaming-primary d-flex align-items-center">
@@ -172,7 +250,7 @@ if (!$result) {
                 <tbody>
                     <?php if ($result && $result->num_rows > 0): while ($row = $result->fetch_assoc()): 
                         $is_overdue = false;
-                        if ($row['status'] == 'active' && strtotime($row['due_date']) < time()) {
+                        if ($row['status'] == 'active' && !empty($row['due_date']) && strtotime($row['due_date']) < time()) {
                             $is_overdue = true;
                         }
                     ?>
@@ -208,7 +286,11 @@ if (!$result) {
                             <?php endif; ?>
                         </td>
                         <td>
-                            <span class="small text-light d-block"><?php echo date('d/m/Y H:i', strtotime($row['due_date'])); ?></span>
+                            <?php if (!empty($row['due_date'])): ?>
+                                <span class="small text-light d-block"><?php echo date('d/m/Y H:i', strtotime($row['due_date'])); ?></span>
+                            <?php else: ?>
+                                <span class="small text-secondary d-block">Chờ kích hoạt</span>
+                            <?php endif; ?>
                             <?php if ($is_overdue): ?>
                                 <span class="badge bg-danger bg-opacity-75 text-white" style="font-size: 0.68rem;">ĐÃ QUÁ HẠN</span>
                             <?php endif; ?>
@@ -223,15 +305,23 @@ if (!$result) {
                         </td>
                         <td class="text-end pe-3">
                             <?php if ($row['status'] == 'active'): ?>
-                                <a href="admin_borrow.php?revoke_id=<?php echo $row['borrow_id']; ?>" 
-                                   class="btn btn-sm btn-outline-danger py-1 px-3"
-                                   onclick="return confirm('Bạn có chắc chắn muốn thu hồi tài khoản này về kho sớm?');">
-                                   Thu hồi
-                                </a>
+                                <form method="POST" class="d-inline" onsubmit="return confirm('Bạn có chắc chắn muốn thu hồi tài khoản này về kho sớm?');">
+                                    <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($csrf_token); ?>">
+                                    <input type="hidden" name="revoke_id" value="<?php echo intval($row['borrow_id']); ?>">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger py-1 px-3">Thu hồi</button>
+                                </form>
+                            <?php elseif (($row['payment_status'] ?? 'pending') === 'pending'): ?>
+                                <form method="POST" class="d-inline" onsubmit="return confirm('Xác nhận đã nhận tiền và kích hoạt đơn #<?php echo intval($row['borrow_id']); ?>?');">
+                                    <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($csrf_token); ?>">
+                                    <input type="hidden" name="approve_payment_id" value="<?php echo intval($row['borrow_id']); ?>">
+                                    <button type="submit" class="btn btn-sm btn-success fw-bold py-1 px-2">Duyệt TT</button>
+                                </form>
                             <?php elseif ($row['payment_status'] == 'paid' && empty($row['account_id'])): ?>
-                                <a href="admin_borrow.php?retry_allocate_id=<?php echo $row['borrow_id']; ?>" class="btn btn-sm btn-warning fw-bold text-dark py-1 px-2">
-                                    Cấp bù TK
-                                </a>
+                                <form method="POST" class="d-inline">
+                                    <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($csrf_token); ?>">
+                                    <input type="hidden" name="retry_allocate_id" value="<?php echo intval($row['borrow_id']); ?>">
+                                    <button type="submit" class="btn btn-sm btn-warning fw-bold text-dark py-1 px-2">Cấp bù TK</button>
+                                </form>
                             <?php else: ?>
                                 <span class="badge" style="background: rgba(255,255,255,0.05); color: #64748b; font-size: 0.72rem;">Đã xong</span>
                             <?php endif; ?>
@@ -248,6 +338,7 @@ if (!$result) {
             </table>
         </div>
     </div>
+    <?php if (function_exists('render_pagination')) { echo render_pagination($page, $total_pages, $total_items, $per_page, $_GET); } ?>
 </div>
 
 <?php require_once __DIR__ . '/includes/admin_footer.php'; ?>

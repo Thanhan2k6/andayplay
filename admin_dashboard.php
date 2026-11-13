@@ -83,7 +83,7 @@ try {
             <h2 class="fw-extrabold mb-0">Trung Tâm Quản Trị & Báo Cáo Doanh Thu</h2>
         </div>
         <div class="d-flex gap-2">
-            <a href="cron_process_expirations.php?secret_token=ANPLAY_CRON_SEC_9b8e21a7df4e083c6f41" target="_blank" class="btn btn-gaming-secondary btn-sm d-flex align-items-center" title="Xem bảng điều khiển Cron Worker">
+            <a href="cron_process_expirations.php" target="_blank" class="btn btn-gaming-secondary btn-sm d-flex align-items-center" title="Xem bảng điều khiển Cron Worker">
                 <i class="bi bi-arrow-repeat me-1 text-info"></i> Quét Đơn Hết Hạn
             </a>
             <button class="btn btn-gaming-secondary btn-sm d-flex align-items-center" onclick="window.print()">
@@ -96,73 +96,79 @@ try {
     <div class="row g-3 mb-4">
         <!-- Doanh Thu -->
         <div class="col-sm-6 col-xl-3">
-            <div class="kpi-stat-card p-4 rounded-4 h-100 position-relative overflow-hidden" style="background: var(--bg-card); border: 1px solid rgba(16, 185, 129, 0.3);">
-                <div class="d-flex justify-content-between align-items-start">
-                    <div>
-                        <span class="text-secondary small text-uppercase fw-bold letter-spacing-1">Tổng Doanh Thu</span>
-                        <h3 class="fw-extrabold text-success mt-2 mb-1"><?php echo number_format($total_revenue, 0, ',', '.'); ?> đ</h3>
-                        <span class="badge bg-success bg-opacity-25 text-success small fw-semibold">Thanh toán tự động</span>
+            <div class="kpi-stat-card p-3 p-md-4 rounded-3 h-100 d-flex flex-column justify-content-between" style="background: var(--bg-card); border: 1px solid var(--admin-border);">
+                <div class="d-flex justify-content-between align-items-start gap-2">
+                    <div class="min-w-0">
+                        <span class="text-secondary small text-uppercase fw-bold" style="letter-spacing: 0.04em; font-size: 0.72rem;">Tổng Doanh Thu</span>
+                        <h3 class="fw-extrabold text-success mt-2 mb-1 fs-4"><?php echo number_format($total_revenue, 0, ',', '.'); ?> đ</h3>
                     </div>
-                    <div class="p-3 rounded-3" style="background: rgba(16, 185, 129, 0.15); color: #10b981;">
-                        <i class="bi bi-cash-stack fs-3"></i>
+                    <div class="p-2 rounded-2 flex-shrink-0" style="background: rgba(16, 185, 129, 0.12); color: #10b981;">
+                        <i class="bi bi-cash-stack fs-4"></i>
                     </div>
+                </div>
+                <div class="mt-2 pt-2 border-top border-secondary border-opacity-10 small text-secondary">
+                    <span class="text-success fw-semibold"><i class="bi bi-check-circle me-1"></i>Thanh toán tự động</span>
                 </div>
             </div>
         </div>
 
         <!-- Kho Tài Khoản (Sẵn / Tổng) -->
         <div class="col-sm-6 col-xl-3">
-            <div class="kpi-stat-card p-4 rounded-4 h-100 position-relative overflow-hidden" style="background: var(--bg-card); border: 1px solid rgba(6, 182, 212, 0.3);">
-                <div class="d-flex justify-content-between align-items-start">
-                    <div>
-                        <span class="text-secondary small text-uppercase fw-bold letter-spacing-1">Kho Tài Khoản</span>
-                        <h3 class="fw-extrabold text-info mt-2 mb-1"><?php echo $available_accounts; ?> <span class="fs-6 text-secondary fw-normal">/ <?php echo $total_accounts; ?> TK</span></h3>
-                        <span class="badge kpi-badge-info" style="background: rgba(6, 182, 212, 0.15); color: var(--accent-cyan); font-size: 0.75rem;">
-                            Đang cho thuê: <?php echo $rented_accounts; ?>
-                        </span>
+            <div class="kpi-stat-card p-3 p-md-4 rounded-3 h-100 d-flex flex-column justify-content-between" style="background: var(--bg-card); border: 1px solid var(--admin-border);">
+                <div class="d-flex justify-content-between align-items-start gap-2">
+                    <div class="min-w-0">
+                        <span class="text-secondary small text-uppercase fw-bold" style="letter-spacing: 0.04em; font-size: 0.72rem;">Kho Tài Khoản</span>
+                        <h3 class="fw-extrabold text-info mt-2 mb-1 fs-4"><?php echo $available_accounts; ?> <span class="fs-6 text-secondary fw-normal">/ <?php echo $total_accounts; ?> TK</span></h3>
                     </div>
-                    <div class="p-3 rounded-3" style="background: rgba(6, 182, 212, 0.15); color: var(--accent-cyan);">
-                        <i class="bi bi-box-seam fs-3"></i>
+                    <div class="p-2 rounded-2 flex-shrink-0" style="background: rgba(6, 182, 212, 0.12); color: var(--accent-cyan);">
+                        <i class="bi bi-box-seam fs-4"></i>
                     </div>
+                </div>
+                <div class="mt-2 pt-2 border-top border-secondary border-opacity-10 small text-secondary">
+                    Đang cho thuê: <strong class="text-info"><?php echo $rented_accounts; ?></strong>
                 </div>
             </div>
         </div>
 
         <!-- Đơn Đang Hoạt Động -->
         <div class="col-sm-6 col-xl-3">
-            <div class="kpi-stat-card p-4 rounded-4 h-100 position-relative overflow-hidden" style="background: var(--bg-card); border: 1px solid rgba(245, 158, 11, 0.3);">
-                <div class="d-flex justify-content-between align-items-start">
-                    <div>
-                        <span class="text-secondary small text-uppercase fw-bold letter-spacing-1">Đơn Đang Hoạt Động</span>
-                        <h3 class="fw-extrabold text-warning mt-2 mb-1"><?php echo $active_borrows; ?></h3>
-                        <span class="text-secondary small">Sắp hết hạn trong 24h: <strong class="text-warning"><?php echo $expiring_soon; ?></strong></span>
+            <div class="kpi-stat-card p-3 p-md-4 rounded-3 h-100 d-flex flex-column justify-content-between" style="background: var(--bg-card); border: 1px solid var(--admin-border);">
+                <div class="d-flex justify-content-between align-items-start gap-2">
+                    <div class="min-w-0">
+                        <span class="text-secondary small text-uppercase fw-bold" style="letter-spacing: 0.04em; font-size: 0.72rem;">Đơn Đang Hoạt Động</span>
+                        <h3 class="fw-extrabold text-warning mt-2 mb-1 fs-4"><?php echo $active_borrows; ?></h3>
                     </div>
-                    <div class="p-3 rounded-3" style="background: rgba(245, 158, 11, 0.15); color: #f59e0b;">
-                        <i class="bi bi-clock-history fs-3"></i>
+                    <div class="p-2 rounded-2 flex-shrink-0" style="background: rgba(245, 158, 11, 0.12); color: #f59e0b;">
+                        <i class="bi bi-clock-history fs-4"></i>
                     </div>
+                </div>
+                <div class="mt-2 pt-2 border-top border-secondary border-opacity-10 small text-secondary">
+                    Sắp hết hạn trong 24h: <strong class="text-warning"><?php echo $expiring_soon; ?></strong>
                 </div>
             </div>
         </div>
 
         <!-- Tài Khoản Bảo Trì & Sự Cố -->
         <div class="col-sm-6 col-xl-3">
-            <div class="kpi-stat-card p-4 rounded-4 h-100 position-relative overflow-hidden" style="background: var(--bg-card); border: 1px solid rgba(239, 68, 68, 0.3);">
-                <div class="d-flex justify-content-between align-items-start">
-                    <div>
-                        <span class="text-secondary small text-uppercase fw-bold letter-spacing-1">Bảo Trì / Cần Kiểm Tra</span>
-                        <h3 class="fw-extrabold text-danger mt-2 mb-1"><?php echo $maintenance_accounts; ?> <span class="fs-6 text-secondary fw-normal">TK</span></h3>
-                        <span class="text-secondary small">Lỗi cấp phát: <strong class="text-danger"><?php echo $failed_allocations; ?></strong></span>
+            <div class="kpi-stat-card p-3 p-md-4 rounded-3 h-100 d-flex flex-column justify-content-between" style="background: var(--bg-card); border: 1px solid var(--admin-border);">
+                <div class="d-flex justify-content-between align-items-start gap-2">
+                    <div class="min-w-0">
+                        <span class="text-secondary small text-uppercase fw-bold" style="letter-spacing: 0.04em; font-size: 0.72rem;">Bảo Trì / Cần Kiểm Tra</span>
+                        <h3 class="fw-extrabold text-danger mt-2 mb-1 fs-4"><?php echo $maintenance_accounts; ?> <span class="fs-6 text-secondary fw-normal">TK</span></h3>
                     </div>
-                    <div class="p-3 rounded-3" style="background: rgba(239, 68, 68, 0.15); color: #ef4444;">
-                        <i class="bi bi-exclamation-octagon fs-3"></i>
+                    <div class="p-2 rounded-2 flex-shrink-0" style="background: rgba(239, 68, 68, 0.12); color: #ef4444;">
+                        <i class="bi bi-exclamation-octagon fs-4"></i>
                     </div>
+                </div>
+                <div class="mt-2 pt-2 border-top border-secondary border-opacity-10 small text-secondary">
+                    Lỗi cấp phát: <strong class="text-danger"><?php echo $failed_allocations; ?></strong>
                 </div>
             </div>
         </div>
     </div>
 
     <!-- CRON AUTOMATION & EXPIRATION MONITOR WIDGET -->
-    <div class="cron-monitor-banner p-4 rounded-4 mb-4 position-relative overflow-hidden">
+    <div class="cron-monitor-banner p-3 p-md-4 rounded-3 mb-4 position-relative overflow-hidden">
         <div class="row align-items-center g-3">
             <div class="col-lg-7">
                 <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
@@ -206,7 +212,7 @@ try {
     <div class="row g-4">
         <!-- Revenue Chart (8 cols) -->
         <div class="col-lg-8">
-            <div class="p-4 rounded-4 h-100 chart-container-box" style="background: var(--bg-card); border: 1px solid var(--border-color);">
+            <div class="p-4 rounded-3 h-100 chart-container-box" style="background: var(--bg-card); border: 1px solid var(--admin-border);">
                 <div class="d-flex justify-content-between align-items-center mb-4">
                     <div>
                         <h5 class="fw-bold mb-1"><i class="bi bi-graph-up text-info me-2"></i>Doanh Thu Thuê Tài Khoản Game (Năm <?php echo $current_year; ?>)</h5>
@@ -222,7 +228,7 @@ try {
 
         <!-- Tasks & Alerts (4 cols) -->
         <div class="col-lg-4">
-            <div class="p-4 rounded-4 h-100 d-flex flex-column tasks-container-box" style="background: var(--bg-card); border: 1px solid var(--border-color);">
+            <div class="p-4 rounded-3 h-100 d-flex flex-column tasks-container-box" style="background: var(--bg-card); border: 1px solid var(--admin-border);">
                 <h5 class="fw-bold mb-3"><i class="bi bi-bell text-warning me-2"></i>Tác Vụ Cần Chú Ý</h5>
                 
                 <div class="d-flex flex-column gap-3 mb-4">
@@ -465,7 +471,7 @@ function copyCronUrl(btn) {
             </div>
             <div class="modal-footer border-top border-secondary border-opacity-25">
                 <button type="button" class="btn btn-gaming-secondary" data-bs-dismiss="modal">Đóng</button>
-                <a href="cron_process_expirations.php?secret_token=ANPLAY_CRON_SEC_9b8e21a7df4e083c6f41" target="_blank" class="btn btn-gaming-primary">
+                <a href="cron_process_expirations.php" target="_blank" class="btn btn-gaming-primary">
                     <i class="bi bi-box-arrow-up-right me-1"></i> Mở Bảng Console Đầy Đủ
                 </a>
             </div>
@@ -491,8 +497,13 @@ function copyCronUrl(btn) {
 
                 <h6 class="fw-bold modal-step-title mb-2">1. Đường Dẫn Web-Cron Bảo Mật Của Bạn:</h6>
                 <div class="input-group mb-4">
+                    <?php
+                    $cron_url_token = (is_super_admin() && defined('ANPLAY_CRON_SECRET') && ANPLAY_CRON_SECRET !== '')
+                        ? urlencode(ANPLAY_CRON_SECRET)
+                        : 'YOUR_CRON_SECRET';
+                    ?>
                     <input type="text" id="cronUrlInput" class="form-control form-control-gaming cron-url-input-field font-monospace" readonly
-                           value="https://anplaystore.free.nf/cron_process_expirations.php?secret_token=ANPLAY_CRON_SEC_9b8e21a7df4e083c6f41&format=json">
+                           value="https://anplaystore.free.nf/cron_process_expirations.php?secret_token=<?php echo htmlspecialchars($cron_url_token); ?>&amp;format=json">
                     <button class="btn btn-gaming-secondary" type="button" onclick="copyCronUrl(this)">
                         <i class="bi bi-clipboard me-1"></i> Sao chép URL
                     </button>

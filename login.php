@@ -13,83 +13,98 @@ if (isset($_GET['cancel_2fa'])) {
         $_SESSION['2fa_pending_user_id'],
         $_SESSION['2fa_pending_username'],
         $_SESSION['2fa_pending_email'],
-        $_SESSION['2fa_pending_role'],
-        $_SESSION['2fa_pending_secret']
+        $_SESSION['2fa_pending_role']
     );
     header("Location: login.php");
     exit();
 }
 
 $script_hieu_ung = "";
+$client_ip = $_SERVER['REMOTE_ADDR'] ?? '127.0.0.1';
 
 // 1. XỬ LÝ ĐĂNG NHẬP BƯỚC 1: USERNAME + PASSWORD
 if (isset($_POST['btn_login'])) {
     $username = trim($_POST['username'] ?? '');
-    $password = $_POST['password'] ?? ''; 
+    $password = $_POST['password'] ?? '';
+    $rl_id = $client_ip . '|' . strtolower($username);
+    $rl = check_rate_limit($conn, 'login', $rl_id, 5, 900);
+    $rl_allowed = is_array($rl) ? !empty($rl['allowed']) : (bool)$rl;
 
-    $stmt_u = $conn->prepare("SELECT * FROM users WHERE username = ? OR email = ? LIMIT 1");
-    if ($stmt_u) {
-        $stmt_u->bind_param("ss", $username, $username);
-        $stmt_u->execute();
-        $result = $stmt_u->get_result();
+    if (!$rl_allowed) {
+        $wait_mins = is_array($rl) ? max(1, ceil(($rl['retry_after'] ?? 900) / 60)) : 15;
+        $script_hieu_ung = "Swal.fire({ icon: 'error', title: 'Tạm khóa đăng nhập', text: 'Bạn đã nhập sai quá nhiều lần. Vui lòng thử lại sau {$wait_mins} phút.', background: '#0f1118', color: '#f8fafc', confirmButtonColor: '#ef4444' });";
+    } else {
+        $stmt_u = $conn->prepare("SELECT user_id, username, email, password, role, status, two_factor_enabled FROM users WHERE username = ? OR email = ? LIMIT 1");
+        if ($stmt_u) {
+            $stmt_u->bind_param("ss", $username, $username);
+            $stmt_u->execute();
+            $result = $stmt_u->get_result();
 
-        if ($result && $result->num_rows > 0) {
-            $user = $result->fetch_assoc();
-            
-            // Dùng password_verify để so khớp mật khẩu mã hóa Bcrypt
-            if (password_verify($password, $user['password']) || $password == $user['password']) {
-                if (isset($user['status']) && in_array($user['status'], ['banned', 'suspended'])) {
-                    $status_txt = ($user['status'] === 'banned') ? 'bị khóa vĩnh viễn' : 'đang bị tạm ngưng hoạt động';
-                    $script_hieu_ung = "Swal.fire({ icon: 'error', title: 'Tài khoản đã bị khóa', text: 'Tài khoản của bạn $status_txt bởi Quản Trị Cấp Cao. Vui lòng liên hệ ban quản trị để được hỗ trợ!', background: '#0f1118', color: '#f8fafc', confirmButtonColor: '#ef4444' });";
-                } elseif (!empty($user['two_factor_enabled']) && intval($user['two_factor_enabled']) === 1) {
-                    // CHUYỂN TIẾP SANG BƯỚC 2: XÁC THỰC 2 LỚP 2FA
-                    $_SESSION['2fa_pending'] = true;
-                    $_SESSION['2fa_pending_user_id'] = $user['user_id'];
-                    $_SESSION['2fa_pending_username'] = $user['username'];
-                    $_SESSION['2fa_pending_email'] = $user['email'];
-                    $_SESSION['2fa_pending_role'] = $user['role'];
-                    $_SESSION['2fa_pending_secret'] = $user['two_factor_secret'];
+            if ($result && $result->num_rows > 0) {
+                $user = $result->fetch_assoc();
+
+                // Chỉ chấp nhận mật khẩu đã băm bằng password_hash()
+                if (password_verify($password, $user['password'])) {
+                    clear_rate_limit($conn, 'login', $rl_id);
+                    if (isset($user['status']) && in_array($user['status'], ['banned', 'suspended'])) {
+                        $status_txt = ($user['status'] === 'banned') ? 'bị khóa vĩnh viễn' : 'đang bị tạm ngưng hoạt động';
+                        $script_hieu_ung = "Swal.fire({ icon: 'error', title: 'Tài khoản đã bị khóa', text: 'Tài khoản của bạn $status_txt bởi Quản Trị Cấp Cao. Vui lòng liên hệ ban quản trị để được hỗ trợ!', background: '#0f1118', color: '#f8fafc', confirmButtonColor: '#ef4444' });";
+                    } elseif (!empty($user['two_factor_enabled']) && intval($user['two_factor_enabled']) === 1) {
+                        // CHUYỂN TIẾP SANG BƯỚC 2: XÁC THỰC 2 LỚP 2FA (không lưu secret vào session)
+                        session_regenerate_id(true);
+                        $_SESSION['2fa_pending'] = true;
+                        $_SESSION['2fa_pending_user_id'] = intval($user['user_id']);
+                        $_SESSION['2fa_pending_username'] = $user['username'];
+                        $_SESSION['2fa_pending_email'] = $user['email'];
+                        $_SESSION['2fa_pending_role'] = intval($user['role']);
+                    } else {
+                        // ĐĂNG NHẬP TRỰC TIẾP (KHI KHÔNG BẬT 2FA)
+                        session_regenerate_id(true);
+                        $_SESSION['user_id'] = intval($user['user_id']);
+                        $_SESSION['username'] = $user['username'];
+                        $_SESSION['email'] = $user['email'];
+                        $_SESSION['role'] = intval($user['role']);
+
+                        $safe_js_user = json_encode($user['username'], JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE);
+
+                        $script_hieu_ung = "
+                            var duration = 2.5 * 1000;
+                            var animationEnd = Date.now() + duration;
+                            var defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 9999 };
+                            function randomInRange(min, max) { return Math.random() * (max - min) + min; }
+                            var interval = setInterval(function() {
+                                var timeLeft = animationEnd - Date.now();
+                                if (timeLeft <= 0) { return clearInterval(interval); }
+                                var particleCount = 40 * (timeLeft / duration);
+                                confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 } }));
+                                confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 } }));
+                            }, 250);
+
+                            var welcomeUser = " . $safe_js_user . ";
+                            Swal.fire({
+                                title: '🎉 Đăng Nhập Thành Công!',
+                                text: 'Chào mừng chiến binh @' + welcomeUser + ' quay lại ANPLAY STORE.',
+                                icon: 'success',
+                                background: '#0f1118',
+                                color: '#f8fafc',
+                                confirmButtonColor: '#6366f1',
+                                confirmButtonText: 'VÀO CHIẾN GAME NGAY',
+                                customClass: { popup: 'z-index-master' }
+                            }).then((result) => {
+                                window.location.href = 'index.php';
+                            });
+                        ";
+                    }
                 } else {
-                    // ĐĂNG NHẬP TRỰC TIẾP (KHI KHÔNG BẬT 2FA)
-                    $_SESSION['user_id'] = $user['user_id'];
-                    $_SESSION['username'] = $user['username'];
-                    $_SESSION['email'] = $user['email'];
-                    $_SESSION['role'] = $user['role'];
-
-                    $script_hieu_ung = "
-                        var duration = 2.5 * 1000;
-                        var animationEnd = Date.now() + duration;
-                        var defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 9999 };
-                        function randomInRange(min, max) { return Math.random() * (max - min) + min; }
-                        var interval = setInterval(function() {
-                            var timeLeft = animationEnd - Date.now();
-                            if (timeLeft <= 0) { return clearInterval(interval); }
-                            var particleCount = 40 * (timeLeft / duration);
-                            confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 } }));
-                            confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 } }));
-                        }, 250);
-
-                        Swal.fire({
-                            title: '🎉 Đăng Nhập Thành Công!',
-                            text: 'Chào mừng chiến binh @" . htmlspecialchars($user['username']) . " quay lại ANPLAY STORE.',
-                            icon: 'success',
-                            background: '#0f1118',
-                            color: '#f8fafc',
-                            confirmButtonColor: '#6366f1',
-                            confirmButtonText: 'VÀO CHIẾN GAME NGAY',
-                            customClass: { popup: 'z-index-master' }
-                        }).then((result) => {
-                            window.location.href = 'index.php';
-                        });
-                    ";
+                    record_failed_attempt($conn, 'login', $rl_id, 5, 900);
+                    $script_hieu_ung = "Swal.fire({ icon: 'error', title: 'Đăng nhập thất bại', text: 'Tên đăng nhập hoặc mật khẩu không chính xác.', background: '#0f1118', color: '#f8fafc', confirmButtonColor: '#ef4444' });";
                 }
             } else {
-                $script_hieu_ung = "Swal.fire({ icon: 'error', title: 'Đăng nhập thất bại', text: 'Mật khẩu không chính xác, vui lòng kiểm tra lại.', background: '#0f1118', color: '#f8fafc', confirmButtonColor: '#ef4444' });";
+                record_failed_attempt($conn, 'login', $rl_id, 5, 900);
+                $script_hieu_ung = "Swal.fire({ icon: 'error', title: 'Đăng nhập thất bại', text: 'Tên đăng nhập hoặc mật khẩu không chính xác.', background: '#0f1118', color: '#f8fafc', confirmButtonColor: '#ef4444' });";
             }
-        } else {
-            $script_hieu_ung = "Swal.fire({ icon: 'error', title: 'Tài khoản không tồn tại', text: 'Tài khoản hoặc Email chưa được đăng ký trên hệ thống.', background: '#0f1118', color: '#f8fafc', confirmButtonColor: '#ef4444' });";
+            $stmt_u->close();
         }
-        $stmt_u->close();
     }
 }
 
@@ -98,59 +113,82 @@ if (isset($_POST['btn_verify_2fa'])) {
     if (!empty($_SESSION['2fa_pending']) && !empty($_SESSION['2fa_pending_user_id'])) {
         $code = trim($_POST['totp_code'] ?? '');
         $uid = intval($_SESSION['2fa_pending_user_id']);
-        $secret = $_SESSION['2fa_pending_secret'] ?? '';
+        $rl_2fa_id = $client_ip . '|' . $uid;
+        $rl_2fa = check_rate_limit($conn, 'login_2fa', $rl_2fa_id, 5, 900);
+        $rl_2fa_allowed = is_array($rl_2fa) ? !empty($rl_2fa['allowed']) : (bool)$rl_2fa;
 
-        $valid_otp = TotpService::verifyCode($secret, $code);
-        $valid_backup = false;
-        if (!$valid_otp) {
-            $valid_backup = TotpService::verifyAndConsumeBackupCode($conn, $uid, $code);
-        }
-
-        if ($valid_otp || $valid_backup) {
-            $_SESSION['user_id'] = $_SESSION['2fa_pending_user_id'];
-            $_SESSION['username'] = $_SESSION['2fa_pending_username'];
-            $_SESSION['email'] = $_SESSION['2fa_pending_email'];
-            $_SESSION['role'] = $_SESSION['2fa_pending_role'];
-
-            $logged_user = $_SESSION['username'];
-
-            unset(
-                $_SESSION['2fa_pending'],
-                $_SESSION['2fa_pending_user_id'],
-                $_SESSION['2fa_pending_username'],
-                $_SESSION['2fa_pending_email'],
-                $_SESSION['2fa_pending_role'],
-                $_SESSION['2fa_pending_secret']
-            );
-
-            $script_hieu_ung = "
-                var duration = 2.5 * 1000;
-                var animationEnd = Date.now() + duration;
-                var defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 9999 };
-                function randomInRange(min, max) { return Math.random() * (max - min) + min; }
-                var interval = setInterval(function() {
-                    var timeLeft = animationEnd - Date.now();
-                    if (timeLeft <= 0) { return clearInterval(interval); }
-                    var particleCount = 40 * (timeLeft / duration);
-                    confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 } }));
-                    confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 } }));
-                }, 250);
-
-                Swal.fire({
-                    title: '🛡️ Xác Thực 2FA Thành Công!',
-                    text: 'Chào mừng chiến binh @" . htmlspecialchars($logged_user) . " quay lại ANPLAY STORE.',
-                    icon: 'success',
-                    background: '#0f1118',
-                    color: '#f8fafc',
-                    confirmButtonColor: '#10b981',
-                    confirmButtonText: 'VÀO CHIẾN GAME NGAY',
-                    customClass: { popup: 'z-index-master' }
-                }).then((result) => {
-                    window.location.href = 'index.php';
-                });
-            ";
+        if (!$rl_2fa_allowed) {
+            $wait_mins = is_array($rl_2fa) ? max(1, ceil(($rl_2fa['retry_after'] ?? 900) / 60)) : 15;
+            $script_hieu_ung = "Swal.fire({ icon: 'error', title: 'Tạm khóa xác thực 2FA', text: 'Bạn đã nhập sai mã 2FA quá nhiều lần. Vui lòng thử lại sau {$wait_mins} phút.', background: '#0f1118', color: '#f8fafc', confirmButtonColor: '#ef4444' });";
         } else {
-            $script_hieu_ung = "Swal.fire({ icon: 'error', title: 'Xác thực 2FA thất bại', text: 'Mã xác thực 6 số không đúng hoặc mã dự phòng đã được sử dụng. Vui lòng thử lại!', background: '#0f1118', color: '#f8fafc', confirmButtonColor: '#ef4444' });";
+            // Đọc two_factor_secret trực tiếp từ DB thay vì lưu trong session
+            $secret = '';
+            $st_2fa = $conn->prepare("SELECT two_factor_secret, two_factor_enabled, status FROM users WHERE user_id = ? LIMIT 1");
+            if ($st_2fa) {
+                $st_2fa->bind_param("i", $uid);
+                $st_2fa->execute();
+                $row_2fa = $st_2fa->get_result()->fetch_assoc();
+                $st_2fa->close();
+                if ($row_2fa && intval($row_2fa['two_factor_enabled']) === 1) {
+                    $secret = $row_2fa['two_factor_secret'] ?? '';
+                }
+            }
+
+            $valid_otp = !empty($secret) ? TotpService::verifyCode($secret, $code) : false;
+            $valid_backup = false;
+            if (!$valid_otp) {
+                $valid_backup = TotpService::verifyAndConsumeBackupCode($conn, $uid, $code);
+            }
+
+            if ($valid_otp || $valid_backup) {
+                clear_rate_limit($conn, 'login_2fa', $rl_2fa_id);
+                session_regenerate_id(true);
+                $_SESSION['user_id'] = intval($_SESSION['2fa_pending_user_id']);
+                $_SESSION['username'] = $_SESSION['2fa_pending_username'];
+                $_SESSION['email'] = $_SESSION['2fa_pending_email'];
+                $_SESSION['role'] = intval($_SESSION['2fa_pending_role']);
+
+                $safe_js_user = json_encode($_SESSION['username'], JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE);
+
+                unset(
+                    $_SESSION['2fa_pending'],
+                    $_SESSION['2fa_pending_user_id'],
+                    $_SESSION['2fa_pending_username'],
+                    $_SESSION['2fa_pending_email'],
+                    $_SESSION['2fa_pending_role']
+                );
+
+                $script_hieu_ung = "
+                    var duration = 2.5 * 1000;
+                    var animationEnd = Date.now() + duration;
+                    var defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 9999 };
+                    function randomInRange(min, max) { return Math.random() * (max - min) + min; }
+                    var interval = setInterval(function() {
+                        var timeLeft = animationEnd - Date.now();
+                        if (timeLeft <= 0) { return clearInterval(interval); }
+                        var particleCount = 40 * (timeLeft / duration);
+                        confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 } }));
+                        confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 } }));
+                    }, 250);
+
+                    var welcomeUser = " . $safe_js_user . ";
+                    Swal.fire({
+                        title: '🛡️ Xác Thực 2FA Thành Công!',
+                        text: 'Chào mừng chiến binh @' + welcomeUser + ' quay lại ANPLAY STORE.',
+                        icon: 'success',
+                        background: '#0f1118',
+                        color: '#f8fafc',
+                        confirmButtonColor: '#10b981',
+                        confirmButtonText: 'VÀO CHIẾN GAME NGAY',
+                        customClass: { popup: 'z-index-master' }
+                    }).then((result) => {
+                        window.location.href = 'index.php';
+                    });
+                ";
+            } else {
+                record_failed_attempt($conn, 'login_2fa', $rl_2fa_id, 5, 900);
+                $script_hieu_ung = "Swal.fire({ icon: 'error', title: 'Xác thực 2FA thất bại', text: 'Mã xác thực 6 số không đúng hoặc mã dự phòng đã được sử dụng. Vui lòng thử lại!', background: '#0f1118', color: '#f8fafc', confirmButtonColor: '#ef4444' });";
+            }
         }
     }
 }
@@ -173,17 +211,51 @@ $is_2fa_step = !empty($_SESSION['2fa_pending']) && !empty($_SESSION['2fa_pending
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
+    <!-- Early Theme Detection -->
+    <script>
+        (function() {
+            try {
+                var savedTheme = localStorage.getItem('anplay_theme');
+                if (savedTheme === 'light') {
+                    document.documentElement.setAttribute('data-theme', 'light');
+                } else if (!savedTheme && window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) {
+                    document.documentElement.setAttribute('data-theme', 'light');
+                } else {
+                    document.documentElement.setAttribute('data-theme', 'dark');
+                }
+            } catch(e) {}
+        })();
+    </script>
+
     <style>
         :root {
+            color-scheme: dark;
             --bg-dark: #08090d;
             --bg-card: #0f1118;
+            --input-bg: #151824;
+            --input-bg-focus: #1a1e2e;
             --border-color: rgba(255, 255, 255, 0.08);
             --primary: #6366f1;
             --primary-hover: #4f46e5;
-            --primary-glow: rgba(99, 102, 241, 0.4);
+            --primary-glow: rgba(99, 102, 241, 0.25);
             --accent-cyan: #06b6d4;
             --text-main: #f8fafc;
             --text-muted: #94a3b8;
+        }
+
+        [data-theme="light"] {
+            color-scheme: light;
+            --bg-dark: #f8fafc;
+            --bg-card: #ffffff;
+            --input-bg: #ffffff;
+            --input-bg-focus: #ffffff;
+            --border-color: #cbd5e1;
+            --primary: #4f46e5;
+            --primary-hover: #4338ca;
+            --primary-glow: rgba(79, 70, 229, 0.16);
+            --accent-cyan: #0284c7;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
         }
 
         body {
@@ -196,29 +268,65 @@ $is_2fa_step = !empty($_SESSION['2fa_pending']) && !empty($_SESSION['2fa_pending
             justify-content: center;
             margin: 0;
             position: relative;
-            background-image: 
-                radial-gradient(circle at 15% 20%, rgba(99, 102, 241, 0.12) 0%, transparent 40%),
-                radial-gradient(circle at 85% 80%, rgba(6, 182, 212, 0.1) 0%, transparent 40%),
-                linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
-            background-size: 100% 100%, 100% 100%, 40px 40px, 40px 40px;
+            background-image:
+                radial-gradient(circle at 15% 20%, rgba(99, 102, 241, 0.08) 0%, transparent 45%),
+                radial-gradient(circle at 85% 80%, rgba(6, 182, 212, 0.06) 0%, transparent 45%);
+        }
+
+        [data-theme="light"] body {
+            background-image:
+                radial-gradient(circle at 15% 20%, rgba(79, 70, 229, 0.06) 0%, transparent 45%),
+                radial-gradient(circle at 85% 80%, rgba(2, 132, 199, 0.05) 0%, transparent 45%);
+        }
+
+        .auth-theme-toggle {
+            position: fixed;
+            top: 16px;
+            right: 16px;
+            z-index: 50;
+            width: 42px;
+            height: 42px;
+            border-radius: 10px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            transition: all 0.2s ease;
+        }
+
+        .auth-theme-toggle:hover {
+            border-color: var(--primary);
         }
 
         .auth-container {
             width: 100%;
             max-width: 440px;
-            padding: 20px;
+            padding: 16px;
             z-index: 10;
         }
 
         .auth-card {
             background: var(--bg-card);
             border: 1px solid var(--border-color);
-            border-radius: 20px;
-            padding: 36px 32px;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+            border-radius: 14px;
+            padding: 32px 28px;
+            box-shadow: 0 16px 36px -12px rgba(0, 0, 0, 0.45);
             position: relative;
             overflow: hidden;
+        }
+
+        [data-theme="light"] .auth-card {
+            box-shadow: 0 12px 30px -8px rgba(15, 23, 42, 0.1);
+        }
+
+        @media (max-width: 400px) {
+            .auth-card {
+                padding: 24px 18px;
+            }
         }
 
         .auth-card::before {
@@ -230,46 +338,64 @@ $is_2fa_step = !empty($_SESSION['2fa_pending']) && !empty($_SESSION['2fa_pending
         }
 
         .brand-box {
-            width: 52px;
-            height: 52px;
+            width: 48px;
+            height: 48px;
             background: linear-gradient(135deg, #6366f1 0%, #4338ca 100%);
-            border-radius: 14px;
+            border-radius: 10px;
             display: inline-flex;
             align-items: center;
             justify-content: center;
             color: #fff;
-            box-shadow: 0 0 20px var(--primary-glow);
-            margin-bottom: 16px;
+            margin-bottom: 14px;
         }
 
         .brand-box-2fa {
             background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-            box-shadow: 0 0 20px rgba(16, 185, 129, 0.4);
         }
 
         .form-control-gaming {
-            background-color: #151824;
+            background-color: var(--input-bg);
             border: 1px solid var(--border-color);
             color: var(--text-main);
-            padding: 12px 16px;
-            border-radius: 10px;
+            padding: 11px 14px;
+            border-radius: 8px;
             font-size: 0.95rem;
-            transition: all 0.25s ease;
+            transition: all 0.2s ease;
+        }
+
+        .form-control-gaming::placeholder {
+            color: var(--text-muted);
         }
 
         .form-control-gaming:focus {
-            background-color: #1a1e2e;
+            background-color: var(--input-bg-focus);
             border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
-            color: #fff;
+            box-shadow: 0 0 0 3px var(--primary-glow);
+            color: var(--text-main);
         }
 
         .input-group-text {
-            background-color: #151824;
+            background-color: var(--input-bg);
             border: 1px solid var(--border-color);
             color: var(--text-muted);
-            border-radius: 10px;
+            border-radius: 8px;
         }
+
+        [data-theme="light"] .text-white {
+            color: var(--text-main) !important;
+        }
+
+        [data-theme="light"] .text-secondary {
+            color: var(--text-muted) !important;
+        }
+
+        .swal2-popup {
+            background: var(--bg-card) !important;
+            color: var(--text-main) !important;
+            border: 1px solid var(--border-color) !important;
+        }
+        .swal2-title { color: var(--text-main) !important; }
+        .swal2-html-container { color: var(--text-muted) !important; }
 
         .btn-gaming-primary {
             background: linear-gradient(135deg, var(--primary) 0%, #4f46e5 100%);
@@ -310,6 +436,11 @@ $is_2fa_step = !empty($_SESSION['2fa_pending']) && !empty($_SESSION['2fa_pending
     </style>
 </head>
 <body>
+
+<button class="auth-theme-toggle" id="authThemeToggleBtn" type="button" onclick="toggleAuthThemeMode()" title="Chuyển chế độ Sáng / Tối" aria-label="Đổi giao diện">
+    <i class="bi bi-sun-fill" id="authThemeIconSun" style="display: none; color: #f59e0b;"></i>
+    <i class="bi bi-moon-stars-fill" id="authThemeIconMoon"></i>
+</button>
 
 <div class="auth-container">
     <div class="auth-card text-center">
@@ -407,6 +538,25 @@ $is_2fa_step = !empty($_SESSION['2fa_pending']) && !empty($_SESSION['2fa_pending
 </div>
 
 <script>
+function toggleAuthThemeMode() {
+    var current = document.documentElement.getAttribute('data-theme') || 'dark';
+    var next = (current === 'light') ? 'dark' : 'light';
+    document.documentElement.setAttribute('data-theme', next);
+    try { localStorage.setItem('anplay_theme', next); } catch(e) {}
+    updateAuthThemeIcon(next);
+}
+function updateAuthThemeIcon(theme) {
+    var sun = document.getElementById('authThemeIconSun');
+    var moon = document.getElementById('authThemeIconMoon');
+    if (sun && moon) {
+        sun.style.display = (theme === 'light') ? 'inline-block' : 'none';
+        moon.style.display = (theme === 'light') ? 'none' : 'inline-block';
+    }
+}
+document.addEventListener('DOMContentLoaded', function() {
+    updateAuthThemeIcon(document.documentElement.getAttribute('data-theme') || 'dark');
+});
+
 function toggleAuthPass(inputId, btn) {
     var input = document.getElementById(inputId);
     var icon = btn.querySelector('i');

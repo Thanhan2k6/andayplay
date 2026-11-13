@@ -60,28 +60,21 @@ if (isset($_POST['btn_extend_submit'])) {
             } catch (Throwable $e) {}
         }
 
-        $order_code = "EXT" . date('YmdHis') . rand(100, 999);
+        $order_code = "EXT" . date('YmdHis') . random_int(100, 999);
         $old_acc_id = isset($old_order['account_id']) ? intval($old_order['account_id']) : null;
 
         $new_order_id = 0;
-        try {
-            $ins = $conn->prepare("INSERT INTO borrow_records 
-                (order_code, user_id, game_id, package_id, duration_hours, rental_price, payment_status, payment_method, rent_type, previous_borrow_id, account_id, status) 
-                VALUES (?, ?, ?, ?, ?, ?, 'pending', 'Chuyển khoản VietQR', 'extend', ?, ?, 'pending')");
-            if ($ins) {
-                $ins->bind_param("siiiidsii", $order_code, $user_id, $game_id, $package_id, $duration_hours, $price, $borrow_id_to_extend, $old_acc_id);
-                $ins->execute();
+        $ins = $conn->prepare("INSERT INTO borrow_records 
+            (order_code, user_id, game_id, package_id, duration_hours, rental_price, payment_status, payment_method, rent_type, previous_borrow_id, account_id, due_date, status) 
+            VALUES (?, ?, ?, ?, ?, ?, 'pending', 'Chuyển khoản VietQR', 'extend', ?, ?, NULL, 'pending')");
+        if ($ins) {
+            $ins->bind_param("siiiidii", $order_code, $user_id, $game_id, $package_id, $duration_hours, $price, $borrow_id_to_extend, $old_acc_id);
+            if ($ins->execute()) {
                 $new_order_id = $conn->insert_id;
-                $ins->close();
+            } else {
+                error_log('[ANPLAY EXTEND INSERT] ' . $ins->error);
             }
-        } catch (Throwable $e) {}
-
-        // Dự phòng nếu bảng borrow_records cấu trúc cũ
-        if ($new_order_id <= 0) {
-            try {
-                $conn->query("INSERT INTO borrow_records (user_id, game_id, borrow_date, due_date, status) VALUES ($user_id, $game_id, NOW(), DATE_ADD(NOW(), INTERVAL $duration_hours HOUR), 'pending')");
-                $new_order_id = $conn->insert_id;
-            } catch (Throwable $e) {}
+            $ins->close();
         }
 
         if ($new_order_id > 0) {
@@ -141,120 +134,49 @@ $is_extension = $order && (($order['rent_type'] ?? '') === 'extend');
 $is_paid_and_active = $order && (($order['payment_status'] ?? '') === 'paid' && ($order['status'] ?? '') === 'active');
 $has_account  = $order && !empty($order['account_username']);
 
-// XỬ LÝ XÁC NHẬN THANH TOÁN — PHẢI Ở ĐÂY TRƯỚC KHI INCLUDE HEADER.PHP
+// Endpoint polling trạng thái thanh toán (chỉ đọc, không tự kích hoạt đơn)
+if ($order && isset($_GET['check_status']) && $_GET['check_status'] == '1') {
+    ob_end_clean();
+    header('Content-Type: application/json; charset=UTF-8');
+    echo json_encode([
+        'success' => true,
+        'paid' => $is_paid_and_active,
+        'payment_status' => $order['payment_status'] ?? 'pending',
+        'status' => $order['status'] ?? 'pending',
+        'order_code' => $order_code
+    ]);
+    exit();
+}
+
+// XỬ LÝ KHI KHÁCH BẤM "TÔI ĐÃ CHUYỂN KHOẢN" — CHỈ GHI NHẬN CHỜ XÁC NHẬN (KHÔNG TỰ KÍCH HOẠT)
 $allocation_error = null;
+$payment_claimed_notice = false;
 if ($order && isset($_POST['confirm_payment_webhook'])) {
     if (!verify_csrf_token($_POST['csrf_token'] ?? '')) {
-        $allocation_error = "Phiên bảo mật đã hết hạn. Vui lòng bấm xác nhận lại.";
+        $allocation_error = "Phiên bảo mật đã hết hạn. Vui lòng tải lại trang và thử lại.";
+    } elseif ($is_paid_and_active) {
+        header("Location: checkout_qr.php?order_id=" . $order_id . "&success=1");
+        exit();
     } else {
-        if ($is_paid_and_active) {
-            header("Location: checkout_qr.php?order_id=" . $order_id . "&success=1");
-            exit();
+        $upd_claim = $conn->prepare("UPDATE borrow_records SET payment_method = 'vietqr_transfer_claimed' WHERE borrow_id = ? AND user_id = ? AND payment_status = 'pending'");
+        if ($upd_claim) {
+            $upd_claim->bind_param("ii", $order_id, $user_id);
+            $upd_claim->execute();
+            $upd_claim->close();
         }
 
-        if ($is_extension) {
-            $prev_b_id = intval($order['previous_borrow_id'] ?? 0);
-            $prev_res = null;
-            if ($prev_b_id > 0) {
-                try {
-                    $prev_res = $conn->query("SELECT due_date, status, account_id FROM borrow_records WHERE borrow_id = $prev_b_id")->fetch_assoc();
-                } catch (Throwable $e) {}
-            }
-            
-            $add_hours = intval($order['duration_hours'] ?? 24);
-            $curr_due = ($prev_res && !empty($prev_res['due_date'])) ? strtotime($prev_res['due_date']) : time();
-            if ($curr_due < time()) {
-                $new_due_date = date('Y-m-d H:i:s', strtotime("+$add_hours hours"));
-            } else {
-                $new_due_date = date('Y-m-d H:i:s', strtotime("+$add_hours hours", $curr_due));
-            }
-
-            try {
-                if ($prev_b_id > 0) {
-                    $upd_prev = $conn->prepare("UPDATE borrow_records SET due_date = ?, status = 'active' WHERE borrow_id = ?");
-                    if ($upd_prev) {
-                        $upd_prev->bind_param("si", $new_due_date, $prev_b_id);
-                        $upd_prev->execute();
-                        $upd_prev->close();
-                    }
-                }
-
-                $acc_id = ($prev_res && !empty($prev_res['account_id'])) ? intval($prev_res['account_id']) : 0;
-                if ($acc_id > 0) {
-                    $upd_acc = $conn->prepare("UPDATE game_accounts SET status = 'RENTED', rent_expires_at = ?, updated_at = NOW() WHERE account_id = ?");
-                    if ($upd_acc) {
-                        $upd_acc->bind_param("si", $new_due_date, $acc_id);
-                        $upd_acc->execute();
-                        $upd_acc->close();
-                    }
-                }
-
-                try {
-                    $upd_this = $conn->prepare("UPDATE borrow_records SET payment_status = 'paid', status = 'active', due_date = ? WHERE borrow_id = ?");
-                    if ($upd_this) {
-                        $upd_this->bind_param("si", $new_due_date, $order_id);
-                        $upd_this->execute();
-                        $upd_this->close();
-                    }
-                } catch (Throwable $e) {
-                    $conn->query("UPDATE borrow_records SET status = 'active', due_date = '$new_due_date' WHERE borrow_id = $order_id");
-                }
-
-                if ($acc_id > 0) {
-                    log_account_allocation($conn, $acc_id, $order_id, $user_id, 'EXTENDED', "Gia hạn thêm $add_hours giờ (đến $new_due_date)", 'SYSTEM');
-                }
-
-                if (function_exists('create_notification')) {
-                    create_notification($conn, $user_id, 'rental', 'Gia hạn thời gian thuê thành công! ⏱️', "Đơn thuê #$borrow_id_to_extend ({$order['title']}) đã được kéo dài thêm $add_hours giờ.", 'my_library.php', 'EXT-' . $order_id);
-                    create_notification($conn, $user_id, 'payment', 'Thanh toán gia hạn thành công 💳', "Thanh toán cho đơn gia hạn #$order_code đã hoàn tất (" . number_format($amount) . "đ).", 'profile.php?tab=orders', 'PAY-EXT-' . $order_id);
-                }
-
-                if (function_exists('notify_admins_with_permission')) {
-                    notify_admins_with_permission($conn, 'order.view', 'order', "Gia hạn đơn thuê #$order_code ⏱️", "Khách hàng @" . ($_SESSION['username'] ?? 'User') . " vừa gia hạn đơn '{$order['title']}' thêm $add_hours giờ.", 'admin_borrow.php', 'ORD-EXT-' . $order_id);
-                }
-
-                header("Location: checkout_qr.php?order_id=" . $order_id . "&success=1&extended=1");
-                exit();
-            } catch (Throwable $e) {
-                $allocation_error = "Lỗi khi xử lý gia hạn: " . $e->getMessage();
-            }
-        } else {
-            $duration_hours = intval($order['duration_hours'] ?? 24);
-            $pref_acc = !empty($order['account_id']) ? intval($order['account_id']) : null;
-
-            $alloc_result = allocate_game_account($conn, $game_id, $user_id, $order_id, $duration_hours, $pref_acc);
-
-            if ($alloc_result['success']) {
-                if (function_exists('create_notification')) {
-                    create_notification($conn, $user_id, 'rental', 'Thuê game thành công! 🎉', "Tài khoản game '{$order['title']}' đã được cấp phát. Hãy vào Thư Viện để lấy thông tin đăng nhập và chơi ngay!", 'my_library.php', 'RENT-' . $order_id);
-                    create_notification($conn, $user_id, 'payment', 'Thanh toán thành công 💳', "Đơn hàng #$order_code đã thanh toán thành công số tiền " . number_format($amount) . "đ.", 'profile.php?tab=orders', 'PAY-' . $order_id);
-                }
-
-                if (function_exists('notify_admins_with_permission')) {
-                    notify_admins_with_permission($conn, 'order.view', 'order', "Đơn thuê mới đã thanh toán #$order_code 💰", "Khách hàng @" . ($_SESSION['username'] ?? 'User') . " vừa thanh toán đơn thuê '{$order['title']}' (" . number_format($amount) . "đ).", 'admin_borrow.php', 'ORD-NEW-' . $order_id);
-                }
-
-                header("Location: checkout_qr.php?order_id=" . $order_id . "&success=1");
-                exit();
-            } else {
-                $allocation_error = $alloc_result['error'];
-                if (function_exists('create_notification')) {
-                    create_notification($conn, $user_id, 'support', 'Sự cố phân bổ tài khoản đơn #' . $order_code . ' ⚠️', "Kho game tạm thời hết tài khoản sẵn sàng hoặc đang bảo trì. Bạn có thể tạo yêu cầu hỗ trợ để được đổi tài khoản ngay.", 'support.php', 'ERR-ALLOC-' . $order_id);
-                }
-
-                // Cảnh báo sự cố tài khoản và thanh toán cho Admin & Super Admin
-                if (function_exists('notify_admins_with_permission')) {
-                    notify_admins_with_permission($conn, 'rental.manage', 'rental', "⚠️ Sự cố kho tài khoản đơn #$order_code", "Đơn #$order_id ({$order['title']}) đã thanh toán nhưng chưa cấp được tài khoản: $allocation_error. Cần xử lý ngay!", 'admin_accounts.php', 'ALLOC-FAIL-' . $order_id);
-                }
-                if (function_exists('notify_super_admins')) {
-                    notify_super_admins($conn, 'payment', "Sự cố giao dịch đơn #$order_code", "Khách hàng @" . ($_SESSION['username'] ?? 'User') . " đã thanh toán " . number_format($amount) . "đ nhưng kho tài khoản không phân bổ được.", 'admin_borrow.php', 'PAY-ISSUE-' . $order_id);
-                }
-
-                try {
-                    $conn->query("UPDATE borrow_records SET payment_status = 'paid', status = 'pending', error_message = '" . $conn->real_escape_string($allocation_error) . "' WHERE borrow_id = $order_id");
-                } catch (Throwable $e) {}
-            }
+        if (function_exists('notify_admins_with_permission')) {
+            notify_admins_with_permission(
+                $conn,
+                'order.manage',
+                'order',
+                "Khách báo đã chuyển khoản #$order_code 🔔",
+                "Khách hàng @" . ($_SESSION['username'] ?? 'User') . " báo đã thanh toán " . number_format($amount) . "đ cho '{$order['title']}'. Vui lòng kiểm tra sao kê và duyệt trong Quản lý đơn thuê.",
+                'admin_borrow.php',
+                'CLAIM-' . $order_id
+            );
         }
+        $payment_claimed_notice = true;
     }
 }
 
@@ -496,6 +418,13 @@ $csrf_token = generate_csrf_token();
                 <p class="text-secondary small mb-0">Hệ thống ngân hàng tự động xác nhận giao dịch 24/7 và cấp tài khoản ngay lập tức</p>
             </div>
 
+            <?php if ($payment_claimed_notice): ?>
+                <div class="alert alert-info alert-dismissible fade show mb-4" style="background: rgba(6, 182, 212, 0.15); border: 1px solid #06b6d4;" role="alert">
+                    <i class="bi bi-hourglass-split text-info me-2"></i><strong>Đã ghi nhận thông báo chuyển khoản!</strong> Hệ thống đang đối soát giao dịch tự động (hoặc Admin sẽ duyệt trong ít phút). Trang sẽ tự động cập nhật khi thanh toán được xác nhận.
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            <?php endif; ?>
+
             <?php if ($allocation_error): ?>
                 <div class="alert alert-warning alert-dismissible fade show mb-4" style="background: rgba(245, 158, 11, 0.15); border: 1px solid #f59e0b;" role="alert">
                     <i class="bi bi-exclamation-triangle-fill text-warning me-2"></i><strong>Thông báo:</strong> <?php echo htmlspecialchars($allocation_error); ?>
@@ -516,7 +445,7 @@ $csrf_token = generate_csrf_token();
                         <img src="<?php echo $qr_url; ?>" alt="VietQR Payment" class="img-fluid rounded-3" style="max-width: 280px; width: 100%;">
                     </div>
                     <div class="mt-3">
-                        <span class="badge bg-dark border border-secondary text-secondary px-3 py-2 small">
+                        <span class="badge text-secondary px-3 py-2 small" style="background: var(--surface-secondary); border: 1px solid var(--border-default);">
                             <i class="bi bi-shield-check text-success me-1"></i> VietQR Napas247 Xác Thực Tự Động
                         </span>
                     </div>
@@ -524,7 +453,7 @@ $csrf_token = generate_csrf_token();
 
                 <!-- Cột 2: Thông tin chuyển khoản & 1-Click Copy -->
                 <div class="col-md-6">
-                    <div class="p-3 rounded-4 mb-3 borrow-summary-card">
+                    <div class="p-3 rounded-3 mb-3 borrow-summary-card">
                         <small class="summary-label d-block fw-bold mb-1">TỰA GAME & GÓI THUÊ:</small>
                         <h5 class="fw-bold game-title-display mb-1"><?php echo htmlspecialchars($order['title']); ?></h5>
                         <span class="badge bg-primary bg-opacity-25 text-primary">

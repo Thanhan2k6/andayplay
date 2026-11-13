@@ -3,11 +3,14 @@ if (session_status() === PHP_SESSION_NONE) { session_start(); }
 $page_title = "Quản Trị Kho Tài Khoản Game";
 require_once __DIR__ . '/includes/admin_header.php';
 
+require_permission('rental.view');
+
 $message = "";
 $error = "";
 
 // 1. XỬ LÝ NHẬP TÀI KHOẢN MỚI THỦ CÔNG HOẶC TỰ ĐỘNG SINH MẬT KHẨU
 if (isset($_POST['btn_add_account'])) {
+    require_permission('rental.manage');
     if (!verify_csrf_token($_POST['csrf_token'] ?? '')) {
         $error = "CSRF verification failed!";
     } else {
@@ -47,6 +50,7 @@ if (isset($_POST['btn_add_account'])) {
 
 // 2. XỬ LÝ ĐỔI TRẠNG THÁI / ĐỔI MẬT KHẨU / BẢO TRÌ TÀI KHOẢN
 if (isset($_POST['btn_update_account'])) {
+    require_permission('rental.manage');
     if (verify_csrf_token($_POST['csrf_token'] ?? '')) {
         $acc_id = intval($_POST['edit_account_id']);
         $new_status = $_POST['edit_status'];
@@ -68,21 +72,36 @@ if (isset($_POST['btn_update_account'])) {
     }
 }
 
-// 3. XÓA TÀI KHOẢN (Chỉ khi không đang được thuê)
-if (isset($_GET['delete_account'])) {
-    $del_id = intval($_GET['delete_account']);
-    $chk = $conn->query("SELECT status, game_id FROM game_accounts WHERE account_id = $del_id")->fetch_assoc();
-    if ($chk && $chk['status'] !== 'RENTED') {
-        $conn->query("DELETE FROM game_accounts WHERE account_id = $del_id");
-        sync_game_inventory($conn, $chk['game_id']);
-        $message = "Đã xóa tài khoản #$del_id khỏi kho.";
+// 3. XÓA TÀI KHOẢN (BẮT BUỘC POST + CSRF + rental.manage)
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_account'])) {
+    require_permission('rental.manage');
+    if (!verify_csrf_token($_POST['csrf_token'] ?? '')) {
+        $error = "CSRF verification failed!";
     } else {
-        $error = "Không thể xóa tài khoản đang trong thời hạn cho thuê!";
+        $del_id = intval($_POST['delete_account']);
+        $st_chk = $conn->prepare("SELECT status, game_id FROM game_accounts WHERE account_id = ? LIMIT 1");
+        $st_chk->bind_param("i", $del_id);
+        $st_chk->execute();
+        $chk = $st_chk->get_result()->fetch_assoc();
+        $st_chk->close();
+
+        if ($chk && $chk['status'] !== 'RENTED') {
+            $st_del = $conn->prepare("DELETE FROM game_accounts WHERE account_id = ?");
+            $st_del->bind_param("i", $del_id);
+            $st_del->execute();
+            $st_del->close();
+            sync_game_inventory($conn, intval($chk['game_id']));
+            write_audit_log($conn, intval($_SESSION['user_id']), 'DELETE_GAME_ACCOUNT', 'game_account', $del_id);
+            $message = "Đã xóa tài khoản #$del_id khỏi kho.";
+        } else {
+            $error = "Không thể xóa tài khoản đang trong thời hạn cho thuê!";
+        }
     }
 }
 
 // 4. XỬ LÝ NẠP HÀNG LOẠT 20 TÀI KHOẢN CHO MỖI GAME
 if (isset($_POST['btn_batch_generate'])) {
+    require_permission('rental.manage');
     if (!verify_csrf_token($_POST['csrf_token'] ?? '')) {
         $error = "CSRF verification failed!";
     } else {
@@ -130,25 +149,66 @@ if (isset($_POST['btn_batch_generate'])) {
 // LẤY DANH SÁCH GAME ĐỂ LỌC
 $games_list = $conn->query("SELECT game_id, title FROM games ORDER BY title ASC");
 
-// LẤY BỘ LỌC
+// LẤY BỘ LỌC & PHÂN TRANG (PREPARED STATEMENT)
+if (file_exists(__DIR__ . '/includes/pagination_helper.php')) {
+    require_once __DIR__ . '/includes/pagination_helper.php';
+}
+$req_per_page = intval($_GET['per_page'] ?? 10);
+$per_page = in_array($req_per_page, [10, 20, 50], true) ? $req_per_page : 10;
+$page = max(1, (int)($_GET['page'] ?? 1));
+
 $filter_game = isset($_GET['filter_game']) ? intval($_GET['filter_game']) : 0;
-$filter_status = isset($_GET['filter_status']) ? $conn->real_escape_string($_GET['filter_status']) : '';
+$filter_status = isset($_GET['filter_status']) ? trim($_GET['filter_status']) : '';
 
 $where = [];
-if ($filter_game > 0) $where[] = "ga.game_id = $filter_game";
-if (!empty($filter_status)) $where[] = "ga.status = '$filter_status'";
+$bind_types = '';
+$bind_params = [];
+if ($filter_game > 0) {
+    $where[] = "ga.game_id = ?";
+    $bind_types .= 'i';
+    $bind_params[] = $filter_game;
+}
+if ($filter_status !== '') {
+    $where[] = "ga.status = ?";
+    $bind_types .= 's';
+    $bind_params[] = $filter_status;
+}
 $where_str = count($where) > 0 ? " WHERE " . implode(" AND ", $where) : "";
 
+$total_items = 0;
+$st_cnt = $conn->prepare("SELECT COUNT(*) AS total FROM game_accounts ga $where_str");
+if ($st_cnt) {
+    if ($bind_types !== '') {
+        $st_cnt->bind_param($bind_types, ...$bind_params);
+    }
+    $st_cnt->execute();
+    $row_cnt = $st_cnt->get_result()->fetch_assoc();
+    $total_items = intval($row_cnt['total'] ?? 0);
+    $st_cnt->close();
+}
+
+$total_pages = max(1, (int)ceil($total_items / $per_page));
+$page = min($page, $total_pages);
+$offset = ($page - 1) * $per_page;
+
 $accounts_res = false;
-try {
-    $accounts_res = $conn->query("SELECT ga.*, g.title, u.username as renter_username, br.due_date as rental_due_date
-        FROM game_accounts ga
-        JOIN games g ON ga.game_id = g.game_id
-        LEFT JOIN borrow_records br ON ga.current_borrow_id = br.borrow_id
-        LEFT JOIN users u ON br.user_id = u.user_id
-        $where_str
-        ORDER BY ga.account_id DESC");
-} catch (Throwable $e) {}
+$st_acc = $conn->prepare("SELECT ga.*, g.title, u.username as renter_username, br.due_date as rental_due_date
+    FROM game_accounts ga
+    JOIN games g ON ga.game_id = g.game_id
+    LEFT JOIN borrow_records br ON ga.current_borrow_id = br.borrow_id
+    LEFT JOIN users u ON br.user_id = u.user_id
+    $where_str
+    ORDER BY ga.account_id DESC
+    LIMIT ? OFFSET ?");
+if ($st_acc) {
+    $data_types = $bind_types . 'ii';
+    $data_params = array_merge($bind_params, [$per_page, $offset]);
+    $st_acc->bind_param($data_types, ...$data_params);
+    if ($st_acc->execute()) {
+        $accounts_res = $st_acc->get_result();
+    }
+    $st_acc->close();
+}
 
 $csrf_token = generate_csrf_token();
 ?>
@@ -285,9 +345,13 @@ $csrf_token = generate_csrf_token();
                                         <i class="bi bi-pencil"></i>
                                     </button>
                                     <?php if ($acc['status'] !== 'RENTED'): ?>
-                                        <a href="admin_accounts.php?delete_account=<?php echo $acc['account_id']; ?>" class="btn btn-sm btn-outline-danger py-1 px-2" onclick="return confirm('Bạn chắc chắn muốn xóa tài khoản này khỏi kho?')" title="Xóa">
-                                            <i class="bi bi-trash"></i>
-                                        </a>
+                                        <form method="POST" class="d-inline" onsubmit="return confirm('Bạn chắc chắn muốn xóa tài khoản này khỏi kho?');">
+                                            <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($csrf_token); ?>">
+                                            <input type="hidden" name="delete_account" value="<?php echo intval($acc['account_id']); ?>">
+                                            <button type="submit" class="btn btn-sm btn-outline-danger py-1 px-2" title="Xóa">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </form>
                                     <?php endif; ?>
                                 </div>
                             </td>
@@ -349,6 +413,7 @@ $csrf_token = generate_csrf_token();
             </table>
         </div>
     </div>
+    <?php if (function_exists('render_pagination')) { echo render_pagination($page, $total_pages, $total_items, $per_page, $_GET); } ?>
 </div>
 
 <!-- MODAL THÊM TÀI KHOẢN MỚI -->

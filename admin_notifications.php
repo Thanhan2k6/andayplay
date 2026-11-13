@@ -86,19 +86,42 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['btn_send_notification
     }
 }
 
-// LẤY DANH SÁCH THÔNG BÁO GẦN ĐÂY ĐỂ XEM LỊCH SỬ
+// LẤY DANH SÁCH THÔNG BÁO GẦN ĐÂY CÓ PHÂN TRANG (PREPARED STATEMENT)
+if (file_exists(__DIR__ . '/includes/pagination_helper.php')) {
+    require_once __DIR__ . '/includes/pagination_helper.php';
+}
+$req_per_page = intval($_GET['per_page'] ?? 10);
+$per_page = in_array($req_per_page, [10, 20, 50], true) ? $req_per_page : 10;
+$page = max(1, (int)($_GET['page'] ?? 1));
+
+$total_items = 0;
+$st_cnt = $conn->prepare("SELECT COUNT(*) AS total FROM notifications n JOIN users u ON n.user_id = u.user_id");
+if ($st_cnt) {
+    $st_cnt->execute();
+    $row_cnt = $st_cnt->get_result()->fetch_assoc();
+    $total_items = intval($row_cnt['total'] ?? 0);
+    $st_cnt->close();
+}
+
+$total_pages = max(1, (int)ceil($total_items / $per_page));
+$page = min($page, $total_pages);
+$offset = ($page - 1) * $per_page;
+
 $recent_notifs = [];
-try {
-    $q_rec = $conn->query("SELECT n.*, u.username, u.email 
-        FROM notifications n 
-        JOIN users u ON n.user_id = u.user_id 
-        ORDER BY n.created_at DESC LIMIT 30");
-    if ($q_rec && $q_rec->num_rows > 0) {
+$st_rec = $conn->prepare("SELECT n.*, u.username, u.email 
+    FROM notifications n 
+    JOIN users u ON n.user_id = u.user_id 
+    ORDER BY n.created_at DESC LIMIT ? OFFSET ?");
+if ($st_rec) {
+    $st_rec->bind_param("ii", $per_page, $offset);
+    if ($st_rec->execute()) {
+        $q_rec = $st_rec->get_result();
         while ($r = $q_rec->fetch_assoc()) {
             $recent_notifs[] = $r;
         }
     }
-} catch (Throwable $e) {}
+    $st_rec->close();
+}
 
 $page_title = "Trung Tâm Thông Báo Quản Trị";
 require_once __DIR__ . '/includes/admin_header.php';
@@ -120,7 +143,7 @@ require_once __DIR__ . '/includes/admin_header.php';
             <a href="admin_support.php" class="btn btn-gaming-secondary d-flex align-items-center">
                 <i class="bi bi-headset me-1 text-primary"></i> Quản Lý Hỗ Trợ
             </a>
-            <a href="admin_dashboard.php" class="btn btn-outline-secondary d-flex align-items-center text-white">
+            <a href="admin_dashboard.php" class="btn btn-gaming-secondary d-flex align-items-center">
                 <i class="bi bi-speedometer2 me-1"></i> Dashboard
             </a>
         </div>
@@ -143,7 +166,7 @@ require_once __DIR__ . '/includes/admin_header.php';
     <div class="row g-4">
         <!-- CỘT TRÁI: FORM GỬI THÔNG BÁO -->
         <div class="col-lg-5">
-            <div class="panel-dark p-4 rounded-4 shadow-sm">
+            <div class="panel-dark p-4 rounded-3 shadow-sm">
                 <h5 class="fw-bold text-white mb-3 pb-2 border-bottom border-secondary border-opacity-25">
                     <i class="bi bi-send-check-fill me-2 text-warning"></i> Soạn Thông Báo Mới
                 </h5>
@@ -207,7 +230,7 @@ require_once __DIR__ . '/includes/admin_header.php';
 
         <!-- CỘT PHẢI: LỊCH SỬ THÔNG BÁO VỪA PHÁT -->
         <div class="col-lg-7">
-            <div class="panel-dark p-4 rounded-4 shadow-sm">
+            <div class="panel-dark p-4 rounded-3 shadow-sm">
                 <h5 class="fw-bold text-white mb-3 pb-2 border-bottom border-secondary border-opacity-25">
                     <i class="bi bi-clock-history me-2 text-info"></i> Lịch Sử Thông Báo Gần Đây
                 </h5>
@@ -222,7 +245,7 @@ require_once __DIR__ . '/includes/admin_header.php';
                         <?php foreach ($recent_notifs as $rn): 
                             $ic = get_notification_icon_info($rn['type']);
                         ?>
-                            <div class="p-3 rounded-3" style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06);">
+                            <div class="p-3 rounded-3" style="background: var(--surface-secondary); border: 1px solid var(--border-default);">
                                 <div class="d-flex align-items-start justify-content-between gap-2 mb-1">
                                     <div class="d-flex align-items-center gap-2">
                                         <span class="badge" style="background: <?php echo $ic['bg']; ?>; color: <?php echo $ic['color']; ?>; font-size: 0.68rem;">
@@ -244,6 +267,7 @@ require_once __DIR__ . '/includes/admin_header.php';
                             </div>
                         <?php endforeach; ?>
                     </div>
+                    <?php if (function_exists('render_pagination')) { echo render_pagination($page, $total_pages, $total_items, $per_page, $_GET); } ?>
                 <?php endif; ?>
             </div>
         </div>

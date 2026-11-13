@@ -1,4 +1,5 @@
-<?php
+﻿<?php
+if (php_sapi_name() !== 'cli') { http_response_code(403); exit('CLI only'); }
 /**
  * ANPLAY STORE - AUTOMATED TEST SUITE: RBAC & SUPER ADMIN VERIFICATION (PHASE 3)
  * Kiểm thử tự động toàn diện phân quyền 3 tầng: USER (0), ADMIN (1), SUPER_ADMIN (2)

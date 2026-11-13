@@ -14,21 +14,26 @@ if (!defined('ANPLAY_CHATBOT_ACCESS')) {
 // 1. Lấy từ biến môi trường hệ thống nếu có
 $envKey = getenv('GEMINI_API_KEY') ?: ($_ENV['GEMINI_API_KEY'] ?? '');
 
-// 2. Dự phòng nạp từ file bí mật cục bộ (.gitignore)
-$localSecretsFile = __DIR__ . '/chatbot_secrets.local.php';
+// 2. Nạp từ file bí mật cục bộ (.gitignore): ưu tiên secrets.local.php, sau đó chatbot_secrets.local.php
 $localKey = '';
-if (file_exists($localSecretsFile)) {
-    $secrets = require $localSecretsFile;
+$unifiedSecretsFile = __DIR__ . '/secrets.local.php';
+if (file_exists($unifiedSecretsFile)) {
+    $secrets = require $unifiedSecretsFile;
     if (is_array($secrets) && !empty($secrets['gemini_api_key'])) {
         $localKey = trim($secrets['gemini_api_key']);
     }
 }
+if (empty($localKey)) {
+    $localSecretsFile = __DIR__ . '/chatbot_secrets.local.php';
+    if (file_exists($localSecretsFile)) {
+        $secrets = require $localSecretsFile;
+        if (is_array($secrets) && !empty($secrets['gemini_api_key'])) {
+            $localKey = trim($secrets['gemini_api_key']);
+        }
+    }
+}
 
-// 3. Fallback an toàn cho môi trường hosting không hỗ trợ biến môi trường
-// (Được mã hóa base64 để bảo vệ cú pháp và tương thích mọi hosting)
-$fallbackKey = base64_decode('QUl6YVN5QW9qMzl1VTN6Vmt4OG11Y01Od0VuZGxqRU9HcXVkZmlj');
-
-$activeApiKey = !empty($localKey) ? $localKey : (!empty($envKey) ? $envKey : $fallbackKey);
+$activeApiKey = !empty($envKey) ? $envKey : $localKey;
 
 return [
     // Khóa API Gemini chính thức

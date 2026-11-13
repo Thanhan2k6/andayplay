@@ -108,44 +108,47 @@ if (empty($packages)) {
 }
 
 // XỬ LÝ: Khi người dùng bấm Tiến hành Thanh toán (TRƯỚC KHI OUTPUT HEADER ĐỂ REDIRECT AN TOÀN)
+$borrow_error = '';
 if (isset($_POST['btn_borrow'])) {
     if (!verify_csrf_token($_POST['csrf_token'] ?? '')) {
-        echo "<script>alert('Phiên bảo mật đã hết hạn. Vui lòng thử lại!');</script>";
+        $borrow_error = 'Phiên bảo mật đã hết hạn. Vui lòng thử lại!';
     } else {
         $selected_pkg_id = intval($_POST['package_id'] ?? 0);
-        $payment_method = $conn->real_escape_string($_POST['payment_method'] ?? 'Chuyển khoản Ngân hàng (VietQR)');
-        
+        $payment_method = trim($_POST['payment_method'] ?? 'Chuyển khoản Ngân hàng (VietQR)');
+        if (empty($payment_method)) {
+            $payment_method = 'Chuyển khoản Ngân hàng (VietQR)';
+        }
+
         $selected_pkg = null;
         foreach ($packages as $pkg) {
-            if ($pkg['package_id'] == $selected_pkg_id) {
+            if (intval($pkg['package_id']) === $selected_pkg_id) {
                 $selected_pkg = $pkg;
                 break;
             }
         }
+
         if (!$selected_pkg) {
-            $selected_pkg = $packages[0];
-        }
+            $borrow_error = 'Gói thuê không hợp lệ hoặc không còn hoạt động!';
+        } else {
+            $duration_hours = ($selected_pkg['duration_type'] == 'hours') ? intval($selected_pkg['duration_value']) : (intval($selected_pkg['duration_value']) * 24);
+            $total_cost = floatval($selected_pkg['price']);
 
-        $duration_hours = ($selected_pkg['duration_type'] == 'hours') ? intval($selected_pkg['duration_value']) : (intval($selected_pkg['duration_value']) * 24);
-        $total_cost = floatval($selected_pkg['price']);
-
-        $can_proceed = true;
-        if (!$preferred_account_id && $available_accounts <= 0) {
-            $can_proceed = false;
-            echo "<script>alert('Rất tiếc, tựa game này hiện đang tạm hết tài khoản khả dụng trong kho!');</script>";
-        } elseif ($preferred_account_id) {
-            if ($old_acc_info && !in_array($old_acc_info['status'], ['AVAILABLE', 'EXPIRED'])) {
+            $can_proceed = true;
+            if (!$preferred_account_id && $available_accounts <= 0) {
                 $can_proceed = false;
-                echo "<script>alert('Tài khoản cũ hiện không khả dụng (đang có người thuê hoặc đang bảo trì)!');</script>";
+                $borrow_error = 'Rất tiếc, tựa game này hiện đang tạm hết tài khoản khả dụng trong kho!';
+            } elseif ($preferred_account_id) {
+                if ($old_acc_info && !in_array($old_acc_info['status'], ['AVAILABLE', 'EXPIRED'])) {
+                    $can_proceed = false;
+                    $borrow_error = 'Tài khoản cũ hiện không khả dụng (đang có người thuê hoặc đang bảo trì)!';
+                }
             }
-        }
 
-        if ($can_proceed) {
-            $order_code = "RENT" . date('YmdHis') . rand(100, 999);
-            $prev_b_id = null;
-            if (isset($_GET['old_borrow_id']) && $preferred_account_id) {
-                $cand_id = intval($_GET['old_borrow_id']);
-                try {
+            if ($can_proceed) {
+                $order_code = "RENT" . date('YmdHis') . random_int(100, 999);
+                $prev_b_id = null;
+                if (isset($_GET['old_borrow_id']) && $preferred_account_id) {
+                    $cand_id = intval($_GET['old_borrow_id']);
                     $chk_prev = $conn->prepare("SELECT borrow_id FROM borrow_records WHERE borrow_id = ? AND user_id = ?");
                     if ($chk_prev) {
                         $chk_prev->bind_param("ii", $cand_id, $user_id);
@@ -155,36 +158,36 @@ if (isset($_POST['btn_borrow'])) {
                         }
                         $chk_prev->close();
                     }
-                } catch (Throwable $e) {}
-            }
+                }
 
-            $new_borrow_id = 0;
-            try {
+                $new_borrow_id = 0;
+                $pkg_id_val = intval($selected_pkg['package_id']);
                 $insert_order = $conn->prepare("INSERT INTO borrow_records 
-                    (order_code, user_id, game_id, package_id, duration_hours, rental_price, payment_status, payment_method, rent_type, previous_borrow_id, account_id, status) 
-                    VALUES (?, ?, ?, ?, ?, ?, 'pending', ?, ?, ?, ?, 'pending')");
+                    (order_code, user_id, game_id, package_id, duration_hours, rental_price, payment_status, payment_method, rent_type, previous_borrow_id, account_id, due_date, status) 
+                    VALUES (?, ?, ?, ?, ?, ?, 'pending', ?, ?, ?, ?, NULL, 'pending')");
                 if ($insert_order) {
-                    $insert_order->bind_param("siiiidssii", $order_code, $user_id, $game_id, $selected_pkg['package_id'], $duration_hours, $total_cost, $payment_method, $rent_type, $prev_b_id, $preferred_account_id);
-                    $insert_order->execute();
-                    $new_borrow_id = $conn->insert_id;
+                    $insert_order->bind_param("siiiidssii", $order_code, $user_id, $game_id, $pkg_id_val, $duration_hours, $total_cost, $payment_method, $rent_type, $prev_b_id, $preferred_account_id);
+                    if ($insert_order->execute()) {
+                        $new_borrow_id = $conn->insert_id;
+                    } else {
+                        error_log('[ANPLAY BORROW INSERT] ' . $insert_order->error);
+                    }
                     $insert_order->close();
                 }
-            } catch (Throwable $e) {}
 
-            // Dự phòng schema cũ
-            if ($new_borrow_id <= 0) {
-                try {
-                    $conn->query("INSERT INTO borrow_records (user_id, game_id, borrow_date, due_date, status) VALUES ($user_id, $game_id, NOW(), DATE_ADD(NOW(), INTERVAL $duration_hours HOUR), 'pending')");
-                    $new_borrow_id = $conn->insert_id;
-                } catch (Throwable $e) {}
-            }
-
-            if ($new_borrow_id > 0) {
-                header("Location: checkout_qr.php?order_id=" . $new_borrow_id);
-                exit();
+                if ($new_borrow_id > 0) {
+                    header("Location: checkout_qr.php?order_id=" . $new_borrow_id);
+                    exit();
+                } else {
+                    $borrow_error = 'Không thể khởi tạo đơn thuê. Vui lòng thử lại sau.';
+                }
             }
         }
     }
+}
+if (!empty($borrow_error)) {
+    $safe_err = json_encode($borrow_error, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE);
+    echo "<script>alert($safe_err);</script>";
 }
 
 // BẮT ĐẦU LOAD GIAO DIỆN

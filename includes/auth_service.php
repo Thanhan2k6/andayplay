@@ -499,3 +499,131 @@ function set_user_permissions($conn, $user_id, array $permission_keys, $granted_
     }
 }
 
+/**
+ * Đảm bảo bảng auth_rate_limits tồn tại
+ */
+function ensure_rate_limit_table(mysqli $conn): void {
+    static $checked = false;
+    if ($checked) return;
+    $checked = true;
+    try {
+        $conn->query("CREATE TABLE IF NOT EXISTS `auth_rate_limits` (
+            `id` INT AUTO_INCREMENT PRIMARY KEY,
+            `action_key` VARCHAR(64) NOT NULL,
+            `identifier` VARCHAR(191) NOT NULL,
+            `attempts` INT NOT NULL DEFAULT 0,
+            `locked_until` DATETIME NULL DEFAULT NULL,
+            `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            UNIQUE KEY `uq_rate_action_ident` (`action_key`, `identifier`),
+            INDEX `idx_rate_locked` (`locked_until`)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+    } catch (Throwable $e) {}
+}
+
+/**
+ * Kiểm tra giới hạn tần suất (Rate Limiting). Trả về ['allowed' => bool, 'retry_after' => int].
+ */
+function check_rate_limit(mysqli $conn, string $action, string $identifier, int $max_attempts = 5, int $window_seconds = 900): array {
+    ensure_rate_limit_table($conn);
+    $action = substr(trim($action), 0, 64);
+    $identifier = substr(trim($identifier), 0, 191);
+    if ($action === '' || $identifier === '') {
+        return ['allowed' => true, 'retry_after' => 0];
+    }
+
+    try {
+        $stmt = $conn->prepare("SELECT attempts, locked_until, UNIX_TIMESTAMP(updated_at) AS last_ts FROM auth_rate_limits WHERE action_key = ? AND identifier = ? LIMIT 1");
+        if (!$stmt) {
+            return ['allowed' => true, 'retry_after' => 0];
+        }
+        $stmt->bind_param("ss", $action, $identifier);
+        $stmt->execute();
+        $row = $stmt->get_result()->fetch_assoc();
+        $stmt->close();
+
+        if (!$row) {
+            return ['allowed' => true, 'retry_after' => 0];
+        }
+
+        $now = time();
+        if (!empty($row['locked_until'])) {
+            $lockedTs = strtotime($row['locked_until']);
+            if ($lockedTs > $now) {
+                return ['allowed' => false, 'retry_after' => ($lockedTs - $now)];
+            }
+        }
+        // Nếu đã qua cửa sổ thời gian -> reset
+        if (($now - intval($row['last_ts'])) > $window_seconds) {
+            clear_rate_limit($conn, $action, $identifier);
+            return ['allowed' => true, 'retry_after' => 0];
+        }
+        if (intval($row['attempts']) >= $max_attempts) {
+            $retryAfter = max(1, $window_seconds - ($now - intval($row['last_ts'])));
+            return ['allowed' => false, 'retry_after' => $retryAfter];
+        }
+        return ['allowed' => true, 'retry_after' => 0];
+    } catch (Throwable $e) {
+        return ['allowed' => true, 'retry_after' => 0];
+    }
+}
+
+/**
+ * Ghi nhận một lần thử thất bại và khóa tạm thời khi đạt ngưỡng
+ */
+function record_failed_attempt(mysqli $conn, string $action, string $identifier, int $max_attempts = 5, int $window_seconds = 900): void {
+    ensure_rate_limit_table($conn);
+    $action = substr(trim($action), 0, 64);
+    $identifier = substr(trim($identifier), 0, 191);
+    if ($action === '' || $identifier === '') return;
+
+    try {
+        $stmt = $conn->prepare("SELECT id, attempts, UNIX_TIMESTAMP(updated_at) AS last_ts FROM auth_rate_limits WHERE action_key = ? AND identifier = ? LIMIT 1");
+        if (!$stmt) return;
+        $stmt->bind_param("ss", $action, $identifier);
+        $stmt->execute();
+        $row = $stmt->get_result()->fetch_assoc();
+        $stmt->close();
+
+        $now = time();
+        if (!$row) {
+            $attempts = 1;
+            $locked_until = ($attempts >= $max_attempts) ? date('Y-m-d H:i:s', $now + $window_seconds) : null;
+            $ins = $conn->prepare("INSERT INTO auth_rate_limits (action_key, identifier, attempts, locked_until, updated_at) VALUES (?, ?, ?, ?, NOW())");
+            if ($ins) {
+                $ins->bind_param("ssis", $action, $identifier, $attempts, $locked_until);
+                $ins->execute();
+                $ins->close();
+            }
+        } else {
+            $attempts = (($now - intval($row['last_ts'])) > $window_seconds) ? 1 : (intval($row['attempts']) + 1);
+            $locked_until = ($attempts >= $max_attempts) ? date('Y-m-d H:i:s', $now + $window_seconds) : null;
+            $upd = $conn->prepare("UPDATE auth_rate_limits SET attempts = ?, locked_until = ?, updated_at = NOW() WHERE id = ?");
+            if ($upd) {
+                $id = intval($row['id']);
+                $upd->bind_param("isi", $attempts, $locked_until, $id);
+                $upd->execute();
+                $upd->close();
+            }
+        }
+    } catch (Throwable $e) {}
+}
+
+/**
+ * Xóa bộ đếm giới hạn tần suất khi xác thực thành công
+ */
+function clear_rate_limit(mysqli $conn, string $action, string $identifier): void {
+    ensure_rate_limit_table($conn);
+    $action = substr(trim($action), 0, 64);
+    $identifier = substr(trim($identifier), 0, 191);
+    if ($action === '' || $identifier === '') return;
+
+    try {
+        $stmt = $conn->prepare("DELETE FROM auth_rate_limits WHERE action_key = ? AND identifier = ?");
+        if ($stmt) {
+            $stmt->bind_param("ss", $action, $identifier);
+            $stmt->execute();
+            $stmt->close();
+        }
+    } catch (Throwable $e) {}
+}
+

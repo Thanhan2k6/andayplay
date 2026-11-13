@@ -62,15 +62,40 @@ if ($res_set && $res_set->num_rows > 0) {
     }
 }
 
-// 3. LẤY NHẬT KÝ KIỂM TOÁN (AUDIT LOGS) GẦN ĐÂY
+// 3. LẤY NHẬT KÝ KIỂM TOÁN (AUDIT LOGS) CÓ PHÂN TRANG (PREPARED STATEMENT)
+if (file_exists(__DIR__ . '/includes/pagination_helper.php')) {
+    require_once __DIR__ . '/includes/pagination_helper.php';
+}
+$req_per_page = intval($_GET['per_page'] ?? 10);
+$per_page = in_array($req_per_page, [10, 20, 50], true) ? $req_per_page : 10;
+$page = max(1, (int)($_GET['page'] ?? 1));
+
+$total_logs = 0;
+$st_cnt = $conn->prepare("SELECT COUNT(*) AS total FROM audit_logs");
+if ($st_cnt) {
+    $st_cnt->execute();
+    $r_cnt = $st_cnt->get_result()->fetch_assoc();
+    $total_logs = intval($r_cnt['total'] ?? 0);
+    $st_cnt->close();
+}
+
+$total_pages = max(1, (int)ceil($total_logs / $per_page));
+$page = min($page, $total_pages);
+$offset = ($page - 1) * $per_page;
+
 $audit_logs = [];
-$res_logs = $conn->query("SELECT al.*, u.username, u.role FROM audit_logs al 
+$st_logs = $conn->prepare("SELECT al.*, u.username, u.role FROM audit_logs al 
     LEFT JOIN users u ON al.user_id = u.user_id 
-    ORDER BY al.created_at DESC LIMIT 30");
-if ($res_logs && $res_logs->num_rows > 0) {
-    while ($l = $res_logs->fetch_assoc()) {
-        $audit_logs[] = $l;
+    ORDER BY al.created_at DESC LIMIT ? OFFSET ?");
+if ($st_logs) {
+    $st_logs->bind_param("ii", $per_page, $offset);
+    if ($st_logs->execute()) {
+        $res_logs = $st_logs->get_result();
+        while ($l = $res_logs->fetch_assoc()) {
+            $audit_logs[] = $l;
+        }
     }
+    $st_logs->close();
 }
 
 $page_title = "Cấu Hình Hệ Thống & Nhật Ký Kiểm Toán";
@@ -213,6 +238,7 @@ require_once __DIR__ . '/includes/admin_header.php';
                         </tbody>
                     </table>
                 </div>
+                <?php if (function_exists('render_pagination')) { echo render_pagination($page, $total_pages, $total_logs, $per_page, $_GET); } ?>
             </div>
         </div>
     </div>

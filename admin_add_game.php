@@ -5,54 +5,72 @@ if (session_status() === PHP_SESSION_NONE) {
 $page_title = "Thêm Tựa Game Mới";
 require_once __DIR__ . '/includes/admin_header.php';
 
+require_permission('game.manage');
+
 // Xử lý lưu game và upload ảnh
 if(isset($_POST['btn_add'])) {
-    if (verify_csrf_token($_POST['csrf_token'] ?? '')) {
-        $title = $conn->real_escape_string($_POST['title']);
-        $category_id = intval($_POST['category_id']);
-        $platform = $conn->real_escape_string($_POST['platform']);
-        $short_desc = $conn->real_escape_string($_POST['short_description']); 
-        $long_desc = $conn->real_escape_string($_POST['long_description']); 
-        $system_req = $conn->real_escape_string($_POST['system_req']);
+    if (!verify_csrf_token($_POST['csrf_token'] ?? '')) {
+        echo "<div class='alert alert-danger text-center'>Phiên bảo mật không hợp lệ. Vui lòng thử lại!</div>";
+    } else {
+        $title = trim($_POST['title'] ?? '');
+        $category_id = intval($_POST['category_id'] ?? 0);
+        $platform = trim($_POST['platform'] ?? 'PC');
+        $short_desc = trim($_POST['short_description'] ?? '');
+        $long_desc = trim($_POST['long_description'] ?? '');
+        $system_req = trim($_POST['system_req'] ?? '');
         $price_type = 'paid';
         $download_link = '';
-        
-        $sql_insert = "INSERT INTO games (title, category_id, platform, description, long_description, system_req, total_quantity, available_quantity, price_type, download_link, image_url) 
-                VALUES ('$title', $category_id, '$platform', '$short_desc', '$long_desc', '$system_req', 0, 0, '$price_type', '$download_link', '')";
-                
-        if($conn->query($sql_insert) === TRUE) {
-            $new_game_id = $conn->insert_id; 
-            
-            // Xử lý upload ảnh bìa
-            if(isset($_FILES['image']) && $_FILES['image']['error'] == 0) {
-                $target_dir = "uploads/";
-                if(!is_dir($target_dir)) mkdir($target_dir, 0777, true);
-                $extension = pathinfo($_FILES["image"]["name"], PATHINFO_EXTENSION);
-                $file_name = $new_game_id . "." . $extension;
-                $target_file = $target_dir . $file_name;
-                if(move_uploaded_file($_FILES["image"]["tmp_name"], $target_file)) {
-                    $conn->query("UPDATE games SET image_url = '$target_file' WHERE game_id = $new_game_id");
-                }
-            }
-            
-            // Tự động tạo 4 gói thời hạn thuê chuẩn nếu là game trả phí
-            if ($price_type === 'paid') {
-                $p1 = floatval($_POST['price_1h'] ?? 5000);
-                $p2 = floatval($_POST['price_1d'] ?? 15000);
-                $p3 = floatval($_POST['price_7d'] ?? 30000);
-                $p4 = floatval($_POST['price_30d'] ?? 99000);
+        $image_url = '';
 
-                $conn->query("INSERT INTO rental_packages (game_id, package_name, duration_type, duration_value, price) VALUES 
-                    ($new_game_id, '1 Giờ (Trải nghiệm nhanh)', 'hours', 1, $p1),
-                    ($new_game_id, '1 Ngày (24 Giờ)', 'days', 1, $p2),
-                    ($new_game_id, '7 Ngày (1 Tuần)', 'days', 7, $p3),
-                    ($new_game_id, '30 Ngày (1 Tháng)', 'days', 30, $p4)");
+        $upload_error = '';
+        if (isset($_FILES['image']) && $_FILES['image']['error'] !== UPLOAD_ERR_NO_FILE) {
+            $up_res = upload_game_image($_FILES['image'], 'game');
+            if ($up_res['success']) {
+                $image_url = $up_res['path'];
+            } else {
+                $upload_error = $up_res['error'];
             }
+        }
 
-            echo "<script>alert('Đã thêm tựa game mới thành công! Bạn có thể vào Kho Tài Khoản để nhập tài khoản cho game này.'); window.location='admin_games.php';</script>";
-            exit();
+        if (!empty($upload_error)) {
+            echo "<div class='alert alert-danger text-center'>" . htmlspecialchars($upload_error) . "</div>";
         } else {
-            echo "<div class='alert alert-danger text-center'>Lỗi hệ thống: " . $conn->error . "</div>";
+            $stmt_ins = $conn->prepare("INSERT INTO games (title, category_id, platform, description, long_description, system_req, total_quantity, available_quantity, quantity, price_type, download_link, image_url) 
+                    VALUES (?, ?, ?, ?, ?, ?, 0, 0, 0, ?, ?, ?)");
+            if ($stmt_ins && $stmt_ins->bind_param("sisssssss", $title, $category_id, $platform, $short_desc, $long_desc, $system_req, $price_type, $download_link, $image_url) && $stmt_ins->execute()) {
+                $new_game_id = $conn->insert_id;
+                $stmt_ins->close();
+
+                if ($price_type === 'paid') {
+                    $p1 = floatval($_POST['price_1h'] ?? 5000);
+                    $p2 = floatval($_POST['price_1d'] ?? 15000);
+                    $p3 = floatval($_POST['price_7d'] ?? 30000);
+                    $p4 = floatval($_POST['price_30d'] ?? 99000);
+
+                    $pkg_stmt = $conn->prepare("INSERT INTO rental_packages (game_id, package_name, duration_type, duration_value, price) VALUES (?, ?, ?, ?, ?)");
+                    if ($pkg_stmt) {
+                        $defs = [
+                            ['1 Giờ (Trải nghiệm nhanh)', 'hours', 1, $p1],
+                            ['1 Ngày (24 Giờ)', 'days', 1, $p2],
+                            ['7 Ngày (1 Tuần)', 'days', 7, $p3],
+                            ['30 Ngày (1 Tháng)', 'days', 30, $p4],
+                        ];
+                        foreach ($defs as $d) {
+                            $pkg_stmt->bind_param("issid", $new_game_id, $d[0], $d[1], $d[2], $d[3]);
+                            $pkg_stmt->execute();
+                        }
+                        $pkg_stmt->close();
+                    }
+                }
+
+                write_audit_log($conn, intval($_SESSION['user_id']), 'ADD_GAME', 'game', $new_game_id, ['title' => $title]);
+                echo "<script>alert('Đã thêm tựa game mới thành công! Bạn có thể vào Kho Tài Khoản để nhập tài khoản cho game này.'); window.location='admin_games.php';</script>";
+                exit();
+            } else {
+                if ($stmt_ins) { $stmt_ins->close(); }
+                error_log('[ANPLAY ADD GAME] ' . $conn->error);
+                echo "<div class='alert alert-danger text-center'>Lỗi hệ thống khi thêm game. Vui lòng thử lại!</div>";
+            }
         }
     }
 }
@@ -137,38 +155,38 @@ $csrf_token = generate_csrf_token();
                 </h5>
                 <div class="row g-3">
                     <div class="col-sm-6 col-md-3">
-                        <div class="p-3 rounded-3" style="background: rgba(255,255,255,0.02); border: 1px solid var(--border-color);">
+                        <div class="p-3 rounded-3" style="background: var(--surface-secondary); border: 1px solid var(--border-default);">
                             <label class="form-label text-secondary small fw-bold">Gói 1 Giờ (Trải nghiệm)</label>
                             <div class="input-group">
                                 <input type="number" name="price_1h" class="form-control form-control-gaming text-white" value="5000" step="1000">
-                                <span class="input-group-text bg-dark border-secondary text-secondary">đ</span>
+                                <span class="input-group-text" style="background: var(--surface-secondary); border-color: var(--border-default); color: var(--text-muted);">đ</span>
                             </div>
                         </div>
                     </div>
                     <div class="col-sm-6 col-md-3">
-                        <div class="p-3 rounded-3" style="background: rgba(255,255,255,0.02); border: 1px solid var(--border-color);">
+                        <div class="p-3 rounded-3" style="background: var(--surface-secondary); border: 1px solid var(--border-default);">
                             <label class="form-label text-secondary small fw-bold">Gói 1 Ngày (24h)</label>
                             <div class="input-group">
                                 <input type="number" name="price_1d" class="form-control form-control-gaming text-white" value="15000" step="1000">
-                                <span class="input-group-text bg-dark border-secondary text-secondary">đ</span>
+                                <span class="input-group-text" style="background: var(--surface-secondary); border-color: var(--border-default); color: var(--text-muted);">đ</span>
                             </div>
                         </div>
                     </div>
                     <div class="col-sm-6 col-md-3">
-                        <div class="p-3 rounded-3" style="background: rgba(255,255,255,0.02); border: 1px solid var(--border-color);">
+                        <div class="p-3 rounded-3" style="background: var(--surface-secondary); border: 1px solid var(--border-default);">
                             <label class="form-label text-secondary small fw-bold">Gói 7 Ngày (1 Tuần)</label>
                             <div class="input-group">
                                 <input type="number" name="price_7d" class="form-control form-control-gaming text-white" value="30000" step="1000">
-                                <span class="input-group-text bg-dark border-secondary text-secondary">đ</span>
+                                <span class="input-group-text" style="background: var(--surface-secondary); border-color: var(--border-default); color: var(--text-muted);">đ</span>
                             </div>
                         </div>
                     </div>
                     <div class="col-sm-6 col-md-3">
-                        <div class="p-3 rounded-3" style="background: rgba(255,255,255,0.02); border: 1px solid var(--border-color);">
+                        <div class="p-3 rounded-3" style="background: var(--surface-secondary); border: 1px solid var(--border-default);">
                             <label class="form-label text-secondary small fw-bold">Gói 30 Ngày (1 Tháng)</label>
                             <div class="input-group">
                                 <input type="number" name="price_30d" class="form-control form-control-gaming text-white" value="99000" step="1000">
-                                <span class="input-group-text bg-dark border-secondary text-secondary">đ</span>
+                                <span class="input-group-text" style="background: var(--surface-secondary); border-color: var(--border-default); color: var(--text-muted);">đ</span>
                             </div>
                         </div>
                     </div>

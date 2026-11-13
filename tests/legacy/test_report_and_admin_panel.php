@@ -1,4 +1,5 @@
-<?php
+﻿<?php
+if (php_sapi_name() !== 'cli') { http_response_code(403); exit('CLI only'); }
 /**
  * AUTOMATED TEST SUITE: CUSTOMER REPORT -> ADMIN NOTIFICATION & DEDICATED ADMIN PANEL
  * Tests real database state and HTTP responses on localhost:8080

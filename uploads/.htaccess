@@ -1,0 +1,13 @@
+# Chặn thực thi PHP và script trong thư mục uploads/
+Options -Indexes
+
+<FilesMatch "\.(php|phtml|php3|php4|php5|php7|php8|phar|pl|py|cgi|sh)$">
+    Require all denied
+</FilesMatch>
+
+<IfModule !mod_authz_core.c>
+    <FilesMatch "\.(php|phtml|php3|php4|php5|php7|php8|phar|pl|py|cgi|sh)$">
+        Order allow,deny
+        Deny from all
+    </FilesMatch>
+</IfModule>

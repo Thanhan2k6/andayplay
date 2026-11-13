@@ -1,4 +1,5 @@
-<?php
+﻿<?php
+if (php_sapi_name() !== 'cli') { http_response_code(403); exit('CLI only'); }
 /**
  * ANPLAY STORE - THEME & CONTRAST VALIDATION TEST SUITE
  * Kiểm tra xác thực hệ thống biến màu, độ tương phản và Light/Dark mode

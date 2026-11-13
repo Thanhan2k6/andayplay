@@ -1,6 +1,9 @@
 <?php
 if (session_status() === PHP_SESSION_NONE) { session_start(); }
-require_once __DIR__ . '/includes/header.php'; 
+require_once __DIR__ . '/includes/header.php';
+if (file_exists(__DIR__ . '/includes/pagination_helper.php')) {
+    require_once __DIR__ . '/includes/pagination_helper.php';
+}
 
 // KIỂM TRA CÁC GAME NGƯỜI DÙNG ĐANG THUÊ HIỆU LỰC
 $rented_games = [];
@@ -15,6 +18,8 @@ if (isset($_SESSION['user_id'])) {
 
 // LỌC VÀ TÌM KIẾM DỮ LIỆU
 $filter_conditions = [];
+$bind_types = '';
+$bind_params = [];
 $category_title = "TẤT CẢ TỰA GAME CHO THUÊ"; 
 
 if (isset($_GET['stock']) && in_array($_GET['stock'], ['available', 'out'])) {
@@ -27,7 +32,7 @@ if (isset($_GET['stock']) && in_array($_GET['stock'], ['available', 'out'])) {
         $category_title .= " (Tạm Hết Tài Khoản)";
     }
 } elseif (isset($_GET['type']) && in_array($_GET['type'], ['free', 'paid'])) {
-    $price_type = $conn->real_escape_string($_GET['type']);
+    $price_type = $_GET['type'];
     if ($price_type === 'free') {
         $filter_conditions[] = "1=1";
     } else {
@@ -37,23 +42,39 @@ if (isset($_GET['stock']) && in_array($_GET['stock'], ['available', 'out'])) {
 
 if (isset($_GET['category']) && !empty($_GET['category'])) {
     $cat_id = intval($_GET['category']);
-    $filter_conditions[] = "g.category_id = $cat_id";
-    $cat_name_sql = $conn->query("SELECT cate_name FROM categories WHERE category_id = $cat_id");
-    if ($cat_name_sql && $cat_name_sql->num_rows > 0) {
-        $category_title = "Thể Loại: " . htmlspecialchars($cat_name_sql->fetch_assoc()['cate_name']);
+    $filter_conditions[] = "g.category_id = ?";
+    $bind_types .= 'i';
+    $bind_params[] = $cat_id;
+    $cat_stmt = $conn->prepare("SELECT cate_name FROM categories WHERE category_id = ?");
+    if ($cat_stmt) {
+        $cat_stmt->bind_param('i', $cat_id);
+        $cat_stmt->execute();
+        $cat_res = $cat_stmt->get_result();
+        if ($cat_res && $cat_res->num_rows > 0) {
+            $category_title = "Thể Loại: " . htmlspecialchars($cat_res->fetch_assoc()['cate_name']);
+        }
+        $cat_stmt->close();
     }
 }
 
 if (isset($_GET['platform']) && !empty($_GET['platform'])) {
-    $platform = $conn->real_escape_string($_GET['platform']);
-    $filter_conditions[] = "g.platform = '$platform'";
+    $platform = trim($_GET['platform']);
+    $filter_conditions[] = "g.platform = ?";
+    $bind_types .= 's';
+    $bind_params[] = $platform;
     $category_title .= " (" . htmlspecialchars($platform) . ")";
 }
 
 if (isset($_GET['search']) && trim($_GET['search']) !== '') {
-    $search_text = $conn->real_escape_string(trim($_GET['search']));
-    $filter_conditions[] = "(g.title LIKE '%$search_text%' OR g.description LIKE '%$search_text%' OR c.cate_name LIKE '%$search_text%' OR g.platform LIKE '%$search_text%')";
-    $category_title = "Kết quả tìm kiếm cho: \"" . htmlspecialchars(trim($_GET['search'])) . "\"";
+    $raw_search = trim($_GET['search']);
+    $like_search = '%' . $raw_search . '%';
+    $filter_conditions[] = "(g.title LIKE ? OR g.description LIKE ? OR c.cate_name LIKE ? OR g.platform LIKE ?)";
+    $bind_types .= 'ssss';
+    $bind_params[] = $like_search;
+    $bind_params[] = $like_search;
+    $bind_params[] = $like_search;
+    $bind_params[] = $like_search;
+    $category_title = "Kết quả tìm kiếm cho: \"" . htmlspecialchars($raw_search) . "\"";
 }
 
 $where_clause = "";
@@ -68,6 +89,39 @@ if (isset($_GET['sort'])) {
     elseif ($_GET['sort'] == 'oldest') { $order_by = " ORDER BY g.game_id ASC"; }
 }
 
+// PHÂN TRANG DB-LEVEL
+$per_page_options = [12, 24, 48];
+$per_page = (isset($_GET['per_page']) && in_array(intval($_GET['per_page']), $per_page_options, true)) ? intval($_GET['per_page']) : 12;
+$page = isset($_GET['page']) ? max(1, intval($_GET['page'])) : 1;
+
+$total_items = 0;
+try {
+    $count_sql = "SELECT COUNT(*) AS total FROM games g LEFT JOIN categories c ON g.category_id = c.category_id $where_clause";
+    $count_stmt = $conn->prepare($count_sql);
+    if ($count_stmt) {
+        if ($bind_types !== '') {
+            $count_stmt->bind_param($bind_types, ...$bind_params);
+        }
+        $count_stmt->execute();
+        $count_res = $count_stmt->get_result();
+        if ($count_res && ($crow = $count_res->fetch_assoc())) {
+            $total_items = intval($crow['total']);
+        }
+        $count_stmt->close();
+    }
+} catch (Throwable $e) {
+    $total_items = 0;
+}
+
+$total_pages = max(1, (int)ceil($total_items / $per_page));
+if ($page > $total_pages) {
+    $page = $total_pages;
+}
+$offset = ($page - 1) * $per_page;
+
+$query_types = $bind_types . 'ii';
+$query_params = array_merge($bind_params, [$per_page, $offset]);
+
 $result = false;
 $schema_warning = false;
 try {
@@ -76,8 +130,14 @@ try {
             (SELECT COUNT(*) FROM game_accounts ga WHERE ga.game_id = g.game_id AND ga.status = 'AVAILABLE') as real_available_acc
             FROM games g 
             LEFT JOIN categories c ON g.category_id = c.category_id 
-            $where_clause $order_by";
-    $result = $conn->query($sql);
+            $where_clause $order_by LIMIT ? OFFSET ?";
+    $stmt = $conn->prepare($sql);
+    if ($stmt) {
+        $stmt->bind_param($query_types, ...$query_params);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $stmt->close();
+    }
 } catch (Throwable $e) {
     $result = false;
 }
@@ -88,8 +148,14 @@ if (!$result) {
         $sql_fallback = "SELECT g.*, c.cate_name, 0 as min_rent_price, g.quantity as real_available_acc 
                          FROM games g 
                          LEFT JOIN categories c ON g.category_id = c.category_id 
-                         $where_clause $order_by";
-        $result = $conn->query($sql_fallback);
+                         $where_clause $order_by LIMIT ? OFFSET ?";
+        $stmt_fb = $conn->prepare($sql_fallback);
+        if ($stmt_fb) {
+            $stmt_fb->bind_param($query_types, ...$query_params);
+            $stmt_fb->execute();
+            $result = $stmt_fb->get_result();
+            $stmt_fb->close();
+        }
     } catch (Throwable $e) {
         $result = false;
     }
@@ -365,6 +431,12 @@ if (!$result) {
         </div>
     <?php endif; ?>
 </div>
+
+<?php if (function_exists('render_pagination')): ?>
+    <div class="mb-5">
+        <?php echo render_pagination($page, $total_pages, $total_items, $per_page, $_GET, [12, 24, 48]); ?>
+    </div>
+<?php endif; ?>
 
 <!-- SECTION: 3 BƯỚC THUÊ GAME NHANH CHÓNG -->
 <section id="rentalGuide" class="mb-5 pt-4">

@@ -5,13 +5,19 @@ if (session_status() === PHP_SESSION_NONE) {
 $page_title = "Chỉnh Sửa Thông Tin Game";
 require_once __DIR__ . '/includes/admin_header.php';
 
+require_permission('game.manage');
+
 if(!isset($_GET['id'])) {
     echo "<script>window.location='admin_games.php';</script>";
     exit();
 }
 $game_id = intval($_GET['id']);
 
-$result = $conn->query("SELECT * FROM games WHERE game_id = $game_id");
+$st_g = $conn->prepare("SELECT * FROM games WHERE game_id = ? LIMIT 1");
+$st_g->bind_param("i", $game_id);
+$st_g->execute();
+$result = $st_g->get_result();
+$st_g->close();
 if(!$result || $result->num_rows == 0) {
     echo "<script>alert('Không tìm thấy tựa game này!'); window.location='admin_games.php';</script>";
     exit();
@@ -23,53 +29,50 @@ $current_download_link = isset($game['download_link']) ? $game['download_link'] 
 
 // Xử lý khi Admin cập nhật thông tin game và các gói thuê
 if(isset($_POST['btn_update'])) {
-    if (verify_csrf_token($_POST['csrf_token'] ?? '')) {
-        $title = $conn->real_escape_string($_POST['title']);
-        $category_id = intval($_POST['category_id']);
-        $platform = isset($_POST['platform']) ? $conn->real_escape_string($_POST['platform']) : 'PC';
-        $description = $conn->real_escape_string($_POST['description']);
-        $long_description = $conn->real_escape_string($_POST['long_description']);
-        $system_req = $conn->real_escape_string($_POST['system_req']);
+    if (!verify_csrf_token($_POST['csrf_token'] ?? '')) {
+        echo "<div class='alert alert-danger text-center'>Phiên bảo mật không hợp lệ. Vui lòng thử lại!</div>";
+    } else {
+        $title = trim($_POST['title'] ?? '');
+        $category_id = intval($_POST['category_id'] ?? 0);
+        $platform = isset($_POST['platform']) ? trim($_POST['platform']) : 'PC';
+        $description = trim($_POST['description'] ?? '');
+        $long_description = trim($_POST['long_description'] ?? '');
+        $system_req = trim($_POST['system_req'] ?? '');
         $price_type = 'paid';
         $download_link = '';
-        
         $image_url = $game['image_url'];
 
-        if(isset($_FILES['image']) && $_FILES['image']['error'] == 0) {
-            $target_dir = "uploads/";
-            if(!is_dir($target_dir)) mkdir($target_dir, 0777, true);
-            $extension = pathinfo($_FILES["image"]["name"], PATHINFO_EXTENSION);
-            $file_name = $game_id . "." . $extension;
-            $target_file = $target_dir . $file_name;
-            if(move_uploaded_file($_FILES["image"]["tmp_name"], $target_file)) {
-                $image_url = $target_file;
+        $upload_error = '';
+        if (isset($_FILES['image']) && $_FILES['image']['error'] !== UPLOAD_ERR_NO_FILE) {
+            $up_res = upload_game_image($_FILES['image'], 'game_' . $game_id);
+            if ($up_res['success']) {
+                $image_url = $up_res['path'];
+            } else {
+                $upload_error = $up_res['error'];
             }
         }
 
-        $sql = "UPDATE games SET 
-                title='$title', 
-                category_id=$category_id, 
-                platform='$platform',
-                description='$description', 
-                long_description='$long_description', 
-                system_req='$system_req', 
-                price_type='$price_type',
-                download_link='$download_link',
-                image_url='$image_url' 
-                WHERE game_id=$game_id";
-
-        if($conn->query($sql) === TRUE) {
-            // Cập nhật giá các gói thời hạn thuê hiện có
-            if (isset($_POST['pkg_price']) && is_array($_POST['pkg_price'])) {
-                foreach ($_POST['pkg_price'] as $pkg_id => $pkg_val) {
-                    $pkg_id = intval($pkg_id);
-                    $pkg_val = floatval($pkg_val);
-                    $conn->query("UPDATE rental_packages SET price = $pkg_val WHERE package_id = $pkg_id AND game_id = $game_id");
+        if (!empty($upload_error)) {
+            echo "<div class='alert alert-danger text-center'>" . htmlspecialchars($upload_error) . "</div>";
+        } else {
+            $stmt_upd = $conn->prepare("UPDATE games SET title = ?, category_id = ?, platform = ?, description = ?, long_description = ?, system_req = ?, price_type = ?, download_link = ?, image_url = ? WHERE game_id = ?");
+            if ($stmt_upd && $stmt_upd->bind_param("sisssssssi", $title, $category_id, $platform, $description, $long_description, $system_req, $price_type, $download_link, $image_url, $game_id) && $stmt_upd->execute()) {
+                $stmt_upd->close();
+                if (isset($_POST['pkg_price']) && is_array($_POST['pkg_price'])) {
+                    $st_pkg_upd = $conn->prepare("UPDATE rental_packages SET price = ? WHERE package_id = ? AND game_id = ?");
+                    if ($st_pkg_upd) {
+                        foreach ($_POST['pkg_price'] as $pkg_id => $pkg_val) {
+                            $pid = intval($pkg_id);
+                            $pval = floatval($pkg_val);
+                            $st_pkg_upd->bind_param("dii", $pval, $pid, $game_id);
+                            $st_pkg_upd->execute();
+                        }
+                        $st_pkg_upd->close();
+                    }
                 }
-            }
-
-            // Tạo các gói mới nếu trước đó game chưa có gói
-            if (isset($_POST['new_pkg_1h']) || isset($_POST['new_pkg_1d'])) {
+                write_audit_log($conn, intval($_SESSION['user_id']), 'EDIT_GAME', 'game', $game_id, ['title' => $title]);
+                // Tạo các gói mới nếu trước đó game chưa có gói
+                if (isset($_POST['new_pkg_1h']) || isset($_POST['new_pkg_1d'])) {
                 $p1 = floatval($_POST['new_pkg_1h'] ?? 5000);
                 $p2 = floatval($_POST['new_pkg_1d'] ?? 15000);
                 $p3 = floatval($_POST['new_pkg_7d'] ?? 30000);
@@ -92,10 +95,13 @@ if(isset($_POST['btn_update'])) {
             // Đồng bộ lại tồn kho
             sync_game_inventory($conn, $game_id);
 
-            echo "<script>alert('Cập nhật thông tin game và giá thuê thành công!'); window.location='admin_games.php';</script>";
-            exit();
-        } else {
-            echo "<div class='alert alert-danger text-center'>Lỗi cập nhật: " . $conn->error . "</div>";
+                echo "<script>alert('Cập nhật thông tin game và giá thuê thành công!'); window.location='admin_games.php';</script>";
+                exit();
+            } else {
+                if ($stmt_upd) { $stmt_upd->close(); }
+                error_log('[ANPLAY EDIT GAME] ' . $conn->error);
+                echo "<div class='alert alert-danger text-center'>Lỗi cập nhật thông tin game!</div>";
+            }
         }
     }
 }
@@ -203,13 +209,13 @@ $csrf_token = generate_csrf_token();
                         while ($pkg = $packages->fetch_assoc()):
                     ?>
                         <div class="col-sm-6 col-md-3">
-                            <div class="p-3 rounded-3" style="background: rgba(255,255,255,0.02); border: 1px solid var(--border-color);">
+                            <div class="p-3 rounded-3" style="background: var(--surface-secondary); border: 1px solid var(--border-default);">
                                 <label class="form-label text-secondary small fw-bold mb-1">
                                     <?php echo htmlspecialchars($pkg['package_name']); ?>
                                 </label>
                                 <div class="input-group">
                                     <input type="number" name="pkg_price[<?php echo $pkg['package_id']; ?>]" class="form-control form-control-gaming text-white" value="<?php echo floatval($pkg['price']); ?>" step="1000">
-                                    <span class="input-group-text bg-dark border-secondary text-secondary">đ</span>
+                                    <span class="input-group-text" style="background: var(--surface-secondary); border-color: var(--border-default); color: var(--text-muted);">đ</span>
                                 </div>
                             </div>
                         </div>
@@ -223,38 +229,38 @@ $csrf_token = generate_csrf_token();
                             </div>
                         </div>
                         <div class="col-sm-6 col-md-3">
-                            <div class="p-3 rounded-3" style="background: rgba(255,255,255,0.02); border: 1px solid var(--border-color);">
+                            <div class="p-3 rounded-3" style="background: var(--surface-secondary); border: 1px solid var(--border-default);">
                                 <label class="form-label text-secondary small fw-bold mb-1">1 Giờ (Trải nghiệm nhanh)</label>
                                 <div class="input-group">
                                     <input type="number" name="new_pkg_1h" class="form-control form-control-gaming text-white" value="5000" step="1000">
-                                    <span class="input-group-text bg-dark border-secondary text-secondary">đ</span>
+                                    <span class="input-group-text" style="background: var(--surface-secondary); border-color: var(--border-default); color: var(--text-muted);">đ</span>
                                 </div>
                             </div>
                         </div>
                         <div class="col-sm-6 col-md-3">
-                            <div class="p-3 rounded-3" style="background: rgba(255,255,255,0.02); border: 1px solid var(--border-color);">
+                            <div class="p-3 rounded-3" style="background: var(--surface-secondary); border: 1px solid var(--border-default);">
                                 <label class="form-label text-secondary small fw-bold mb-1">1 Ngày (24 Giờ)</label>
                                 <div class="input-group">
                                     <input type="number" name="new_pkg_1d" class="form-control form-control-gaming text-white" value="15000" step="1000">
-                                    <span class="input-group-text bg-dark border-secondary text-secondary">đ</span>
+                                    <span class="input-group-text" style="background: var(--surface-secondary); border-color: var(--border-default); color: var(--text-muted);">đ</span>
                                 </div>
                             </div>
                         </div>
                         <div class="col-sm-6 col-md-3">
-                            <div class="p-3 rounded-3" style="background: rgba(255,255,255,0.02); border: 1px solid var(--border-color);">
+                            <div class="p-3 rounded-3" style="background: var(--surface-secondary); border: 1px solid var(--border-default);">
                                 <label class="form-label text-secondary small fw-bold mb-1">7 Ngày (1 Tuần)</label>
                                 <div class="input-group">
                                     <input type="number" name="new_pkg_7d" class="form-control form-control-gaming text-white" value="30000" step="1000">
-                                    <span class="input-group-text bg-dark border-secondary text-secondary">đ</span>
+                                    <span class="input-group-text" style="background: var(--surface-secondary); border-color: var(--border-default); color: var(--text-muted);">đ</span>
                                 </div>
                             </div>
                         </div>
                         <div class="col-sm-6 col-md-3">
-                            <div class="p-3 rounded-3" style="background: rgba(255,255,255,0.02); border: 1px solid var(--border-color);">
+                            <div class="p-3 rounded-3" style="background: var(--surface-secondary); border: 1px solid var(--border-default);">
                                 <label class="form-label text-secondary small fw-bold mb-1">30 Ngày (1 Tháng)</label>
                                 <div class="input-group">
                                     <input type="number" name="new_pkg_30d" class="form-control form-control-gaming text-white" value="99000" step="1000">
-                                    <span class="input-group-text bg-dark border-secondary text-secondary">đ</span>
+                                    <span class="input-group-text" style="background: var(--surface-secondary); border-color: var(--border-default); color: var(--text-muted);">đ</span>
                                 </div>
                             </div>
                         </div>

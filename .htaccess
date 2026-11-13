@@ -1,0 +1,24 @@
+# ANPLAY STORE — Root Security Rules
+Options -Indexes
+
+# Block direct HTTP access to SQL dumps, docs, scripts, env/backup files
+<FilesMatch "\.(sql|md|py|docx|log|bak|env|ini|sh|yml|yaml)$">
+    Require all denied
+</FilesMatch>
+
+# Block legacy test & seed scripts from web access
+<FilesMatch "^(test_|seed_).*\.php$">
+    Require all denied
+</FilesMatch>
+
+# Fallback for Apache 2.2 compatibility (InfinityFree)
+<IfModule !mod_authz_core.c>
+    <FilesMatch "\.(sql|md|py|docx|log|bak|env|ini|sh|yml|yaml)$">
+        Order allow,deny
+        Deny from all
+    </FilesMatch>
+    <FilesMatch "^(test_|seed_).*\.php$">
+        Order allow,deny
+        Deny from all
+    </FilesMatch>
+</IfModule>

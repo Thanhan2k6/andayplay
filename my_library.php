@@ -9,6 +9,9 @@ if (!isset($_SESSION['user_id'])) {
 }
 
 require_once __DIR__ . '/includes/connect.php';
+if (file_exists(__DIR__ . '/includes/pagination_helper.php')) {
+    require_once __DIR__ . '/includes/pagination_helper.php';
+}
 $user_id = intval($_SESSION['user_id']);
 $current_page = 'my_library.php';
 
@@ -60,8 +63,13 @@ if (isset($_POST['btn_report_error'])) {
 
             // 1. Chuyển tài khoản sang trạng thái MAINTENANCE nếu có tài khoản
             if ($rep_acc_id) {
-                $esc_issue = $conn->real_escape_string($rep_issue);
-                $conn->query("UPDATE game_accounts SET status = 'MAINTENANCE', notes = CONCAT(COALESCE(notes, ''), ' | Khách @$customer_name báo lỗi: $esc_issue') WHERE account_id = $rep_acc_id");
+                $note_append = " | Khách @$customer_name báo lỗi: $rep_issue";
+                $st_maint = $conn->prepare("UPDATE game_accounts SET status = 'MAINTENANCE', notes = CONCAT(COALESCE(notes, ''), ?) WHERE account_id = ?");
+                if ($st_maint) {
+                    $st_maint->bind_param("si", $note_append, $rep_acc_id);
+                    $st_maint->execute();
+                    $st_maint->close();
+                }
                 if (function_exists('log_account_allocation')) {
                     log_account_allocation($conn, $rep_acc_id, $rep_borrow_id, $user_id, 'MAINTENANCE_TRIGGERED', "Báo lỗi từ khách: $rep_issue", 'USER');
                 }
@@ -94,7 +102,36 @@ if (isset($_POST['btn_report_error'])) {
     }
 }
 
-// LẤY DANH SÁCH CÁC ĐƠN THUÊ CỦA USER KÈM THÔNG TIN TÀI KHOẢN GAME
+// PHÂN TRANG & THỐNG KÊ TỔNG QUAN TỪ DB
+$per_page_options = [10, 20, 50];
+$per_page = (isset($_GET['per_page']) && in_array(intval($_GET['per_page']), $per_page_options, true)) ? intval($_GET['per_page']) : 10;
+$page_num = isset($_GET['page']) ? max(1, intval($_GET['page'])) : 1;
+
+$total_orders = 0;
+$active_orders = 0;
+$expired_orders = 0;
+try {
+    $stats_stmt = $conn->prepare("SELECT COUNT(*) AS total_orders, COALESCE(SUM(CASE WHEN status = 'active' AND due_date >= NOW() THEN 1 ELSE 0 END), 0) AS active_orders FROM borrow_records WHERE user_id = ?");
+    if ($stats_stmt) {
+        $stats_stmt->bind_param('i', $user_id);
+        $stats_stmt->execute();
+        $stats_res = $stats_stmt->get_result();
+        if ($stats_res && ($srow = $stats_res->fetch_assoc())) {
+            $total_orders = intval($srow['total_orders']);
+            $active_orders = intval($srow['active_orders']);
+            $expired_orders = max(0, $total_orders - $active_orders);
+        }
+        $stats_stmt->close();
+    }
+} catch (Throwable $e) {}
+
+$total_pages = max(1, (int)ceil($total_orders / $per_page));
+if ($page_num > $total_pages) {
+    $page_num = $total_pages;
+}
+$offset = ($page_num - 1) * $per_page;
+
+// LẤY DANH SÁCH CÁC ĐƠN THUÊ CỦA USER KÈM THÔNG TIN TÀI KHOẢN GAME (PHÂN TRANG DB)
 $result = false;
 try {
     $sql = "SELECT br.borrow_id, br.borrow_date, br.due_date, br.status, br.rent_type, br.duration_hours,
@@ -103,9 +140,16 @@ try {
             FROM borrow_records br 
             JOIN games g ON br.game_id = g.game_id 
             LEFT JOIN game_accounts ga ON br.account_id = ga.account_id
-            WHERE br.user_id = $user_id
-            ORDER BY br.borrow_id DESC";
-    $result = $conn->query($sql);
+            WHERE br.user_id = ?
+            ORDER BY br.borrow_id DESC
+            LIMIT ? OFFSET ?";
+    $stmt = $conn->prepare($sql);
+    if ($stmt) {
+        $stmt->bind_param('iii', $user_id, $per_page, $offset);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $stmt->close();
+    }
 } catch (Throwable $e) {
     $result = false;
 }
@@ -117,32 +161,25 @@ if (!$result) {
                                NULL as account_id, '' as account_username, '' as account_password_encrypted, 'AVAILABLE' as account_status, 'Global' as server_region
                         FROM borrow_records br 
                         JOIN games g ON br.game_id = g.game_id 
-                        WHERE br.user_id = $user_id
-                        ORDER BY br.borrow_id DESC";
-        $result = $conn->query($sql_fallback);
+                        WHERE br.user_id = ?
+                        ORDER BY br.borrow_id DESC
+                        LIMIT ? OFFSET ?";
+        $stmt_fb = $conn->prepare($sql_fallback);
+        if ($stmt_fb) {
+            $stmt_fb->bind_param('iii', $user_id, $per_page, $offset);
+            $stmt_fb->execute();
+            $result = $stmt_fb->get_result();
+            $stmt_fb->close();
+        }
     } catch (Throwable $e) {
         $result = false;
     }
 }
 $csrf_token = generate_csrf_token();
 
-// Tính sơ bộ thống kê của khách
-$total_orders = 0;
-$active_orders = 0;
-$expired_orders = 0;
 $rows_data = [];
-
 if ($result && $result->num_rows > 0) {
     while ($r = $result->fetch_assoc()) {
-        $due_t = strtotime($r['due_date']);
-        $is_over = ($r['status'] === 'expired' || ($r['status'] === 'active' && $due_t < time()));
-        $is_act = ($r['status'] === 'active' && !$is_over);
-        if ($is_act) {
-            $active_orders++;
-        } else {
-            $expired_orders++;
-        }
-        $total_orders++;
         $rows_data[] = $r;
     }
 }
@@ -313,10 +350,10 @@ require_once __DIR__ . '/includes/header.php';
                     </div>
 
                     <!-- THÔNG TIN TÀI KHOẢN (CREDENTIALS BOX) -->
-                    <div class="p-3 rounded-3 mb-3" style="background: rgba(15, 17, 24, 0.8); border: 1px solid var(--border-color);">
+                    <div class="p-3 rounded-3 mb-3" style="background: var(--surface-secondary); border: 1px solid var(--border-default);">
                         <div class="d-flex justify-content-between align-items-center mb-2 pb-1 border-bottom border-secondary border-opacity-25">
                             <span class="small fw-bold text-info"><i class="bi bi-shield-lock-fill me-1"></i> THÔNG TIN ĐĂNG NHẬP</span>
-                            <span class="badge" style="background: rgba(255,255,255,0.06); color: #94a3b8; font-size: 0.7rem; border: 1px solid var(--border-color);">
+                            <span class="badge" style="background: var(--surface-card); color: var(--text-muted); font-size: 0.7rem; border: 1px solid var(--border-default);">
                                 <?php echo htmlspecialchars($row['server_region'] ?? 'Global'); ?>
                             </span>
                         </div>
@@ -463,7 +500,7 @@ require_once __DIR__ . '/includes/header.php';
                             <div class="d-grid gap-2">
                                 <?php if ($row['account_id']): ?>
                                     <a href="borrow_process.php?game_id=<?php echo $row['game_id']; ?>&type=re-rent&re_rent_acc=<?php echo $row['account_id']; ?>&old_borrow_id=<?php echo $row['borrow_id']; ?>" 
-                                       class="btn btn-sm btn-gaming-secondary text-white text-decoration-none py-1">
+                                       class="btn btn-sm btn-gaming-secondary text-decoration-none py-1">
                                         <i class="bi bi-arrow-repeat me-1"></i> Thuê lại tài khoản cũ (Giữ Save)
                                     </a>
                                 <?php endif; ?>
@@ -615,6 +652,12 @@ require_once __DIR__ . '/includes/header.php';
         </div>
         <?php endif; ?>
     </div>
+
+    <?php if (function_exists('render_pagination')): ?>
+        <div class="mt-4">
+            <?php echo render_pagination($page_num, $total_pages, $total_orders, $per_page, $_GET, [10, 20, 50]); ?>
+        </div>
+    <?php endif; ?>
 </div>
 
 <script>

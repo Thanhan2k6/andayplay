@@ -1,4 +1,5 @@
-<?php
+﻿<?php
+if (php_sapi_name() !== 'cli') { http_response_code(403); exit('CLI only'); }
 /**
  * ANPLAY STORE - PHASE 11 COMPREHENSIVE UPGRADE TEST SUITE
  * Kiểm thử tự động toàn diện 12 Phases theo chuẩn Senior Full-Stack

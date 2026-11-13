@@ -1,4 +1,5 @@
-<?php
+﻿<?php
+if (php_sapi_name() !== 'cli') { http_response_code(403); exit('CLI only'); }
 /**
  * ANPLAY STORE - RENTAL MODEL CONVERSION TEST SUITE
  * Kiểm thử xác thực chuyển đổi toàn diện sang mô hình cho thuê tài khoản 100%

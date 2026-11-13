@@ -355,7 +355,7 @@ require_once __DIR__ . '/includes/header.php';
 
 <div class="container-fluid px-lg-5 py-4 my-2 text-white">
     <!-- HERO PROFILE HEADER -->
-    <div class="gaming-card p-4 mb-4 position-relative overflow-hidden" style="background: linear-gradient(135deg, rgba(21, 24, 34, 0.95) 0%, rgba(15, 17, 24, 0.95) 100%); border: 1px solid var(--border-color);">
+    <div class="gaming-card p-4 mb-4 position-relative overflow-hidden" style="background: var(--surface-card); border: 1px solid var(--border-default);">
         <div class="position-absolute end-0 top-0 p-4 opacity-10 d-none d-lg-block pointer-events-none">
             <i class="bi bi-controller text-white" style="font-size: 10rem;"></i>
         </div>
@@ -551,14 +551,14 @@ require_once __DIR__ . '/includes/header.php';
 
                     <div class="row g-3 mb-4">
                         <div class="col-md-6">
-                            <div class="p-3 rounded-3 h-100" style="background: #141724; border: 1px solid var(--border-color);">
+                            <div class="p-3 rounded-3 h-100" style="background: var(--surface-secondary); border: 1px solid var(--border-default);">
                                 <div class="text-secondary small mb-1">Tên đăng nhập hệ thống</div>
                                 <div class="fw-bold text-white fs-5">@<?php echo htmlspecialchars($user_info['username']); ?></div>
                                 <div class="text-muted small mt-2"><i class="bi bi-info-circle me-1"></i> Tên người dùng là duy nhất và không thể thay đổi</div>
                             </div>
                         </div>
                         <div class="col-md-6">
-                            <div class="p-3 rounded-3 h-100" style="background: #141724; border: 1px solid var(--border-color);">
+                            <div class="p-3 rounded-3 h-100" style="background: var(--surface-secondary); border: 1px solid var(--border-default);">
                                 <div class="text-secondary small mb-1">Email liên kết nhận thông báo</div>
                                 <div class="fw-bold text-info fs-5"><?php echo htmlspecialchars($user_info['email']); ?></div>
                                 <div class="text-success small mt-2"><i class="bi bi-patch-check-fill me-1"></i> Đã xác thực nhận mã kích hoạt game</div>
@@ -647,7 +647,7 @@ require_once __DIR__ . '/includes/header.php';
                             <div class="col-md-6">
                                 <label class="form-label text-light small fw-bold">Tên đăng nhập (Username):</label>
                                 <div class="input-group">
-                                    <span class="input-group-text border-secondary border-opacity-25 bg-dark text-secondary"><i class="bi bi-at"></i></span>
+                                    <span class="input-group-text" style="background: var(--surface-secondary); border-color: var(--border-default); color: var(--text-muted);"><i class="bi bi-at"></i></span>
                                     <input type="text" class="form-control form-control-gaming text-secondary" value="<?php echo htmlspecialchars($user_info['username']); ?>" readonly disabled>
                                 </div>
                                 <small class="text-muted d-block mt-1">Tên đăng nhập được cố định sau khi đăng ký tài khoản.</small>
@@ -656,7 +656,7 @@ require_once __DIR__ . '/includes/header.php';
                             <div class="col-md-6">
                                 <label class="form-label text-light small fw-bold">Địa chỉ Email liên kết:</label>
                                 <div class="input-group">
-                                    <span class="input-group-text border-secondary border-opacity-25 bg-dark text-secondary"><i class="bi bi-envelope"></i></span>
+                                    <span class="input-group-text" style="background: var(--surface-secondary); border-color: var(--border-default); color: var(--text-muted);"><i class="bi bi-envelope"></i></span>
                                     <input type="email" name="email" class="form-control form-control-gaming text-white" value="<?php echo htmlspecialchars($user_info['email']); ?>" required placeholder="name@example.com">
                                 </div>
                                 <small class="text-secondary d-block mt-1">Dùng để nhận hóa đơn, thông tin tài khoản và khôi phục mật khẩu khi cần.</small>
@@ -838,7 +838,7 @@ require_once __DIR__ . '/includes/header.php';
                         </div>
 
                         <div class="col-lg-5">
-                            <div class="p-4 rounded-3 h-100" style="background: #141724; border: 1px solid var(--border-color);">
+                            <div class="p-4 rounded-3 h-100" style="background: var(--surface-secondary); border: 1px solid var(--border-default);">
                                 <h6 class="fw-bold text-white mb-3 d-flex align-items-center">
                                     <i class="bi bi-shield-check text-success me-2 fs-5"></i> Trạng Thái Bảo Mật
                                 </h6>
@@ -938,7 +938,7 @@ require_once __DIR__ . '/includes/header.php';
                                         </div>
                                     </div>
                                 </div>
-                                <div class="d-flex align-items-center justify-content-between p-3 rounded-3" style="background: #141724; border: 1px solid var(--border-color);">
+                                <div class="d-flex align-items-center justify-content-between p-3 rounded-3" style="background: var(--surface-secondary); border: 1px solid var(--border-default);">
                                     <div>
                                         <span class="text-light small fw-bold d-block">Mã dự phòng khả dụng:</span>
                                         <span class="text-secondary small">Dùng khi không truy cập được điện thoại</span>
@@ -951,7 +951,7 @@ require_once __DIR__ . '/includes/header.php';
 
                             <div class="col-md-5">
                                 <div class="d-grid gap-2">
-                                    <button class="btn btn-gaming-secondary text-white py-2" type="button" data-bs-toggle="collapse" data-bs-target="#collapseRegenBackup">
+                                    <button class="btn btn-gaming-secondary py-2" type="button" data-bs-toggle="collapse" data-bs-target="#collapseRegenBackup">
                                         <i class="bi bi-arrow-repeat me-1"></i> Tạo Lại Mã Dự Phòng Mới
                                     </button>
                                     <button class="btn btn-outline-danger py-2" type="button" data-bs-toggle="collapse" data-bs-target="#collapseDisable2fa">
@@ -963,7 +963,7 @@ require_once __DIR__ . '/includes/header.php';
 
                         <!-- Form Tạo Lại Mã Dự Phòng -->
                         <div class="collapse mt-3" id="collapseRegenBackup">
-                            <div class="p-3 rounded-3" style="background: #111420; border: 1px solid var(--border-subtle);">
+                            <div class="p-3 rounded-3" style="background: var(--surface-secondary); border: 1px solid var(--border-default);">
                                 <h6 class="text-warning fw-bold mb-2"><i class="bi bi-key me-1"></i> Tạo Lại Danh Sách 8 Mã Dự Phòng Mới</h6>
                                 <p class="text-secondary small mb-3">Mọi mã dự phòng cũ sẽ bị hủy bỏ. Vui lòng xác thực mật khẩu và mã OTP hiện tại:</p>
                                 <form method="POST" action="profile.php?tab=security" class="row g-2 align-items-end">
@@ -1021,7 +1021,7 @@ require_once __DIR__ . '/includes/header.php';
                             $temp_backup = $_SESSION['temp_2fa_backup_codes'];
                             $qr_url = TotpService::getQrCodeUrl($user_info['username'], $temp_secret);
                             ?>
-                            <div class="p-3 p-md-4 rounded-3" style="background: #111420; border: 1px solid rgba(99, 102, 241, 0.3);">
+                            <div class="p-3 p-md-4 rounded-3" style="background: var(--surface-secondary); border: 1px solid var(--border-highlight);">
                                 <h5 class="fw-bold text-white mb-3"><i class="bi bi-qr-code-scan text-primary me-2"></i> Thiết Lập Xác Thực 2 Bước (3 Bước Đơn Giản)</h5>
 
                                 <div class="row g-4">

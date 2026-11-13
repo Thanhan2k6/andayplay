@@ -148,7 +148,7 @@ if (isset($_SESSION['user_id'])) {
     <!-- TOPBAR TRÊN CÙNG -->
     <header class="topbar">
         <!-- Nút mở Menu trên Mobile -->
-        <button class="btn text-white d-lg-none me-2 p-1" id="openSidebarBtn" aria-label="Open Menu">
+        <button class="btn d-lg-none me-2 p-1 d-inline-flex align-items-center justify-content-center" id="openSidebarBtn" aria-label="Open Menu" style="color: var(--text-primary); min-width: 40px; min-height: 40px;">
             <i class="bi bi-list fs-2"></i>
         </button>
 

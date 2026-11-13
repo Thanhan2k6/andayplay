@@ -1,4 +1,5 @@
-<?php
+﻿<?php
+if (php_sapi_name() !== 'cli') { http_response_code(403); exit('CLI only'); }
 /**
  * ANPLAY STORE - AUTOMATED TEST SUITE: PHASE 5 COMPLETE NOTIFICATION CENTER
  * Kiểm thử toàn diện hệ thống thông báo đa vai trò: USER, ADMIN, SUPER_ADMIN
