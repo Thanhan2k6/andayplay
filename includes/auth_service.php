@@ -90,7 +90,134 @@ function ensure_auth_and_system_schema($conn) {
                 ('audit.view', 'Xem nhật ký kiểm toán', 'audit', 'Xem lịch sử hành động bảo mật của hệ thống (Độc quyền Super Admin)'),
                 ('system.manage', 'Cấu hình hệ thống toàn sàn', 'system', 'Điều chỉnh thông tin sàn và các cài đặt bảo mật (Độc quyền Super Admin)');");
         }
+
+        // Bảng khôi phục mật khẩu (migration 002)
+        $conn->query("CREATE TABLE IF NOT EXISTS `password_resets` (
+          `id` INT(11) NOT NULL AUTO_INCREMENT PRIMARY KEY,
+          `user_id` INT(11) NOT NULL,
+          `email` VARCHAR(100) NOT NULL,
+          `token_hash` VARCHAR(64) NOT NULL,
+          `expires_at` DATETIME NOT NULL,
+          `used_at` DATETIME DEFAULT NULL,
+          `request_ip` VARCHAR(45) DEFAULT NULL,
+          `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+          INDEX `idx_pr_token` (`token_hash`),
+          INDEX `idx_pr_user` (`user_id`),
+          INDEX `idx_pr_email` (`email`)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;");
+
+        // Tự động vá các cột migration 002 nếu DB thực tế chưa chạy script SQL thủ công
+        $user_cols = anplay_get_table_columns($conn, 'users');
+        $needs_user_heal = !empty($user_cols) && (
+            !isset($user_cols['status']) ||
+            !isset($user_cols['two_factor_enabled']) ||
+            !isset($user_cols['two_factor_secret']) ||
+            !isset($user_cols['two_factor_backup_codes'])
+        );
+
+        $schema_healed = false;
+        if ($hr = $conn->query("SELECT `setting_value` FROM `system_settings` WHERE `setting_key` = 'schema_002_auto_healed' LIMIT 1")) {
+            if ($hrow = $hr->fetch_assoc()) {
+                $schema_healed = (($hrow['setting_value'] ?? '') === '1');
+            }
+            $hr->free();
+        }
+
+        if ($needs_user_heal || !$schema_healed) {
+            anplay_ensure_missing_columns($conn, 'users', [
+                'status'                  => "ENUM('active','suspended','banned') NOT NULL DEFAULT 'active'",
+                'two_factor_enabled'      => "TINYINT(1) NOT NULL DEFAULT 0",
+                'two_factor_secret'       => "VARCHAR(64) DEFAULT NULL",
+                'two_factor_backup_codes' => "TEXT DEFAULT NULL",
+            ], $user_cols);
+
+            $game_cols = anplay_get_table_columns($conn, 'games');
+            $added_games = anplay_ensure_missing_columns($conn, 'games', [
+                'quantity' => "INT(11) NOT NULL DEFAULT 0",
+            ], $game_cols);
+            if (in_array('quantity', $added_games, true) && isset($game_cols['available_quantity'])) {
+                $conn->query("UPDATE `games` SET `quantity` = COALESCE(`available_quantity`, 0)");
+            }
+
+            anplay_ensure_missing_columns($conn, 'support_tickets', [
+                'assigned_to' => "INT(11) DEFAULT NULL",
+            ]);
+
+            if ($br_due = $conn->query("SHOW COLUMNS FROM `borrow_records` LIKE 'due_date'")) {
+                if (($due_meta = $br_due->fetch_assoc()) && strtoupper($due_meta['Null'] ?? '') === 'NO') {
+                    $conn->query("ALTER TABLE `borrow_records` MODIFY COLUMN `due_date` DATETIME NULL DEFAULT NULL");
+                }
+                $br_due->free();
+            }
+
+            anplay_ensure_missing_columns($conn, 'borrow_records', [
+                'order_code'         => "VARCHAR(50) DEFAULT NULL",
+                'account_id'         => "INT(11) DEFAULT NULL",
+                'package_id'         => "INT(11) DEFAULT NULL",
+                'duration_hours'     => "INT(11) NOT NULL DEFAULT 168",
+                'rental_price'       => "DECIMAL(12,2) NOT NULL DEFAULT 0.00",
+                'payment_status'     => "ENUM('pending','paid','failed','refunded') DEFAULT 'pending'",
+                'payment_method'     => "VARCHAR(50) DEFAULT NULL",
+                'payment_tx_id'      => "VARCHAR(100) DEFAULT NULL",
+                'rent_type'          => "ENUM('new','extend','re-rent') DEFAULT 'new'",
+                'previous_borrow_id' => "INT(11) DEFAULT NULL",
+                'return_date'        => "DATETIME DEFAULT NULL",
+                'revoke_status'      => "ENUM('none','pending','revoked','failed') DEFAULT 'none'",
+                'error_message'      => "TEXT DEFAULT NULL",
+                'warn_24h_sent'      => "TINYINT(1) NOT NULL DEFAULT 0",
+                'warn_1h_sent'       => "TINYINT(1) NOT NULL DEFAULT 0",
+                'warn_15m_sent'      => "TINYINT(1) NOT NULL DEFAULT 0",
+            ]);
+
+            $verified_user_cols = anplay_get_table_columns($conn, 'users');
+            if (isset($verified_user_cols['status'], $verified_user_cols['two_factor_enabled'])) {
+                $conn->query("INSERT INTO `system_settings` (`setting_key`, `setting_value`, `setting_group`, `description`)
+                              VALUES ('schema_002_auto_healed', '1', 'system', 'Auto-healed migration 002 columns')
+                              ON DUPLICATE KEY UPDATE `setting_value` = '1'");
+            }
+        }
     } catch (Throwable $e) {}
+}
+
+/**
+ * Lấy danh sách cột hiện có của một bảng MySQL
+ */
+function anplay_get_table_columns($conn, $table) {
+    $cols = [];
+    try {
+        $res = $conn->query("SHOW COLUMNS FROM `{$table}`");
+        if ($res) {
+            while ($row = $res->fetch_assoc()) {
+                $cols[$row['Field']] = true;
+            }
+            $res->free();
+        }
+    } catch (Throwable $e) {}
+    return $cols;
+}
+
+/**
+ * Bổ sung các cột còn thiếu cho bảng theo danh sách định nghĩa SQL
+ */
+function anplay_ensure_missing_columns($conn, $table, $column_defs, $existing_cols = null) {
+    $added = [];
+    if ($existing_cols === null) {
+        $existing_cols = anplay_get_table_columns($conn, $table);
+    }
+    if (empty($existing_cols)) {
+        return $added;
+    }
+    foreach ($column_defs as $col_name => $sql_def) {
+        if (isset($existing_cols[$col_name])) {
+            continue;
+        }
+        try {
+            if ($conn->query("ALTER TABLE `{$table}` ADD COLUMN `{$col_name}` {$sql_def}")) {
+                $added[] = $col_name;
+            }
+        } catch (Throwable $e) {}
+    }
+    return $added;
 }
 
 if (isset($conn)) {

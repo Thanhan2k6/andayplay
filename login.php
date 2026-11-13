@@ -35,6 +35,10 @@ if (isset($_POST['btn_login'])) {
         $script_hieu_ung = "Swal.fire({ icon: 'error', title: 'Tạm khóa đăng nhập', text: 'Bạn đã nhập sai quá nhiều lần. Vui lòng thử lại sau {$wait_mins} phút.', background: '#0f1118', color: '#f8fafc', confirmButtonColor: '#ef4444' });";
     } else {
         $stmt_u = $conn->prepare("SELECT user_id, username, email, password, role, status, two_factor_enabled FROM users WHERE username = ? OR email = ? LIMIT 1");
+        if (!$stmt_u) {
+            // Dự phòng cho DB chưa bổ sung cột migration 002 (status, two_factor_enabled)
+            $stmt_u = $conn->prepare("SELECT user_id, username, email, password, role FROM users WHERE username = ? OR email = ? LIMIT 1");
+        }
         if ($stmt_u) {
             $stmt_u->bind_param("ss", $username, $username);
             $stmt_u->execute();
@@ -104,6 +108,9 @@ if (isset($_POST['btn_login'])) {
                 $script_hieu_ung = "Swal.fire({ icon: 'error', title: 'Đăng nhập thất bại', text: 'Tên đăng nhập hoặc mật khẩu không chính xác.', background: '#0f1118', color: '#f8fafc', confirmButtonColor: '#ef4444' });";
             }
             $stmt_u->close();
+        } else {
+            error_log('ANPLAY login prepare failed: ' . ($conn->error ?? 'unknown error'));
+            $script_hieu_ung = "Swal.fire({ icon: 'error', title: 'Lỗi hệ thống', text: 'Không thể xử lý yêu cầu đăng nhập lúc này. Vui lòng thử lại sau.', background: '#0f1118', color: '#f8fafc', confirmButtonColor: '#ef4444' });";
         }
     }
 }
@@ -132,6 +139,8 @@ if (isset($_POST['btn_verify_2fa'])) {
                 if ($row_2fa && intval($row_2fa['two_factor_enabled']) === 1) {
                     $secret = $row_2fa['two_factor_secret'] ?? '';
                 }
+            } else {
+                error_log('ANPLAY 2FA prepare failed: ' . ($conn->error ?? 'unknown error'));
             }
 
             $valid_otp = !empty($secret) ? TotpService::verifyCode($secret, $code) : false;
@@ -397,8 +406,6 @@ $is_2fa_step = !empty($_SESSION['2fa_pending']) && !empty($_SESSION['2fa_pending
             border-radius: 8px;
         }
 
-        [data-theme="light"] .,
-        [data-theme="light"] .,
         [data-theme="light"] .auth-card .form-label {
             color: var(--text-main) !important;
         }
@@ -528,7 +535,7 @@ $is_2fa_step = !empty($_SESSION['2fa_pending']) && !empty($_SESSION['2fa_pending
                     </div>
                     <div class="input-group">
                         <span class="input-group-text"><i class="bi bi-key"></i></span>
-                        <input type="password" name="password" id="login_password" class="form-control form-control-gaming" placeholder="••••••••" required autocomplete="current-password">
+                        <input type="password" name="password" id="login_password" class="form-control form-control-gaming" placeholder="Nhập mật khẩu..." required autocomplete="current-password">
                         <button class="btn btn-outline-secondary input-group-text" type="button" onclick="toggleAuthPass('login_password', this)">
                             <i class="bi bi-eye"></i>
                         </button>
